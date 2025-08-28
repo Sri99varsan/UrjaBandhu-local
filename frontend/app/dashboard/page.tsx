@@ -72,7 +72,7 @@ export default function DashboardPage() {
         toast.error('Failed to load devices')
       } else {
         // Transform the data to match our interface
-        const transformedDevices: Device[] = devicesData?.map(device => ({
+        const transformedDevices: Device[] = devicesData?.map((device: any) => ({
           id: device.id,
           name: device.name,
           type: device.device_type,
@@ -100,20 +100,18 @@ export default function DashboardPage() {
       }
 
       // Calculate dashboard stats
-      const activeDevices = devicesData?.filter(d => d.status === 'active').length || 0
-      const totalConsumption = devicesData?.reduce((sum, d) => sum + (d.current_consumption || 0), 0) || 0
-      const monthlyUsage = consumptionData?.reduce((sum, c) => sum + (c.consumption || 0), 0) || 0
+      const activeDevices = devicesData?.filter((d: any) => d.status === 'active').length || 0
+      const totalConsumption = devicesData?.reduce((sum: number, d: any) => sum + (d.current_consumption || 0), 0) || 0
+      const monthlyUsage = consumptionData?.reduce((sum: number, c: any) => sum + (c.consumption || 0), 0) || 0
       
       // Calculate monthly cost (assuming ₹8 per kWh as average Indian rate)
       const ratePerKwh = 8
       const monthlyCost = monthlyUsage * ratePerKwh
 
       // Calculate efficiency score (average of all devices)
-      const avgEfficiency = devicesData?.length 
-        ? devicesData.reduce((sum, d) => sum + (d.efficiency_score || 75), 0) / devicesData.length
-        : 85
-
-      // Calculate savings potential (simplified calculation)
+      const avgEfficiency = devicesData?.length
+        ? devicesData.reduce((sum: number, d: any) => sum + (d.efficiency_score || 75), 0) / devicesData.length
+        : 85      // Calculate savings potential (simplified calculation)
       const savingsPotential = Math.max(0, (100 - avgEfficiency) * 0.3)
       
       setStats({

@@ -104,9 +104,9 @@ export default function AnalyticsPage() {
         setConsumptionData(consumptionData || [])
         
         // Calculate totals
-        const total = consumptionData?.reduce((sum, item) => sum + (item.consumption || 0), 0) || 0
-        const totalCostCalc = consumptionData?.reduce((sum, item) => sum + (item.cost || 0), 0) || 0
-        const maxPeak = Math.max(...(consumptionData?.map(item => item.peak_demand || 0) || [0]))
+        const total = consumptionData?.reduce((sum: number, item: any) => sum + (item.consumption || 0), 0) || 0
+        const totalCostCalc = consumptionData?.reduce((sum: number, item: any) => sum + (item.cost || 0), 0) || 0
+        const maxPeak = Math.max(...(consumptionData?.map((item: any) => item.peak_demand || 0) || [0]))
         
         setTotalConsumption(Math.round(total * 100) / 100)
         setTotalCost(Math.round(totalCostCalc * 100) / 100)
@@ -131,7 +131,7 @@ export default function AnalyticsPage() {
         // Process device usage data
         const deviceUsageMap = new Map()
         
-        deviceData?.forEach(device => {
+        deviceData?.forEach((device: any) => {
           if (!deviceUsageMap.has(device.name)) {
             deviceUsageMap.set(device.name, {
               device_name: device.name,
