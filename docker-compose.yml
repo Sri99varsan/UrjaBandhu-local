@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - urjabandhu-network
+    command: npm run dev
+
+  # InfluxDB for Time Series Data (optional - for advanced analytics)
+  influxdb:
+    image: influxdb:2.7
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: password123
+      DOCKER_INFLUXDB_INIT_ORG: urjabandhu
+      DOCKER_INFLUXDB_INIT_BUCKET: electricity_data
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: urjabandhu-token-2024
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    networks:
+      - urjabandhu-network
+    profiles:
+      - analytics
+
+  # Redis for Caching (optional - for performance optimization)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - urjabandhu-network
+    profiles:
+      - cache
+
+volumes:
+  influxdb_data:
+  influxdb_config:
+  redis_data:
+
+networks:
+  urjabandhu-network:
+    driver: bridge

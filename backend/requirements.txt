@@ -1,0 +1,45 @@
+# Core ML/AI Libraries
+tensorflow
+torch
+torchvision
+transformers
+scikit-learn
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+
+# Time Series
+prophet
+statsmodels
+
+# OCR and Computer Vision
+pytesseract
+opencv-python
+pillow
+
+# NLP/TTS/STT
+openai
+azure-cognitiveservices-speech
+speech-recognition
+pydub
+
+# API and Web
+httpx
+aiohttp
+websockets
+
+# Development and Testing
+pytest
+pytest-asyncio
+black
+flake8
+mypy
+pre-commit
+
+# Utilities
+python-dotenv
+click
+rich
+typer
