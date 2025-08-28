@@ -9,6 +9,12 @@ CREATE TABLE profiles (
   email TEXT NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
+  notification_preferences JSONB DEFAULT '{"email_alerts": true, "push_notifications": true, "energy_tips": true, "weekly_reports": true}',
+  theme TEXT DEFAULT 'system' CHECK (theme IN ('light', 'dark', 'system')),
+  language TEXT DEFAULT 'en',
+  timezone TEXT DEFAULT 'Asia/Kolkata',
+  energy_rate DECIMAL(10, 2) DEFAULT 8.00,
+  currency TEXT DEFAULT 'INR',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

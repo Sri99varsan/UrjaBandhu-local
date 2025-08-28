@@ -67,7 +67,20 @@ export default function SettingsPage() {
 
       if (error) {
         console.error('Error fetching profile:', error)
-        // Create default profile if doesn't exist
+        
+        // Check if it's a missing record error (PGRST116)
+        if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
+          console.log('Profile not found, creating default profile for user:', user?.id)
+        } else {
+          console.error('Database error details:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          })
+        }
+        
+        // Create default profile if doesn't exist or there's an error
         const defaultProfile: Partial<UserProfile> = {
           id: user?.id,
           email: user?.email || '',
@@ -85,14 +98,81 @@ export default function SettingsPage() {
           currency: 'INR'
         }
         setProfile(defaultProfile as UserProfile)
+        
+        // Try to create the profile in the database
+        await createDefaultProfile(defaultProfile as UserProfile)
       } else {
-        setProfile(data)
+        // If data exists but is missing fields, merge with defaults
+        const completeProfile = {
+          ...data,
+          notification_preferences: data.notification_preferences || {
+            email_alerts: true,
+            push_notifications: true,
+            energy_tips: true,
+            weekly_reports: true
+          },
+          theme: data.theme || 'system',
+          language: data.language || 'en',
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          energy_rate: data.energy_rate || 8,
+          currency: data.currency || 'INR'
+        }
+        setProfile(completeProfile)
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
-      toast.error('Failed to load profile')
+      console.error('Unexpected error fetching profile:', error)
+      toast.error('Failed to load profile settings')
+      
+      // Still provide a default profile so the page doesn't break
+      const defaultProfile: UserProfile = {
+        id: user?.id || '',
+        email: user?.email || '',
+        full_name: user?.user_metadata?.full_name || '',
+        notification_preferences: {
+          email_alerts: true,
+          push_notifications: true,
+          energy_tips: true,
+          weekly_reports: true
+        },
+        theme: 'system',
+        language: 'en',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        energy_rate: 8,
+        currency: 'INR'
+      }
+      setProfile(defaultProfile)
     } finally {
       setLoadingData(false)
+    }
+  }
+
+  const createDefaultProfile = async (profile: UserProfile) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          avatar_url: user?.user_metadata?.avatar_url || null,
+          notification_preferences: profile.notification_preferences,
+          theme: profile.theme,
+          language: profile.language,
+          timezone: profile.timezone,
+          energy_rate: profile.energy_rate,
+          currency: profile.currency,
+          updated_at: new Date().toISOString()
+        })
+
+      if (error) {
+        console.error('Error creating default profile:', error)
+        // If the table structure doesn't match, we'll just use the frontend state
+        console.log('Using in-memory profile until database schema is updated')
+      } else {
+        console.log('Default profile created successfully')
+      }
+    } catch (error) {
+      console.error('Error in createDefaultProfile:', error)
     }
   }
 

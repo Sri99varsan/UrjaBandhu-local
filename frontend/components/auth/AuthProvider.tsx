@@ -55,14 +55,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: user.email!,
           full_name: user.user_metadata?.full_name || null,
           avatar_url: user.user_metadata?.avatar_url || null,
+          notification_preferences: {
+            email_alerts: true,
+            push_notifications: true,
+            energy_tips: true,
+            weekly_reports: true
+          },
+          theme: 'system',
+          language: 'en',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
+          energy_rate: 8.00,
+          currency: 'INR',
           updated_at: new Date().toISOString(),
         })
 
       if (error) {
         console.error('Error creating/updating profile:', error)
+        // Don't throw here, as auth should still work even if profile creation fails
+      } else {
+        console.log('Profile created/updated successfully for user:', user.id)
       }
     } catch (error) {
       console.error('Error in createOrUpdateProfile:', error)
+      // Don't throw here, as auth should still work even if profile creation fails
     }
   }
 
