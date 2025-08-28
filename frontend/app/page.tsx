@@ -4,34 +4,6 @@ import { Zap, BarChart3, Brain, Globe, Users, ArrowRight } from 'lucide-react'
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-electricity-50 to-energy-50">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-electricity-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <Zap className="h-8 w-8 text-electricity-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">UrjaBandhu</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="text-gray-600 hover:text-electricity-600 px-3 py-2 rounded-md text-sm font-medium">
-                Dashboard
-              </Link>
-              <Link href="/analytics" className="text-gray-600 hover:text-electricity-600 px-3 py-2 rounded-md text-sm font-medium">
-                Analytics
-              </Link>
-              <Link href="/chat" className="text-gray-600 hover:text-electricity-600 px-3 py-2 rounded-md text-sm font-medium">
-                AI Assistant
-              </Link>
-              <Link href="/dashboard" className="bg-electricity-600 hover:bg-electricity-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="relative py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
