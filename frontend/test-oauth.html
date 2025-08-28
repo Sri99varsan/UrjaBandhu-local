@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Test - UrjaBandhu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .test-step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔐 OAuth Setup Test - UrjaBandhu</h1>
+        
+        <div class="test-step">
+            <h2>✅ Step 1: Check if app is running</h2>
+            <div id="app-status" class="status info">
+                Checking if Next.js app is running on http://localhost:3001...
+            </div>
+            <button onclick="checkAppStatus()">Test App Connection</button>
+        </div>
+
+        <div class="test-step">
+            <h2>🌐 Step 2: Environment Variables</h2>
+            <div class="status info">
+                <strong>Current Configuration:</strong><br>
+                Supabase URL: https://ygjdvufbiobntseveoia.supabase.co<br>
+                Status: <span id="env-status">Ready for testing</span>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <h2>🔑 Step 3: OAuth Configuration Checklist</h2>
+            <div class="status warning">
+                <strong>To enable Google OAuth, ensure these steps are completed in your Supabase dashboard:</strong>
+                <ol>
+                    <li>Go to Authentication → Settings → Auth Providers</li>
+                    <li>Enable Google provider</li>
+                    <li>Add your Google OAuth Client ID and Secret</li>
+                    <li>Set redirect URLs:
+                        <ul>
+                            <li><code>http://localhost:3001/auth/callback</code> (development)</li>
+                            <li><code>https://yourdomain.com/auth/callback</code> (production)</li>
+                        </ul>
+                    </li>
+                    <li>In Google Cloud Console:
+                        <ul>
+                            <li>Enable Google+ API</li>
+                            <li>Add authorized origins: <code>http://localhost:3001</code></li>
+                            <li>Add redirect URIs: <code>https://ygjdvufbiobntseveoia.supabase.co/auth/v1/callback</code></li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <h2>🧪 Step 4: Test OAuth Flow</h2>
+            <div id="oauth-status" class="status info">
+                Ready to test OAuth functionality
+            </div>
+            <button onclick="testOAuth()">Open Auth Page</button>
+            <button onclick="testSupabaseConnection()">Test Supabase Connection</button>
+        </div>
+
+        <div class="test-step">
+            <h2>📝 Step 5: Common Issues & Solutions</h2>
+            <div class="status warning">
+                <strong>If OAuth doesn't work, check:</strong>
+                <ul>
+                    <li><strong>CORS Issues:</strong> Make sure redirect URLs match exactly</li>
+                    <li><strong>Google Console:</strong> Verify client ID/secret are correct</li>
+                    <li><strong>Supabase:</strong> Check if Google provider is enabled</li>
+                    <li><strong>Network:</strong> Ensure no firewall blocking requests</li>
+                    <li><strong>Cookies:</strong> Clear browser cookies and try again</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        async function checkAppStatus() {
+            const statusEl = document.getElementById('app-status');
+            try {
+                const response = await fetch('http://localhost:3001');
+                if (response.ok) {
+                    statusEl.className = 'status success';
+                    statusEl.innerHTML = '✅ App is running successfully on http://localhost:3001';
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.innerHTML = '❌ App responded with error: ' + response.status;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ Cannot connect to app. Make sure it\'s running: ' + error.message;
+            }
+        }
+
+        function testOAuth() {
+            const statusEl = document.getElementById('oauth-status');
+            statusEl.className = 'status info';
+            statusEl.innerHTML = '🔄 Opening auth page in new tab...';
+            
+            // Open auth page in new tab
+            window.open('http://localhost:3001/auth', '_blank');
+            
+            setTimeout(() => {
+                statusEl.innerHTML = '📋 Test the Google OAuth button in the opened tab. Check browser console for any errors.';
+            }, 1000);
+        }
+
+        async function testSupabaseConnection() {
+            const statusEl = document.getElementById('oauth-status');
+            statusEl.className = 'status info';
+            statusEl.innerHTML = '🔄 Testing Supabase connection...';
+            
+            try {
+                const response = await fetch('https://ygjdvufbiobntseveoia.supabase.co/rest/v1/', {
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnamR2dWZiaW9ibnRzZXZlb2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzNzA3MTgsImV4cCI6MjA3MTk0NjcxOH0.BQGNl13CD_SkpBAkQ4ByiQilfAW-Wj7XpVzin2UNBls'
+                    }
+                });
+                
+                if (response.ok) {
+                    statusEl.className = 'status success';
+                    statusEl.innerHTML = '✅ Supabase connection successful!';
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.innerHTML = '❌ Supabase connection failed: ' + response.status;
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ Supabase connection error: ' + error.message;
+            }
+        }
+
+        // Auto-check app status on load
+        window.onload = checkAppStatus;
+    </script>
+</body>
+</html>
