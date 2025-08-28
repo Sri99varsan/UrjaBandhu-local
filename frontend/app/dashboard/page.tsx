@@ -186,15 +186,6 @@ export default function DashboardPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      router.push('/')
-    } catch (error) {
-      toast.error('Failed to sign out')
-    }
-  }
-
   if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -212,42 +203,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <Zap className="h-8 w-8 text-electricity-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">UrjaBandhu</span>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <a href="#" className="border-electricity-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  <Home className="h-4 w-4 mr-2" />
-                  Dashboard
-                </a>
-                <a href="#" className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Analytics
-                </a>
-                <a href="#" className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  AI Assistant
-                </a>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">Welcome, {user.email}</span>
-              <button
-                onClick={handleSignOut}
-                className="text-gray-500 hover:text-gray-700 p-2 rounded-md"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <DashboardNavigation />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

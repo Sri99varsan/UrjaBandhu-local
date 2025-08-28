@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
+import DashboardNavigation from '@/components/navigation/DashboardNavigation'
 
 interface Device {
   id: string
@@ -252,6 +253,7 @@ export default function DevicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <DashboardNavigation />
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
