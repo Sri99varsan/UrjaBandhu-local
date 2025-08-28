@@ -8,6 +8,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Devices', href: '/devices' },
   { name: 'Analytics', href: '/analytics' },
+  { name: 'Advanced Analytics', href: '/analytics-advanced' },
   { name: 'Settings', href: '/settings' },
   { name: 'Test Database', href: '/test-database' },
 ]
