@@ -32,7 +32,7 @@ interface AnalysisStep {
   completed: boolean
 }
 
-export default function ChatbotLandingPage() {
+export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: string | null }) {
   const { user } = useAuth()
   const router = useRouter()
   const [animationPhase, setAnimationPhase] = useState<'entrance' | 'analyzing' | 'results'>('entrance')
@@ -67,13 +67,19 @@ export default function ChatbotLandingPage() {
   const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
+    // If there's an initial query, skip entrance and go directly to analyzing
+    if (initialQuery) {
+      setAnimationPhase('analyzing')
+      return
+    }
+    
     // Entrance animation sequence
     const timer1 = setTimeout(() => {
       setAnimationPhase('analyzing')
     }, 2000)
 
     return () => clearTimeout(timer1)
-  }, [])
+  }, [initialQuery])
 
   useEffect(() => {
     if (animationPhase === 'analyzing') {
@@ -434,9 +440,20 @@ export default function ChatbotLandingPage() {
                           animate={{ opacity: 1 }}
                           transition={{ delay: 1.8, duration: 1 }}
                         >
-                          Hello! I've analyzed your energy usage. Your current consumption is <strong>2.4 kWh today</strong> 
-                          with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you'll spend 
-                          <strong> ₹380 by month-end</strong>. Would you like me to suggest ways to reduce your electricity bill?
+                          {initialQuery ? (
+                            <>
+                              Great question: "<em className="text-blue-300">{initialQuery}</em>" <br/><br/>
+                              I've analyzed your energy usage in response to your query. Your current consumption is <strong>2.4 kWh today</strong> 
+                              with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you'll spend 
+                              <strong> ₹380 by month-end</strong>. Let me provide specific insights related to your question.
+                            </>
+                          ) : (
+                            <>
+                              Hello! I've analyzed your energy usage. Your current consumption is <strong>2.4 kWh today</strong> 
+                              with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you'll spend 
+                              <strong> ₹380 by month-end</strong>. Would you like me to suggest ways to reduce your electricity bill?
+                            </>
+                          )}
                         </motion.p>
                       </motion.div>
                     </div>

@@ -3,18 +3,28 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { AuthForm } from '@/components/auth/AuthForm'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const { user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard')
+      const redirect = searchParams.get('redirect') || 'dashboard'
+      const hasQuery = searchParams.get('hasQuery') === 'true'
+      
+      if (hasQuery) {
+        // If user came from homepage with a query, redirect to dashboard
+        // The dashboard will pick up the query from localStorage
+        router.push('/dashboard')
+      } else {
+        router.push(`/${redirect}`)
+      }
     }
-  }, [user, loading, router])
+  }, [user, loading, router, searchParams])
 
   const toggleMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin')
