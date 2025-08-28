@@ -32,11 +32,11 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
   if (user) {
     // Authenticated users get sidebar layout
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <AuthenticatedSidebar />
         
         {/* Main content area with sidebar offset */}
-        <div className="lg:pl-64">
+        <div className="lg:pl-72">
           <main className="min-h-screen">
             {children}
           </main>
@@ -47,7 +47,7 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
 
   // Unauthenticated users get public header
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <PublicHeader />
       <main>
         {children}
