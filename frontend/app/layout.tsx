@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { Toaster } from 'react-hot-toast'
-import Navigation from '@/components/Navigation'
+import NavigationWrapper from '@/components/navigation/NavigationWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,10 +24,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <Navigation />
-          <main className="min-h-screen">
+          <NavigationWrapper>
             {children}
-          </main>
+          </NavigationWrapper>
           <Toaster
             position="top-right"
             toastOptions={{

@@ -129,10 +129,10 @@ export default function DatabaseTestPage() {
   }
 
   return (
-    <div className="bg-gray-100 p-8 pt-4">
+    <div className="p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Database Connection Test</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Database Connection Test</h2>
           <p className="text-gray-600">Verify your UrjaBandhu database setup and frontend integration</p>
         </div>
 
