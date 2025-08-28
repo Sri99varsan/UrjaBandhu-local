@@ -57,36 +57,43 @@ export default function AuthenticatedSidebar() {
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-border px-6 pb-4">
+        {/* Glassmorphism background with grid pattern */}
+        <div className="absolute inset-0 bg-black">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+          <div className="absolute top-10 left-10 w-32 h-32 bg-green-500/10 rounded-full blur-[40px] animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-24 h-24 bg-emerald-400/10 rounded-full blur-[30px] animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+        
+        <div className="relative flex grow flex-col gap-y-5 overflow-y-auto bg-black/90 backdrop-blur-md border-r border-white/10 px-6 pb-4">
           {/* Logo */}
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Zap className="h-5 w-5 text-primary-foreground" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-500/25">
+                <Zap className="h-5 w-5 text-black" />
               </div>
-              <span className="text-xl font-bold text-foreground">UrjaBandhu</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">UrjaBandhu</span>
             </Link>
           </div>
 
           {/* User Profile */}
-          <div className="flex items-center gap-x-4 px-4 py-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-x-4 px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
             <Avatar className="h-10 w-10">
               <AvatarImage src="" alt={user?.email} />
-              <AvatarFallback className="bg-primary text-primary-foreground">
+              <AvatarFallback className="bg-gradient-to-r from-green-400 to-emerald-500 text-black font-semibold">
                 {getInitials(user?.email || '')}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {user?.user_metadata?.full_name || user?.email || 'User'}
               </p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-xs text-gray-400 truncate">
                 {user?.email}
               </p>
             </div>
           </div>
 
-          <Separator />
+          <Separator className="border-white/10" />
 
           {/* Navigation */}
           <nav className="flex flex-1 flex-col">
@@ -98,21 +105,21 @@ export default function AuthenticatedSidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        "group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 transition-all duration-200",
+                        "group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 transition-all duration-200 border border-transparent",
                         isActive
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 text-green-400 shadow-lg shadow-green-500/10"
+                          : "text-gray-300 hover:text-green-400 hover:bg-white/5 hover:border-white/10"
                       )}
                     >
                       <item.icon
                         className={cn(
                           "h-5 w-5 shrink-0 transition-colors",
-                          isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                          isActive ? "text-green-400" : "text-gray-400 group-hover:text-green-400"
                         )}
                       />
                       <span className="truncate">{item.name}</span>
                       {item.badge && (
-                        <Badge variant="secondary" className="ml-auto text-xs">
+                        <Badge variant="secondary" className="ml-auto text-xs bg-green-500/20 text-green-400 border-green-500/30">
                           {item.badge}
                         </Badge>
                       )}
@@ -126,14 +133,14 @@ export default function AuthenticatedSidebar() {
             </ul>
           </nav>
 
-          <Separator />
+          <Separator className="border-white/10" />
 
           {/* Bottom Actions */}
           <div className="mt-auto">
             <Button
               onClick={handleSignOut}
               variant="ghost"
-              className="w-full justify-start gap-x-3 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              className="w-full justify-start gap-x-3 text-gray-300 hover:text-green-400 hover:bg-white/5 transition-all duration-200"
             >
               <LogOut className="h-5 w-5" />
               Sign Out
@@ -143,27 +150,27 @@ export default function AuthenticatedSidebar() {
       </div>
 
       {/* Mobile menu button */}
-      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-black/90 backdrop-blur-md border-b border-white/10 px-4 py-4 shadow-lg sm:px-6 lg:hidden">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsMobileMenuOpen(true)}
-          className="-m-2.5 text-muted-foreground lg:hidden"
+          className="-m-2.5 text-gray-300 hover:text-green-400 lg:hidden"
         >
           <span className="sr-only">Open sidebar</span>
           <Menu className="h-6 w-6" />
         </Button>
-        <div className="flex-1 text-sm font-semibold leading-6 text-foreground">
+        <div className="flex-1 text-sm font-semibold leading-6 text-white">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-              <Zap className="h-4 w-4 text-primary-foreground" />
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-r from-green-400 to-emerald-500">
+              <Zap className="h-4 w-4 text-black" />
             </div>
-            UrjaBandhu
+            <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">UrjaBandhu</span>
           </div>
         </div>
         <Avatar className="h-8 w-8">
           <AvatarImage src="" alt={user?.email} />
-          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+          <AvatarFallback className="bg-gradient-to-r from-green-400 to-emerald-500 text-black text-xs">
             {getInitials(user?.email || '')}
           </AvatarFallback>
         </Avatar>
@@ -172,7 +179,7 @@ export default function AuthenticatedSidebar() {
       {/* Mobile Sidebar */}
       {isMobileMenuOpen && (
         <div className="relative z-50 lg:hidden">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
           
           <div className="fixed inset-0 flex">
             <div className="relative mr-16 flex w-full max-w-xs flex-1">
@@ -181,7 +188,7 @@ export default function AuthenticatedSidebar() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="-m-2.5 text-white"
+                  className="-m-2.5 text-green-400 hover:text-green-300"
                 >
                   <span className="sr-only">Close sidebar</span>
                   <X className="h-6 w-6" />
@@ -189,36 +196,36 @@ export default function AuthenticatedSidebar() {
               </div>
 
               {/* Mobile sidebar content */}
-              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
+              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-black/95 backdrop-blur-md border-r border-white/10 px-6 pb-4">
                 {/* Mobile Logo */}
                 <div className="flex h-16 shrink-0 items-center">
                   <Link href="/dashboard" className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                      <Zap className="h-5 w-5 text-primary-foreground" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-500/25">
+                      <Zap className="h-5 w-5 text-black" />
                     </div>
-                    <span className="text-xl font-bold text-foreground">UrjaBandhu</span>
+                    <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">UrjaBandhu</span>
                   </Link>
                 </div>
 
                 {/* Mobile User Profile */}
-                <div className="flex items-center gap-x-4 px-4 py-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-x-4 px-4 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src="" alt={user?.email} />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
+                    <AvatarFallback className="bg-gradient-to-r from-green-400 to-emerald-500 text-black font-semibold">
                       {getInitials(user?.email || '')}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
+                    <p className="text-sm font-medium text-white truncate">
                       {user?.user_metadata?.full_name || user?.email || 'User'}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-xs text-gray-400 truncate">
                       {user?.email}
                     </p>
                   </div>
                 </div>
 
-                <Separator />
+                <Separator className="border-white/10" />
 
                 {/* Mobile Navigation */}
                 <nav className="flex flex-1 flex-col">
@@ -231,21 +238,21 @@ export default function AuthenticatedSidebar() {
                             href={item.href}
                             onClick={() => setIsMobileMenuOpen(false)}
                             className={cn(
-                              "group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 transition-all duration-200",
+                              "group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 transition-all duration-200 border border-transparent",
                               isActive
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 text-green-400 shadow-lg shadow-green-500/10"
+                                : "text-gray-300 hover:text-green-400 hover:bg-white/5 hover:border-white/10"
                             )}
                           >
                             <item.icon
                               className={cn(
                                 "h-5 w-5 shrink-0 transition-colors",
-                                isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                                isActive ? "text-green-400" : "text-gray-400 group-hover:text-green-400"
                               )}
                             />
                             <span className="truncate">{item.name}</span>
                             {item.badge && (
-                              <Badge variant="secondary" className="ml-auto text-xs">
+                              <Badge variant="secondary" className="ml-auto text-xs bg-green-500/20 text-green-400 border-green-500/30">
                                 {item.badge}
                               </Badge>
                             )}
@@ -256,14 +263,14 @@ export default function AuthenticatedSidebar() {
                   </ul>
                 </nav>
 
-                <Separator />
+                <Separator className="border-white/10" />
 
                 {/* Mobile Bottom Actions */}
                 <div className="mt-auto">
                   <Button
                     onClick={handleSignOut}
                     variant="ghost"
-                    className="w-full justify-start gap-x-3 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    className="w-full justify-start gap-x-3 text-gray-300 hover:text-green-400 hover:bg-white/5 transition-all duration-200"
                   >
                     <LogOut className="h-5 w-5" />
                     Sign Out

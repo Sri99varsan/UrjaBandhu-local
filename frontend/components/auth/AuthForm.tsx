@@ -1,8 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from './AuthProvider'
-import { Zap, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '@/components/auth/AuthProvider'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Eye, EyeOff, Zap, Mail, Lock, User } from 'lucide-react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 interface AuthFormProps {
@@ -15,37 +19,25 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-
+  const [isLoading, setIsLoading] = useState(false)
   const { signIn, signUp, signInWithGoogle } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!email || !password) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    if (mode === 'signup' && !fullName) {
-      toast.error('Please enter your full name')
-      return
-    }
-
-    setLoading(true)
+    setIsLoading(true)
 
     try {
       if (mode === 'signin') {
         await signIn(email, password)
-        toast.success('Welcome back!')
+        toast.success('Signed in successfully!')
       } else {
         await signUp(email, password, fullName)
-        toast.success('Account created! Please check your email to verify.')
+        toast.success('Account created successfully!')
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -58,135 +50,146 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-electricity-50 to-energy-50 px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex justify-center">
-            <div className="flex items-center">
-              <Zap className="h-12 w-12 text-electricity-600" />
-              <span className="ml-2 text-2xl font-bold text-gray-900">UrjaBandhu</span>
+    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-600/5 rounded-full blur-[100px]" />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 w-full max-w-md"
+      >
+        {/* Header */}
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="flex justify-center mb-4"
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-500/25">
+              <Zap className="h-8 w-8 text-black" />
             </div>
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            {mode === 'signin' ? 'Sign in to your account' : 'Create your account'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {mode === 'signin' 
-              ? 'Welcome back! Please sign in to continue.' 
-              : 'Join UrjaBandhu to start optimizing your electricity consumption.'
-            }
+          </motion.div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+            UrjaBandhu
+          </h1>
+          <p className="text-gray-400 mt-2">
+            {mode === 'signin' ? 'Welcome back!' : 'Create your account'}
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+        {/* Form Card */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl"
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
             {mode === 'signup' && (
-              <div>
-                <label htmlFor="fullName" className="sr-only">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                transition={{ duration: 0.3 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="fullName" className="text-sm font-medium text-gray-300">
                   Full Name
-                </label>
+                </Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
                     id="fullName"
-                    name="fullName"
                     type="text"
-                    required={mode === 'signup'}
+                    placeholder="Enter your full name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-electricity-500 focus:border-electricity-500 focus:z-10 sm:text-sm"
-                    placeholder="Full Name"
+                    className="pl-10 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    required={mode === 'signup'}
                   />
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-300">
+                Email
+              </Label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
                   id="email"
-                  name="email"
                   type="email"
-                  autoComplete="email"
-                  required
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-electricity-500 focus:border-electricity-500 focus:z-10 sm:text-sm"
-                  placeholder="Email address"
+                  className="pl-10 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                  required
                 />
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="sr-only">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-gray-300">
                 Password
-              </label>
+              </Label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
                   id="password"
-                  name="password"
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                  required
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-electricity-500 focus:border-electricity-500 focus:z-10 sm:text-sm"
-                  placeholder="Password"
+                  className="pl-10 pr-10 bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                  required
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
-          </div>
 
-          <div>
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-electricity-600 hover:bg-electricity-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-electricity-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold py-3 shadow-lg shadow-green-500/25 transition-all duration-300"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
+                  {mode === 'signin' ? 'Signing in...' : 'Creating account...'}
+                </div>
               ) : (
                 mode === 'signin' ? 'Sign In' : 'Create Account'
               )}
-            </button>
-          </div>
+            </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/20" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-black text-gray-400">Or continue with</span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
-            </div>
-          </div>
 
-          <div>
-            <button
+            <Button
               type="button"
               onClick={handleGoogleSignIn}
-              className="group relative w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-electricity-500 transition-colors"
+              variant="outline"
+              className="w-full bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 transition-all duration-300"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -207,14 +210,13 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
                 />
               </svg>
               Continue with Google
-            </button>
-          </div>
+            </Button>
+          </form>
 
-          <div className="text-center">
+          <div className="mt-6 text-center">
             <button
-              type="button"
               onClick={onToggleMode}
-              className="text-electricity-600 hover:text-electricity-500 text-sm font-medium"
+              className="text-sm text-gray-400 hover:text-green-400 transition-colors"
             >
               {mode === 'signin' 
                 ? "Don't have an account? Sign up" 
@@ -222,8 +224,8 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
               }
             </button>
           </div>
-        </form>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

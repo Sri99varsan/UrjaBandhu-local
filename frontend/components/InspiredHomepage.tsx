@@ -27,42 +27,61 @@ export function InspiredHomepage() {
   }
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.1)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        
+        {/* Gradient Orbs */}
+        <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/20 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/15 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
+
       {/* Navigation */}
-      <nav className="relative z-20 flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <nav className="relative z-20 flex items-center justify-between px-6 py-4">
         <motion.div 
           className="flex items-center gap-3"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Zap className="h-5 w-5 text-white" />
+          {/* Glassmorphism container for logo */}
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/25">
+                <Zap className="h-5 w-5 text-black" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                UrjaBandhu
+              </span>
+            </div>
           </div>
-          <span className="text-xl font-semibold text-gray-900">
-            UrjaBandhu
-          </span>
         </motion.div>
 
         <motion.div 
-          className="flex items-center gap-6"
+          className="flex items-center gap-4"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <Button variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium">
-            Features
-          </Button>
-          <Button variant="ghost" className="text-gray-600 hover:text-gray-900 font-medium">
-            About
-          </Button>
-          <Button 
-            variant="outline" 
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium"
-            onClick={() => router.push('/login')}
-          >
-            Sign In
-          </Button>
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-2 py-2 shadow-xl">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300">
+                Features
+              </Button>
+              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300">
+                About
+              </Button>
+              <Button 
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold shadow-lg shadow-green-500/25 transition-all duration-300"
+                onClick={() => router.push('/login')}
+              >
+                Sign In
+              </Button>
+            </div>
+          </div>
         </motion.div>
       </nav>
 
@@ -75,15 +94,15 @@ export function InspiredHomepage() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
             Smarter energy{' '}
-            <span className="text-blue-600">
+            <span className="bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 bg-clip-text text-transparent">
               decisions
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-2xl mx-auto font-light">
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto font-light">
             AI-powered insights to optimize your electricity usage and reduce energy costs.
           </p>
 
@@ -94,13 +113,19 @@ export function InspiredHomepage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
+            {/* Glassmorphism Search Container */}
             <div 
-              className={`relative bg-white border-2 rounded-2xl p-1 shadow-lg transition-all duration-300 ${
-                isFocused ? 'border-blue-500 shadow-blue-100' : 'border-gray-200 shadow-gray-100'
+              className={`relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-1 shadow-2xl transition-all duration-300 ${
+                isFocused ? 'border-green-500/50 shadow-green-500/20' : 'border-white/20'
               }`}
             >
+              {/* Glow effect */}
+              {isFocused && (
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl -z-10" />
+              )}
+              
               <div className="flex items-center gap-4 px-6 py-4">
-                <Search className={`h-5 w-5 transition-colors ${isFocused ? 'text-blue-500' : 'text-gray-400'}`} />
+                <Search className={`h-5 w-5 transition-colors ${isFocused ? 'text-green-400' : 'text-gray-400'}`} />
                 <Input
                   type="text"
                   placeholder="How can I reduce my electricity bill?"
@@ -109,12 +134,12 @@ export function InspiredHomepage() {
                   onKeyPress={handleKeyPress}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  className="flex-1 border-0 bg-transparent text-gray-900 placeholder-gray-500 text-lg focus:ring-0 focus:outline-none"
+                  className="flex-1 border-0 bg-transparent text-white placeholder-gray-400 text-lg focus:ring-0 focus:outline-none"
                 />
                 <Button 
                   onClick={handleSearch}
                   disabled={!query.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black px-6 py-2 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-green-500/25"
                 >
                   Analyze
                 </Button>
@@ -129,7 +154,7 @@ export function InspiredHomepage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            <span className="text-gray-500 text-sm font-medium">Popular:</span>
+            <span className="text-gray-400 text-sm font-medium">Popular:</span>
             {[
               "Reduce electricity bill",
               "Energy usage patterns",
@@ -138,7 +163,7 @@ export function InspiredHomepage() {
               <button
                 key={suggestion}
                 onClick={() => setQuery(suggestion)}
-                className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full transition-colors duration-200"
+                className="text-sm bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/20 text-gray-300 hover:text-green-400 px-4 py-2 rounded-full transition-all duration-300 hover:border-green-400/30"
               >
                 {suggestion}
               </button>
@@ -149,17 +174,20 @@ export function InspiredHomepage() {
 
       {/* Features Section */}
       <motion.div 
-        className="bg-gray-50 py-20"
+        className="relative py-20"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.8 }}
       >
-        <div className="max-w-6xl mx-auto px-6">
+        {/* Glassmorphism background for features section */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-transparent" />
+        
+        <div className="relative max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Powerful AI tools
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
               Everything you need to understand and optimize your energy consumption
             </p>
           </div>
@@ -184,16 +212,18 @@ export function InspiredHomepage() {
             ].map((feature, index) => (
               <motion.div
                 key={feature.title}
-                className="text-center p-8 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300"
+                className="group text-center p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl hover:shadow-green-500/20 hover:border-green-500/30 transition-all duration-500 hover:bg-white/10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1 + index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
               >
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <feature.icon className="h-8 w-8 text-blue-600" />
+                {/* Icon with glassmorphism background */}
+                <div className="w-16 h-16 bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:from-green-400/30 group-hover:to-emerald-500/30 transition-all duration-300 shadow-lg shadow-green-500/10">
+                  <feature.icon className="h-8 w-8 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-green-300 transition-colors duration-300">{feature.title}</h3>
+                <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors duration-300">{feature.description}</p>
               </motion.div>
             ))}
           </div>

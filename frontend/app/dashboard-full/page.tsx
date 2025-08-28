@@ -210,25 +210,36 @@ export default function FullDashboardPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-lg font-medium text-white">Loading dashboard...</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Energy Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
-        </div>
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <div className="relative z-10 p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Energy Dashboard</h1>
+            <p className="text-gray-300">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
+          </div>
         <div className="flex items-center space-x-4">
-          <button className="relative p-2 text-gray-400 hover:text-gray-500">
+          <button className="relative p-2 text-gray-300 hover:text-green-400 transition-colors">
             <Bell className="h-6 w-6" />
             {stats.unreadAlerts > 0 && (
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
+              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-black" />
             )}
           </button>
         </div>
@@ -237,60 +248,60 @@ export default function FullDashboardPage() {
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Current Consumption */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <Zap className="h-8 w-8 text-yellow-600" />
+              <Zap className="h-8 w-8 text-green-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">Current Usage</dt>
-                <dd className="text-lg font-medium text-gray-900">{stats.currentConsumption} kWh</dd>
+                <dt className="text-sm font-medium text-gray-300 truncate">Current Usage</dt>
+                <dd className="text-lg font-medium text-white">{stats.currentConsumption} kWh</dd>
               </dl>
             </div>
           </div>
         </div>
 
         {/* Monthly Cost */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <DollarSign className="h-8 w-8 text-green-600" />
+              <DollarSign className="h-8 w-8 text-emerald-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">Monthly Cost</dt>
-                <dd className="text-lg font-medium text-gray-900">₹{stats.monthlyCost}</dd>
+                <dt className="text-sm font-medium text-gray-300 truncate">Monthly Cost</dt>
+                <dd className="text-lg font-medium text-white">₹{stats.monthlyCost}</dd>
               </dl>
             </div>
           </div>
         </div>
 
         {/* Active Devices */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <Activity className="h-8 w-8 text-blue-600" />
+              <Activity className="h-8 w-8 text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">Active Devices</dt>
-                <dd className="text-lg font-medium text-gray-900">{stats.devicesActive}</dd>
+                <dt className="text-sm font-medium text-gray-300 truncate">Active Devices</dt>
+                <dd className="text-lg font-medium text-white">{stats.devicesActive}</dd>
               </dl>
             </div>
           </div>
         </div>
 
         {/* Efficiency Score */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <Award className="h-8 w-8 text-purple-600" />
+              <Award className="h-8 w-8 text-purple-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">Efficiency Score</dt>
-                <dd className="text-lg font-medium text-gray-900">{stats.efficiencyScore}%</dd>
+                <dt className="text-sm font-medium text-gray-300 truncate">Efficiency Score</dt>
+                <dd className="text-lg font-medium text-white">{stats.efficiencyScore}%</dd>
               </dl>
             </div>
           </div>
@@ -301,10 +312,10 @@ export default function FullDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Usage Trends */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Energy Usage Trends</h3>
-            <div className="h-64 flex items-center justify-center text-gray-500">
-              <BarChart3 className="h-16 w-16 text-gray-300" />
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
+            <h3 className="text-lg font-medium text-white mb-4">Energy Usage Trends</h3>
+            <div className="h-64 flex items-center justify-center text-gray-400">
+              <BarChart3 className="h-16 w-16 text-gray-500" />
               <span className="ml-2">Chart visualization would go here</span>
             </div>
           </div>
@@ -312,18 +323,18 @@ export default function FullDashboardPage() {
 
         {/* Recent Alerts */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Alerts</h3>
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
+            <h3 className="text-lg font-medium text-white mb-4">Recent Alerts</h3>
             <div className="space-y-3">
               {alerts.slice(0, 3).map((alert) => (
                 <div key={alert.id} className="flex items-start space-x-3">
                   <AlertTriangle className={`h-5 w-5 mt-0.5 ${
-                    alert.severity === 'high' ? 'text-red-500' : 
-                    alert.severity === 'medium' ? 'text-yellow-500' : 'text-blue-500'
+                    alert.severity === 'high' ? 'text-red-400' : 
+                    alert.severity === 'medium' ? 'text-yellow-400' : 'text-blue-400'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">{alert.message}</p>
-                    <p className="text-xs text-gray-500">{new Date(alert.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm text-white">{alert.message}</p>
+                    <p className="text-xs text-gray-400">{new Date(alert.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
               ))}
@@ -331,29 +342,29 @@ export default function FullDashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
+            <h3 className="text-lg font-medium text-white mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <button 
                 onClick={() => router.push('/devices')}
-                className="w-full flex items-center justify-between p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50"
+                className="w-full flex items-center justify-between p-3 text-left bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-all duration-200"
               >
-                <span className="text-sm font-medium text-gray-900">Manage Devices</span>
-                <Zap className="h-4 w-4 text-gray-400" />
+                <span className="text-sm font-medium text-white">Manage Devices</span>
+                <Zap className="h-4 w-4 text-green-400" />
               </button>
               <button 
                 onClick={() => router.push('/analytics')}
-                className="w-full flex items-center justify-between p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50"
+                className="w-full flex items-center justify-between p-3 text-left bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-all duration-200"
               >
-                <span className="text-sm font-medium text-gray-900">View Analytics</span>
-                <BarChart3 className="h-4 w-4 text-gray-400" />
+                <span className="text-sm font-medium text-white">View Analytics</span>
+                <BarChart3 className="h-4 w-4 text-green-400" />
               </button>
               <button 
                 onClick={() => router.push('/automation')}
-                className="w-full flex items-center justify-between p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50"
+                className="w-full flex items-center justify-between p-3 text-left bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-all duration-200"
               >
-                <span className="text-sm font-medium text-gray-900">Set Automation</span>
-                <Target className="h-4 w-4 text-gray-400" />
+                <span className="text-sm font-medium text-white">Set Automation</span>
+                <Target className="h-4 w-4 text-green-400" />
               </button>
             </div>
           </div>
@@ -361,40 +372,40 @@ export default function FullDashboardPage() {
       </div>
 
       {/* Energy Goals */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Energy Goals</h3>
-          <button className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+          <h3 className="text-lg font-medium text-white">Energy Goals</h3>
+          <button className="inline-flex items-center px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black text-sm leading-4 font-medium rounded-lg transition-all duration-200">
             <Plus className="h-4 w-4 mr-2" />
             Add Goal
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {goals.slice(0, 3).map((goal) => (
-            <div key={goal.id} className="border border-gray-200 rounded-lg p-4">
+            <div key={goal.id} className="bg-white/10 border border-white/20 rounded-lg p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-900 capitalize">{goal.goal_type} Goal</span>
+                <span className="text-sm font-medium text-white capitalize">{goal.goal_type} Goal</span>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  goal.status === 'on_track' ? 'bg-green-100 text-green-800' : 
-                  goal.status === 'at_risk' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                  goal.status === 'on_track' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 
+                  goal.status === 'at_risk' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
                 }`}>
                   {goal.status.replace('_', ' ')}
                 </span>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Target:</span>
-                  <span className="text-gray-900">₹{goal.target_cost}</span>
+                  <span className="text-gray-300">Target:</span>
+                  <span className="text-white">₹{goal.target_cost}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Current:</span>
-                  <span className="text-gray-900">₹{goal.current_cost}</span>
+                  <span className="text-gray-300">Current:</span>
+                  <span className="text-white">₹{goal.current_cost}</span>
                 </div>
               </div>
               <div className="mt-3">
-                <div className="bg-gray-200 rounded-full h-2">
+                <div className="bg-white/20 rounded-full h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full" 
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full" 
                     style={{ width: `${Math.min((goal.current_cost / goal.target_cost) * 100, 100)}%` }}
                   ></div>
                 </div>
@@ -405,24 +416,25 @@ export default function FullDashboardPage() {
       </div>
 
       {/* Efficiency Tips */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Efficiency Tips</h3>
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 className="text-lg font-medium text-white mb-4">Efficiency Tips</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {deviceCategories.slice(0, 3).map((category) => (
-            <div key={category.id} className="border border-gray-200 rounded-lg p-4">
+            <div key={category.id} className="bg-white/10 border border-white/20 rounded-lg p-4 backdrop-blur-sm">
               <div className="flex items-center mb-3">
-                <Lightbulb className="h-5 w-5 text-yellow-500 mr-2" />
-                <span className="text-sm font-medium text-gray-900">{category.name}</span>
+                <Lightbulb className="h-5 w-5 text-yellow-400 mr-2" />
+                <span className="text-sm font-medium text-white">{category.name}</span>
               </div>
               <ul className="space-y-1">
                 {category.efficiency_tips.slice(0, 2).map((tip, index) => (
-                  <li key={index} className="text-xs text-gray-600">• {tip}</li>
+                  <li key={index} className="text-xs text-gray-300">• {tip}</li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
       </div>
+    </div>
     </div>
   )
 }

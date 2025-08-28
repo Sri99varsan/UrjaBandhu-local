@@ -256,84 +256,92 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="mt-2 text-gray-600">
-            Manage your account settings and preferences
-          </p>
-        </div>
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
 
-        <div className="lg:grid lg:grid-cols-12 lg:gap-x-5">
-          {/* Sidebar */}
-          <aside className="py-6 px-2 sm:px-6 lg:py-0 lg:px-0 lg:col-span-3">
-            <nav className="space-y-1">
-              {tabs.map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`group rounded-md px-3 py-2 flex items-center text-sm font-medium w-full text-left ${
-                      activeTab === tab.id
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-900 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5 mr-3" />
-                    {tab.name}
-                  </button>
-                )
-              })}
-            </nav>
-          </aside>
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white">Settings</h1>
+            <p className="mt-2 text-gray-300">
+              Manage your account settings and preferences
+            </p>
+          </div>
 
-          {/* Main Content */}
-          <div className="space-y-6 sm:px-6 lg:px-0 lg:col-span-9">
-            <div className="bg-white shadow rounded-lg">
-              <div className="py-6 px-4 sm:p-6">
-                {/* Profile Tab */}
-                {activeTab === 'profile' && (
-                  <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Profile Information</h3>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input
-                          type="text"
-                          value={profile.full_name}
-                          onChange={(e) => updateProfile({ full_name: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input
-                          type="email"
-                          value={profile.email}
-                          disabled
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-500"
-                        />
-                        <p className="mt-1 text-xs text-gray-500">Email cannot be changed here</p>
+          <div className="lg:grid lg:grid-cols-12 lg:gap-x-5">
+            {/* Sidebar */}
+            <aside className="py-6 px-2 sm:px-6 lg:py-0 lg:px-0 lg:col-span-3">
+              <nav className="space-y-1">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`group rounded-lg px-3 py-2 flex items-center text-sm font-medium w-full text-left transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? 'bg-white/10 backdrop-blur-md border border-green-500/30 text-green-400'
+                          : 'text-gray-300 hover:text-green-400 hover:bg-white/5 border border-transparent'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 mr-3" />
+                      {tab.name}
+                    </button>
+                  )
+                })}
+              </nav>
+            </aside>
+
+            {/* Main Content */}
+            <div className="space-y-6 sm:px-6 lg:px-0 lg:col-span-9">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl">
+                <div className="py-6 px-4 sm:p-6">
+                  {/* Profile Tab */}
+                  {activeTab === 'profile' && (
+                    <div>
+                      <h3 className="text-lg leading-6 font-medium text-white mb-6">Profile Information</h3>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300">Full Name</label>
+                          <input
+                            type="text"
+                            value={profile.full_name}
+                            onChange={(e) => updateProfile({ full_name: e.target.value })}
+                            className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300">Email</label>
+                          <input
+                            type="email"
+                            value={profile.email}
+                            disabled
+                            className="mt-1 block w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-2 text-gray-400 cursor-not-allowed"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">Email cannot be changed here</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Notifications Tab */}
                 {activeTab === 'notifications' && (
                   <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Notification Preferences</h3>
+                    <h3 className="text-lg leading-6 font-medium text-white mb-6">Notification Preferences</h3>
                     <div className="space-y-4">
                       {Object.entries(profile.notification_preferences).map(([key, value]) => (
                         <div key={key} className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-gray-900 capitalize">
+                            <p className="text-sm font-medium text-white capitalize">
                               {key.replace(/_/g, ' ')}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-400">
                               {key === 'email_alerts' && 'Receive email notifications for important alerts'}
                               {key === 'push_notifications' && 'Receive push notifications on your device'}
                               {key === 'energy_tips' && 'Get energy saving tips and recommendations'}
@@ -342,8 +350,8 @@ export default function SettingsPage() {
                           </div>
                           <button
                             onClick={() => updateNotificationPreferences(key, !value)}
-                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              value ? 'bg-blue-600' : 'bg-gray-200'
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black ${
+                              value ? 'bg-green-600' : 'bg-white/20'
                             }`}
                           >
                             <span
@@ -361,14 +369,14 @@ export default function SettingsPage() {
                 {/* Preferences Tab */}
                 {activeTab === 'preferences' && (
                   <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">App Preferences</h3>
+                    <h3 className="text-lg leading-6 font-medium text-white mb-6">App Preferences</h3>
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Theme</label>
+                        <label className="block text-sm font-medium text-gray-300">Theme</label>
                         <select
                           value={profile.theme}
                           onChange={(e) => updateProfile({ theme: e.target.value as 'light' | 'dark' | 'system' })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         >
                           <option value="light">Light</option>
                           <option value="dark">Dark</option>
@@ -376,28 +384,28 @@ export default function SettingsPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Language</label>
+                        <label className="block text-sm font-medium text-gray-300">Language</label>
                         <select
                           value={profile.language}
                           onChange={(e) => updateProfile({ language: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         >
-                          <option value="en">English</option>
-                          <option value="hi">हिंदी (Hindi)</option>
-                          <option value="bn">বাংলা (Bengali)</option>
-                          <option value="te">తెలుగు (Telugu)</option>
-                          <option value="mr">मराठी (Marathi)</option>
-                          <option value="ta">தமிழ் (Tamil)</option>
-                          <option value="gu">ગુજરાતી (Gujarati)</option>
+                          <option value="en" className="bg-gray-800 text-white">English</option>
+                          <option value="hi" className="bg-gray-800 text-white">हिंदी (Hindi)</option>
+                          <option value="bn" className="bg-gray-800 text-white">বাংলা (Bengali)</option>
+                          <option value="te" className="bg-gray-800 text-white">తెలుగు (Telugu)</option>
+                          <option value="mr" className="bg-gray-800 text-white">मराठी (Marathi)</option>
+                          <option value="ta" className="bg-gray-800 text-white">தமிழ் (Tamil)</option>
+                          <option value="gu" className="bg-gray-800 text-white">ગુજરાતી (Gujarati)</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Timezone</label>
+                        <label className="block text-sm font-medium text-gray-300">Timezone</label>
                         <input
                           type="text"
                           value={profile.timezone}
                           onChange={(e) => updateProfile({ timezone: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         />
                       </div>
                     </div>
@@ -407,51 +415,53 @@ export default function SettingsPage() {
                 {/* Energy Settings Tab */}
                 {activeTab === 'energy' && (
                   <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Energy Settings</h3>
+                    <h3 className="text-lg leading-6 font-medium text-white mb-6">Energy Settings</h3>
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Energy Rate (per kWh)</label>
+                        <label className="block text-sm font-medium text-gray-300">Energy Rate (per kWh)</label>
                         <div className="mt-1 relative">
                           <input
                             type="number"
                             step="0.01"
                             value={profile.energy_rate}
                             onChange={(e) => updateProfile({ energy_rate: parseFloat(e.target.value) || 0 })}
-                            className="block w-full border border-gray-300 rounded-md px-3 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                           />
                           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500 sm:text-sm">₹</span>
+                            <span className="text-gray-400 sm:text-sm">₹</span>
                           </div>
                         </div>
                         <p className="mt-1 text-xs text-gray-500">This rate is used to calculate your energy costs</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Currency</label>
+                        <label className="block text-sm font-medium text-gray-300">Currency</label>
                         <select
                           value={profile.currency}
                           onChange={(e) => updateProfile({ currency: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         >
-                          <option value="INR">Indian Rupee (₹)</option>
-                          <option value="USD">US Dollar ($)</option>
-                          <option value="EUR">Euro (€)</option>
-                          <option value="GBP">British Pound (£)</option>
+                          <option value="INR" className="bg-gray-800 text-white">Indian Rupee (₹)</option>
+                          <option value="USD" className="bg-gray-800 text-white">US Dollar ($)</option>
+                          <option value="EUR" className="bg-gray-800 text-white">Euro (€)</option>
+                          <option value="GBP" className="bg-gray-800 text-white">British Pound (£)</option>
                         </select>
                       </div>
                     </div>
                   </div>
                 )}
+
+                </div>
               </div>
 
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end">
+              <div className="bg-white/10 backdrop-blur-sm border-t border-white/20 px-4 py-3 sm:px-6 flex justify-end">
                 <button
                   onClick={saveProfile}
                   disabled={saving}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-medium rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50"
                 >
                   {saving ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2"></div>
                       Saving...
                     </>
                   ) : (

@@ -13,8 +13,9 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
   const { user, loading } = useAuth()
   const pathname = usePathname()
 
-  // Don't show any navigation on auth pages
+  // Don't show any navigation on auth pages or homepage
   const isAuthPage = pathname?.startsWith('/auth')
+  const isHomePage = pathname === '/'
   
   if (loading) {
     return (
@@ -24,20 +25,25 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
     )
   }
 
-  if (isAuthPage) {
-    // Auth pages get no navigation
+  if (isAuthPage || isHomePage) {
+    // Auth pages and homepage get no navigation
     return <>{children}</>
   }
 
   if (user) {
     // Authenticated users get sidebar layout
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-black relative">
+        {/* Background effects */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        </div>
+        
         <AuthenticatedSidebar />
         
         {/* Main content area with sidebar offset */}
         <div className="lg:pl-72">
-          <main className="min-h-screen">
+          <main className="min-h-screen relative">
             {children}
           </main>
         </div>
