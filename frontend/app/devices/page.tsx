@@ -21,7 +21,7 @@ import DeviceDetectionModal from '@/components/device-detection/DeviceDetectionM
 interface Device {
   id: string
   name: string
-  device_type: string
+  device_type?: string
   power_rating: number
   current_consumption: number
   status: 'active' | 'inactive'
@@ -207,7 +207,7 @@ export default function DevicesPage() {
     setEditingDevice(device)
     setFormData({
       name: device.name,
-      device_type: device.device_type,
+      device_type: device.device_type || '',
       power_rating: device.power_rating.toString(),
       location: device.location,
       status: device.status
@@ -239,7 +239,9 @@ export default function DevicesPage() {
     toast.success(`Device detected: ${detectedDevice.device_name}`)
   }
 
-  const getDeviceIcon = (type: string) => {
+  const getDeviceIcon = (type: string | undefined) => {
+    if (!type) return '⚡'
+    
     switch (type.toLowerCase()) {
       case 'lighting':
         return '💡'

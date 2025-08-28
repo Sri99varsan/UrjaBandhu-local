@@ -12,10 +12,17 @@ import {
   Activity,
   Lightbulb,
   Home,
-  LogOut
+  LogOut,
+  Target,
+  Bell,
+  AlertTriangle,
+  TrendingUp,
+  Award,
+  Plus
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
+import { enhancedAnalyticsService, energyGoalService, energyAlertService, deviceCategoryService } from '@/lib/database'
 
 interface DashboardStats {
   currentConsumption: number
@@ -24,6 +31,37 @@ interface DashboardStats {
   devicesActive: number
   efficiencyScore: number
   savingsPotential: number
+  // Phase 2 additions
+  totalDevices: number
+  activeGoals: number
+  unreadAlerts: number
+  savings: number
+  thisMonth: {
+    consumption: number
+    cost: number
+    savings: number
+  }
+}
+
+interface EnergyGoal {
+  id: string
+  goal_type: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  target_consumption: number
+  target_cost: number
+  current_consumption: number
+  current_cost: number
+  start_date: string
+  end_date: string
+}
+
+interface EnergyAlert {
+  id: string
+  alert_type: string
+  title: string
+  message: string
+  priority: 'high' | 'medium' | 'low'
+  is_read: boolean
+  created_at: string
 }
 
 interface Device {
@@ -43,6 +81,10 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [devices, setDevices] = useState<Device[]>([])
   const [loadingData, setLoadingData] = useState(true)
+  // Phase 2 additions
+  const [energyGoals, setEnergyGoals] = useState<EnergyGoal[]>([])
+  const [recentAlerts, setRecentAlerts] = useState<EnergyAlert[]>([])
+  const [showGoalModal, setShowGoalModal] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -134,7 +176,17 @@ export default function DashboardPage() {
         monthlyCost: Math.round(monthlyCost * 100) / 100,
         devicesActive: activeDevices,
         efficiencyScore: Math.round(avgEfficiency),
-        savingsPotential: Math.round(savingsPotential * 100) / 100
+        savingsPotential: Math.round(savingsPotential * 100) / 100,
+        // Phase 2 additions
+        totalDevices: devicesData?.length || 0,
+        activeGoals: 0,
+        unreadAlerts: 0,
+        savings: 0,
+        thisMonth: {
+          consumption: Math.round(monthlyUsage * 100) / 100,
+          cost: Math.round(monthlyCost * 100) / 100,
+          savings: 0
+        }
       })
 
     } catch (error) {
@@ -148,7 +200,17 @@ export default function DashboardPage() {
         monthlyCost: 3840.50,
         devicesActive: 8,
         efficiencyScore: 85,
-        savingsPotential: 15.2
+        savingsPotential: 15.2,
+        // Phase 2 additions
+        totalDevices: 12,
+        activeGoals: 2,
+        unreadAlerts: 3,
+        savings: 285.50,
+        thisMonth: {
+          consumption: 456.78,
+          cost: 3840.50,
+          savings: 285.50
+        }
       })
 
       setDevices([

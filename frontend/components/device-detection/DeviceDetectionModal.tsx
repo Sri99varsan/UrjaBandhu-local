@@ -68,25 +68,16 @@ export default function DeviceDetectionModal({
         throw new Error('Image size must be less than 5MB')
       }
 
-      // Upload image to Supabase Storage
-      const fileName = `device-images/${user.id}/${Date.now()}-${file.name}`
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('device-images')
-        .upload(fileName, file)
-
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`)
+      // Convert file to base64 for processing
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const imageData = e.target?.result as string
+        setUploadedImage(imageData)
+        
+        // Automatically start device detection
+        await performDeviceDetection(imageData)
       }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('device-images')
-        .getPublicUrl(fileName)
-
-      setUploadedImage(publicUrl)
-      
-      // Automatically start device detection
-      await performDeviceDetection(publicUrl)
+      reader.readAsDataURL(file)
 
     } catch (error) {
       console.error('Upload error:', error)
@@ -97,24 +88,29 @@ export default function DeviceDetectionModal({
     }
   }
 
-  const performDeviceDetection = async (imageUrl: string) => {
+  const performDeviceDetection = async (imageData: string) => {
     if (!user) return
 
     try {
       setIsDetecting(true)
       setError(null)
 
-      // Call the Supabase Edge Function for device detection
-      const { data, error } = await supabase.functions.invoke('ocr-device-detection', {
-        body: {
-          image_url: imageUrl,
+      // Call our API route which handles the OCR processing
+      const response = await fetch('/api/ocr-detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_data: imageData,
           user_id: user.id
-        }
+        })
       })
 
-      if (error) {
-        throw new Error(`Detection failed: ${error.message}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Detection failed')
       }
+
+      const data = await response.json()
 
       if (data.device_matches && data.device_matches.length > 0) {
         setDetectionResult(data)
