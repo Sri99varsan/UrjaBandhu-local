@@ -13,7 +13,8 @@ import {
   LogOut,
   Menu,
   X,
-  Database
+  Database,
+  Bot
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Devices', href: '/devices', icon: Zap },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Automation', href: '/automation', icon: Bot },
   { name: 'Test Database', href: '/test-database', icon: Database },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
