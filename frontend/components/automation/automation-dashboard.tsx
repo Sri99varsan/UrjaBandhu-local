@@ -158,8 +158,11 @@ export function AutomationDashboard({ userId }: AutomationDashboardProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center h-64 bg-black/20 rounded-lg backdrop-blur-sm border border-white/10">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-white">Loading automation...</span>
+        </div>
       </div>
     )
   }

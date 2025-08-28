@@ -131,23 +131,30 @@ export default function AuthCallbackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-electricity-50 to-energy-50 flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto p-6">
+    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+      
+      <div className="relative z-10 text-center max-w-md mx-auto p-6">
         <div className="flex items-center justify-center mb-6">
-          <div className="w-12 h-12 border-4 border-electricity-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        <h2 className="text-xl font-semibold text-white mb-2">
           {status.includes('successful') ? '🎉 Success!' : 'Completing Sign In'}
         </h2>
-        <p className="text-gray-600 mb-4">{status}</p>
-        <div className="text-sm text-gray-500">
+        <p className="text-gray-300 mb-4">{status}</p>
+        <div className="text-sm text-gray-400">
           <p>Please wait, this may take a few moments...</p>
         </div>
         
         {/* Progress indicator */}
         <div className="mt-6">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-electricity-600 h-2 rounded-full animate-pulse" style={{width: isLoading ? '60%' : '100%'}}></div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="bg-green-500 h-2 rounded-full animate-pulse" style={{width: isLoading ? '60%' : '100%'}}></div>
           </div>
         </div>
       </div>

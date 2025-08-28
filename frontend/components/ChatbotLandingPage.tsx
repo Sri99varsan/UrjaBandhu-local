@@ -117,10 +117,15 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.15),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0deg,rgba(14,165,233,0.05)_360deg)]" />
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-600/5 rounded-full blur-[100px]" />
+      </div>
+      <div className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0deg,rgba(34,197,94,0.05)_360deg)]" />
       
       {/* Main Container */}
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
@@ -152,7 +157,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                 
                 {/* Main Text */}
                 <motion.div 
-                  className="relative bg-slate-800/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl px-8 py-6 shadow-2xl"
+                  className="relative bg-black/80 backdrop-blur-sm border border-white/20 rounded-2xl px-8 py-6 shadow-2xl"
                   initial={{ rotateX: -15 }}
                   animate={{ rotateX: 0 }}
                   transition={{ duration: 1, ease: "easeOut" }}
@@ -165,7 +170,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                   >
                     Let's make{' '}
                     <motion.span 
-                      className="bg-gradient-to-r from-orange-400 via-red-400 to-orange-400 bg-clip-text text-transparent"
+                      className="bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 bg-clip-text text-transparent"
                       animate={{ 
                         backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                       }}
@@ -193,24 +198,24 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Avatar className="h-12 w-12 border-2 border-blue-400/50">
-                    <AvatarFallback className="bg-blue-500 text-white font-semibold">
+                  <Avatar className="h-12 w-12 border-2 border-green-400/50">
+                    <AvatarFallback className="bg-green-500 text-black font-semibold">
                       {user?.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </motion.div>
                 
                 <motion.div 
-                  className="flex items-center gap-2 bg-slate-800/60 backdrop-blur-sm border border-slate-600/50 rounded-full px-6 py-3 min-w-[300px]"
+                  className="flex items-center gap-2 bg-black/60 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 min-w-[300px]"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <Brain className="h-5 w-5 text-blue-400" />
-                  <span className="text-slate-300 flex-1">Initializing energy analysis...</span>
+                  <Brain className="h-5 w-5 text-green-400" />
+                  <span className="text-gray-300 flex-1">Initializing energy analysis...</span>
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   >
-                    <Sparkles className="h-4 w-4 text-orange-400" />
+                    <Sparkles className="h-4 w-4 text-green-400" />
                   </motion.div>
                 </motion.div>
               </motion.div>
@@ -253,8 +258,8 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                     >
                       <Card 
                         className={cn(
-                          "bg-slate-800/60 backdrop-blur-sm border transition-all duration-500",
-                          isActive ? "border-blue-400/50 shadow-lg shadow-blue-400/20" : "border-slate-700/50",
+                          "bg-black/60 backdrop-blur-sm border transition-all duration-500",
+                          isActive ? "border-green-400/50 shadow-lg shadow-green-400/20" : "border-white/20",
                           isCompleted && "border-green-400/50"
                         )}
                       >
@@ -267,13 +272,13 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                             <motion.div 
                               className={cn(
                                 "flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
-                                isCompleted ? "bg-green-500" : isActive ? "bg-blue-500" : "bg-slate-700"
+                                isCompleted ? "bg-green-500" : isActive ? "bg-green-500" : "bg-gray-700"
                               )}
                               animate={isActive ? { 
                                 boxShadow: [
-                                  "0 0 0 0 rgba(59, 130, 246, 0.7)",
-                                  "0 0 0 10px rgba(59, 130, 246, 0)",
-                                  "0 0 0 0 rgba(59, 130, 246, 0)"
+                                  "0 0 0 0 rgba(34, 197, 94, 0.7)",
+                                  "0 0 0 10px rgba(34, 197, 94, 0)",
+                                  "0 0 0 0 rgba(34, 197, 94, 0)"
                                 ]
                               } : {}}
                               transition={{ duration: 1.5, repeat: Infinity }}
@@ -305,17 +310,17 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                                 animate={{ opacity: 1 }}
                               >
                                 <motion.div 
-                                  className="w-2 h-2 bg-blue-400 rounded-full"
+                                  className="w-2 h-2 bg-green-400 rounded-full"
                                   animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                                   transition={{ duration: 1, repeat: Infinity, delay: 0 }}
                                 />
                                 <motion.div 
-                                  className="w-2 h-2 bg-blue-400 rounded-full"
+                                  className="w-2 h-2 bg-green-400 rounded-full"
                                   animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                                   transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
                                 />
                                 <motion.div 
-                                  className="w-2 h-2 bg-blue-400 rounded-full"
+                                  className="w-2 h-2 bg-green-400 rounded-full"
                                   animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                                   transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
                                 />
@@ -383,13 +388,13 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                       transition: { duration: 0.3 }
                     }}
                   >
-                    <Card className="bg-slate-800/60 backdrop-blur-sm border border-slate-700/50">
+                    <Card className="bg-black/60 backdrop-blur-sm border border-white/20">
                       <CardContent className="p-4 text-center">
                         <motion.div
                           whileHover={{ rotate: 10 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <Icon className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                          <Icon className="h-8 w-8 text-green-400 mx-auto mb-2" />
                         </motion.div>
                         <h3 className="text-lg font-semibold text-white">{step.value}</h3>
                         <p className="text-slate-400 text-sm">{step.title}</p>
@@ -406,7 +411,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.8 }}
             >
-              <Card className="bg-slate-800/80 backdrop-blur-sm border border-slate-700/50">
+              <Card className="bg-black/80 backdrop-blur-sm border border-white/20">
                 <CardContent className="p-6">
                   <motion.div 
                     className="flex items-start gap-4 mb-6"
@@ -415,21 +420,21 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                     transition={{ delay: 1.4, duration: 0.6 }}
                   >
                     <motion.div 
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"
                       animate={{ 
                         boxShadow: [
-                          "0 0 0 0 rgba(59, 130, 246, 0.4)",
-                          "0 0 0 8px rgba(59, 130, 246, 0)",
-                          "0 0 0 0 rgba(59, 130, 246, 0)"
+                          "0 0 0 0 rgba(34, 197, 94, 0.4)",
+                          "0 0 0 8px rgba(34, 197, 94, 0)",
+                          "0 0 0 0 rgba(34, 197, 94, 0)"
                         ]
                       }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <Brain className="h-5 w-5 text-white" />
+                      <Brain className="h-5 w-5 text-black" />
                     </motion.div>
                     <div className="flex-1">
                       <motion.div 
-                        className="bg-slate-700/50 rounded-lg p-4 mb-4"
+                        className="bg-gray-800/50 rounded-lg p-4 mb-4"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 1.6, duration: 0.5 }}
@@ -442,7 +447,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                         >
                           {initialQuery ? (
                             <>
-                              Great question: "<em className="text-blue-300">{initialQuery}</em>" <br/><br/>
+                              Great question: "<em className="text-green-300">{initialQuery}</em>" <br/><br/>
                               I've analyzed your energy usage in response to your query. Your current consumption is <strong>2.4 kWh today</strong> 
                               with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you'll spend 
                               <strong> ₹380 by month-end</strong>. Let me provide specific insights related to your question.
@@ -470,7 +475,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="bg-slate-700/50 border-slate-600 hover:bg-slate-600 text-white"
+                        className="bg-gray-800/50 border-white/20 hover:bg-gray-700 text-white"
                       >
                         Show savings tips
                       </Button>
@@ -479,7 +484,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="bg-slate-700/50 border-slate-600 hover:bg-slate-600 text-white"
+                        className="bg-gray-800/50 border-white/20 hover:bg-gray-700 text-white"
                       >
                         Device breakdown
                       </Button>
@@ -488,7 +493,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="bg-slate-700/50 border-slate-600 hover:bg-slate-600 text-white"
+                        className="bg-gray-800/50 border-white/20 hover:bg-gray-700 text-white"
                         onClick={navigateToFullDashboard}
                       >
                         Full dashboard
@@ -503,20 +508,20 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 2.2, duration: 0.6 }}
                   >
-                    <div className="flex-1 flex items-center gap-2 bg-slate-700/50 rounded-lg px-4 py-3">
+                    <div className="flex-1 flex items-center gap-2 bg-gray-800/50 rounded-lg px-4 py-3">
                       <input 
                         type="text" 
                         placeholder="Ask me anything about your energy usage..."
-                        className="flex-1 bg-transparent text-white placeholder-slate-400 outline-none"
+                        className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
                       />
                       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                         <Button size="sm" variant="ghost" className="p-1">
-                          <Mic className="h-4 w-4 text-blue-400" />
+                          <Mic className="h-4 w-4 text-green-400" />
                         </Button>
                       </motion.div>
                     </div>
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
+                      <Button size="sm" className="bg-green-500 hover:bg-green-600">
                         <Send className="h-4 w-4" />
                       </Button>
                     </motion.div>
@@ -534,7 +539,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     onClick={navigateToFullDashboard}
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold shadow-lg shadow-green-500/25"
                   >
                     Continue to Full Dashboard
                     <ArrowRight className="ml-2 h-4 w-4" />
