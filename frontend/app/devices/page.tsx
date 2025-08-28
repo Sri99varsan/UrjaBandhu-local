@@ -17,6 +17,7 @@ import {
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import DashboardNavigation from '@/components/navigation/DashboardNavigation'
+import DeviceDetectionModal from '@/components/device-detection/DeviceDetectionModal'
 
 interface Device {
   id: string
@@ -37,6 +38,7 @@ export default function DevicesPage() {
   const [devices, setDevices] = useState<Device[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showDetectionModal, setShowDetectionModal] = useState(false)
   const [editingDevice, setEditingDevice] = useState<Device | null>(null)
   const [formData, setFormData] = useState({
     name: '',
@@ -225,6 +227,19 @@ export default function DevicesPage() {
     })
   }
 
+  const handleDeviceDetected = (detectedDevice: any) => {
+    // Pre-fill the form with detected device information
+    setFormData({
+      name: detectedDevice.device_name,
+      device_type: detectedDevice.device_type,
+      power_rating: detectedDevice.power_rating.toString(),
+      location: '',
+      status: 'active'
+    })
+    setShowAddModal(true)
+    toast.success(`Device detected: ${detectedDevice.device_name}`)
+  }
+
   const getDeviceIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'lighting':
@@ -264,13 +279,22 @@ export default function DevicesPage() {
                 Monitor and manage your electrical devices
               </p>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Device
-            </button>
+            <div className="mt-4 sm:mt-0 flex space-x-3">
+              <button
+                onClick={() => setShowDetectionModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-blue-600 rounded-md shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Detect Device
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Device
+              </button>
+            </div>
           </div>
         </div>
 
@@ -474,6 +498,13 @@ export default function DevicesPage() {
           </div>
         </div>
       )}
+
+      {/* Device Detection Modal */}
+      <DeviceDetectionModal
+        isOpen={showDetectionModal}
+        onClose={() => setShowDetectionModal(false)}
+        onDeviceDetected={handleDeviceDetected}
+      />
     </div>
   )
 }
