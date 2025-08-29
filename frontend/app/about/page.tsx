@@ -1,6 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase'
+import { Team } from '@/lib/supabase'
 import { 
   Zap, 
   Target, 
@@ -11,7 +14,11 @@ import {
   ChevronRight,
   TrendingUp,
   Shield,
-  Heart
+  Heart,
+  Linkedin,
+  Twitter,
+  Github,
+  Mail
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { Button } from '@/components/ui/button'
@@ -49,29 +56,33 @@ const values = [
   }
 ]
 
-const team = [
-  {
-    name: "Arunavo Roy",
-    role: "Co-Founder & CEO",
-    description: "Passionate about renewable energy and AI, leading the vision to democratize energy optimization.",
-    image: "/api/placeholder/150/150"
-  },
-  {
-    name: "Engineering Team",
-    role: "Development",
-    description: "Expert engineers building scalable AI solutions for energy management and optimization.",
-    image: "/api/placeholder/150/150"
-  },
-  {
-    name: "Data Science Team",
-    role: "AI & Analytics",
-    description: "Developing machine learning models for predictive analytics and energy pattern recognition.",
-    image: "/api/placeholder/150/150"
-  }
-]
-
 export default function AboutPage() {
   const router = useRouter()
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loadingTeams, setLoadingTeams] = useState(true)
+
+  useEffect(() => {
+    async function fetchTeams() {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('teams')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true })
+
+        if (!error && data) {
+          setTeams(data)
+        }
+      } catch (err) {
+        console.error('Error fetching teams:', err)
+      } finally {
+        setLoadingTeams(false)
+      }
+    }
+
+    fetchTeams()
+  }, [])
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -79,8 +90,8 @@ export default function AboutPage() {
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
         <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse animate-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/5 rounded-full blur-[120px] animate-pulse animate-delay-4000" />
       </div>
 
       {/* Navigation */}
@@ -266,33 +277,137 @@ export default function AboutPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {team.map((member, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loadingTeams ? (
+              // Loading skeleton
+              Array.from({ length: 6 }).map((_, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
+                  className="group"
+                >
+                  <Card className="h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl">
+                    <CardHeader className="text-center">
+                      <div className="w-24 h-24 bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                        <Users className="h-12 w-12 text-green-400" />
+                      </div>
+                      <div className="h-6 bg-gray-700/50 rounded animate-pulse mb-2"></div>
+                      <div className="h-4 bg-gray-700/30 rounded animate-pulse w-20 mx-auto"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-16 bg-gray-700/30 rounded animate-pulse"></div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            ) : teams.length > 0 ? (
+              teams.map((member, index) => (
+                <motion.div
+                  key={member.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
+                  className="group"
+                >
+                  <Card className="h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl hover:shadow-green-500/20 hover:border-green-500/30 transition-all duration-500 hover:bg-white/10">
+                    <CardHeader className="text-center">
+                      <div className="relative mx-auto mb-4 w-24 h-24">
+                        {member.image_url ? (
+                          <img
+                            src={member.image_url}
+                            alt={member.name}
+                            className="w-full h-full rounded-full object-cover border-4 border-green-400/20 group-hover:border-green-400/50 transition-all duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 flex items-center justify-center group-hover:from-green-400/30 group-hover:to-emerald-500/30 transition-all duration-300 shadow-lg shadow-green-500/10">
+                            <span className="text-lg font-bold text-green-400 group-hover:text-green-300">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <CardTitle className="text-lg font-semibold text-white group-hover:text-green-300 transition-colors duration-300">
+                        {member.name}
+                      </CardTitle>
+                      <div className="text-green-400 text-sm font-medium mb-2">{member.role}</div>
+                      {member.department && (
+                        <div className="text-gray-400 text-xs">{member.department}</div>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      {member.bio && (
+                        <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300 leading-relaxed text-center mb-4">
+                          {member.bio}
+                        </CardDescription>
+                      )}
+                      
+                      {/* Social Links */}
+                      <div className="flex justify-center space-x-2">
+                        {member.linkedin_url && (
+                          <a
+                            href={member.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`${member.name} on LinkedIn`}
+                            className="p-2 rounded-lg bg-slate-700/50 hover:bg-blue-600 transition-colors duration-200 text-gray-400 hover:text-white"
+                          >
+                            <Linkedin className="h-3 w-3" />
+                          </a>
+                        )}
+                        {member.twitter_url && (
+                          <a
+                            href={member.twitter_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`${member.name} on Twitter`}
+                            className="p-2 rounded-lg bg-slate-700/50 hover:bg-blue-400 transition-colors duration-200 text-gray-400 hover:text-white"
+                          >
+                            <Twitter className="h-3 w-3" />
+                          </a>
+                        )}
+                        {member.github_url && (
+                          <a
+                            href={member.github_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`${member.name} on GitHub`}
+                            className="p-2 rounded-lg bg-slate-700/50 hover:bg-gray-800 transition-colors duration-200 text-gray-400 hover:text-white"
+                          >
+                            <Github className="h-3 w-3" />
+                          </a>
+                        )}
+                        {member.email && (
+                          <a
+                            href={`mailto:${member.email}`}
+                            title={`Email ${member.name}`}
+                            className="p-2 rounded-lg bg-slate-700/50 hover:bg-green-600 transition-colors duration-200 text-gray-400 hover:text-white"
+                          >
+                            <Mail className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            ) : (
+              // Fallback when no team data
               <motion.div
-                key={member.name}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-                className="group"
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="col-span-full text-center py-12"
               >
-                <Card className="h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl hover:shadow-green-500/20 hover:border-green-500/30 transition-all duration-500 hover:bg-white/10">
-                  <CardHeader className="text-center">
-                    <div className="w-24 h-24 bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-green-400/30 group-hover:to-emerald-500/30 transition-all duration-300 shadow-lg shadow-green-500/10">
-                      <Users className="h-12 w-12 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
-                    </div>
-                    <CardTitle className="text-lg font-semibold text-white group-hover:text-green-300 transition-colors duration-300">
-                      {member.name}
-                    </CardTitle>
-                    <div className="text-green-400 text-sm font-medium">{member.role}</div>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300 leading-relaxed text-center">
-                      {member.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8">
+                  <Users className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                  <p className="text-gray-400 text-lg">
+                    Our team information will be available soon.
+                  </p>
+                </div>
               </motion.div>
-            ))}
+            )}
           </div>
         </motion.div>
 

@@ -4,6 +4,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import toast, { Toaster } from 'react-hot-toast'
 import { 
   Zap, 
   BarChart3, 
@@ -36,6 +37,16 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
   const { user } = useAuth()
   const router = useRouter()
   const [animationPhase, setAnimationPhase] = useState<'entrance' | 'analyzing' | 'results'>('entrance')
+  
+  // Chat state
+  const [inputMessage, setInputMessage] = useState('')
+  const [isListening, setIsListening] = useState(false)
+  const [chatMessages, setChatMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'bot'}>>([])
+  const [isProcessingMessage, setIsProcessingMessage] = useState(false)
+  
+  // Speech recognition
+  const [speechRecognition, setSpeechRecognition] = useState<any>(null)
+  
   const [analysisSteps, setAnalysisSteps] = useState<AnalysisStep[]>([
     {
       id: 'power-usage',
@@ -116,13 +127,128 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
     router.push('/dashboard-full')
   }
 
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition()
+        recognition.continuous = false
+        recognition.interimResults = false
+        recognition.lang = 'en-US'
+        
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript
+          setInputMessage(transcript)
+          setIsListening(false)
+          toast.success('✅ Speech captured successfully!')
+        }
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error)
+          setIsListening(false)
+          toast.error('❌ Speech recognition failed. Please try again.')
+        }
+        
+        recognition.onend = () => {
+          setIsListening(false)
+        }
+        
+        setSpeechRecognition(recognition)
+      }
+    }
+  }, [])
+
+  // Handle text input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputMessage(e.target.value)
+  }
+
+  // Handle sending message
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isProcessingMessage) return
+    
+    const userMessage = {
+      id: Date.now().toString(),
+      text: inputMessage,
+      sender: 'user' as const
+    }
+    
+    setChatMessages(prev => [...prev, userMessage])
+    setIsProcessingMessage(true)
+    
+    // Clear input
+    const messageText = inputMessage
+    setInputMessage('')
+    
+    try {
+      // Call the chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: messageText }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to get response')
+      }
+      
+      const data = await response.json()
+      
+      const botResponse = {
+        id: (Date.now() + 1).toString(),
+        text: data.response,
+        sender: 'bot' as const
+      }
+      
+      setChatMessages(prev => [...prev, botResponse])
+    } catch (error) {
+      console.error('Chat error:', error)
+      const errorResponse = {
+        id: (Date.now() + 1).toString(),
+        text: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        sender: 'bot' as const
+      }
+      setChatMessages(prev => [...prev, errorResponse])
+      toast.error('Failed to send message. Please try again.')
+    } finally {
+      setIsProcessingMessage(false)
+    }
+  }
+
+  // Handle key press in input
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSendMessage()
+    }
+  }
+
+  // Toggle speech recognition
+  const toggleSpeechRecognition = () => {
+    if (!speechRecognition) {
+      toast.error('Speech recognition is not supported in your browser. Please use Chrome or Edge.')
+      return
+    }
+    
+    if (isListening) {
+      speechRecognition.stop()
+      setIsListening(false)
+    } else {
+      toast.success('🎤 Listening... Speak now!')
+      speechRecognition.start()
+      setIsListening(true)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
         <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-600/5 rounded-full blur-[100px]" />
       </div>
       <div className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0deg,rgba(34,197,94,0.05)_360deg)]" />
@@ -501,6 +627,63 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                     </motion.div>
                   </motion.div>
                   
+                  {/* Chat Messages Display */}
+                  {chatMessages.length > 0 && (
+                    <motion.div 
+                      className="mb-4 max-h-64 overflow-y-auto space-y-3"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      {chatMessages.map((message) => (
+                        <motion.div
+                          key={message.id}
+                          initial={{ opacity: 0, x: message.sender === 'user' ? 50 : -50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`max-w-[80%] p-3 rounded-lg ${
+                            message.sender === 'user' 
+                              ? 'bg-green-500 text-black' 
+                              : 'bg-gray-800/50 text-white'
+                          }`}>
+                            <p className="text-sm">{message.text}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                      {isProcessingMessage && (
+                        <motion.div
+                          initial={{ opacity: 0, x: -50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex justify-start"
+                        >
+                          <div className="bg-gray-800/50 text-white p-3 rounded-lg">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex space-x-1">
+                                <motion.div 
+                                  className="w-2 h-2 bg-green-400 rounded-full"
+                                  animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                />
+                                <motion.div 
+                                  className="w-2 h-2 bg-green-400 rounded-full"
+                                  animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                                />
+                                <motion.div 
+                                  className="w-2 h-2 bg-green-400 rounded-full"
+                                  animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                                />
+                              </div>
+                              <span className="text-sm text-gray-400">AI is thinking...</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  )}
+                  
                   {/* Input Area */}
                   <motion.div 
                     className="flex items-center gap-3"
@@ -512,16 +695,31 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                       <input 
                         type="text" 
                         placeholder="Ask me anything about your energy usage..."
-                        className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+                        value={inputMessage}
+                        onChange={handleInputChange}
+                        onKeyPress={handleKeyPress}
+                        disabled={isProcessingMessage}
+                        className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none disabled:opacity-50"
                       />
                       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                        <Button size="sm" variant="ghost" className="p-1">
-                          <Mic className="h-4 w-4 text-green-400" />
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className={`p-1 ${isListening ? 'bg-red-500/20' : ''}`}
+                          onClick={toggleSpeechRecognition}
+                          disabled={isProcessingMessage}
+                        >
+                          <Mic className={`h-4 w-4 ${isListening ? 'text-red-400' : 'text-green-400'}`} />
                         </Button>
                       </motion.div>
                     </div>
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button size="sm" className="bg-green-500 hover:bg-green-600">
+                      <Button 
+                        size="sm" 
+                        className="bg-green-500 hover:bg-green-600 disabled:opacity-50"
+                        onClick={handleSendMessage}
+                        disabled={!inputMessage.trim() || isProcessingMessage}
+                      >
                         <Send className="h-4 w-4" />
                       </Button>
                     </motion.div>
@@ -549,7 +747,32 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
             </motion.div>
           </motion.div>
         )}
-        </div>
       </div>
-    )
-  }
+      
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1f2937',
+            color: '#ffffff',
+            border: '1px solid rgba(34, 197, 94, 0.2)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#22c55e',
+              secondary: '#ffffff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#ffffff',
+            },
+          },
+        }}
+      />
+    </div>
+  )
+}
