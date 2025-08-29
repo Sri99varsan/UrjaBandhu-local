@@ -1,8 +1,9 @@
 'use client'
 
 import { useAuth } from '@/components/auth/AuthProvider'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { 
   Plus, 
   Edit3, 
@@ -47,18 +48,7 @@ export default function DevicesPage() {
     status: 'active' as 'active' | 'inactive'
   })
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth')
-      return
-    }
-
-    if (user) {
-      fetchDevices()
-    }
-  }, [user, loading, router])
-
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
     try {
       setLoadingData(true)
       const { data, error } = await supabase
@@ -79,7 +69,18 @@ export default function DevicesPage() {
     } finally {
       setLoadingData(false)
     }
-  }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth')
+      return
+    }
+
+    if (user) {
+      fetchDevices()
+    }
+  }, [user, loading, router, fetchDevices])
 
   const handleAddDevice = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -266,7 +267,7 @@ export default function DevicesPage() {
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
           <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
         </div>
         
         <div className="relative z-10 flex items-center space-x-3">
@@ -325,12 +326,16 @@ export default function DevicesPage() {
                     <button
                       onClick={() => openEditModal(device)}
                       className="text-gray-400 hover:text-gray-600"
+                      title="Edit device"
+                      aria-label="Edit device"
                     >
                       <Edit3 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteDevice(device.id)}
                       className="text-gray-400 hover:text-red-600"
+                      title="Delete device"
+                      aria-label="Delete device"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -371,18 +376,17 @@ export default function DevicesPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">Efficiency</span>
                     <div className="flex items-center">
-                      <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            device.efficiency_score >= 80
-                              ? 'bg-green-500'
-                              : device.efficiency_score >= 60
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                          }`}
-                          style={{ width: `${device.efficiency_score}%` }}
-                        ></div>
-                      </div>
+                      <ProgressBar 
+                        value={device.efficiency_score}
+                        className={`w-16 bg-gray-200 rounded-full h-2 mr-2`}
+                        barClassName={`h-2 rounded-full ${
+                          device.efficiency_score >= 80
+                            ? 'bg-green-500'
+                            : device.efficiency_score >= 60
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        }`}
+                      />
                       <span className="text-sm font-medium text-gray-900">{device.efficiency_score}%</span>
                     </div>
                   </div>
@@ -439,6 +443,8 @@ export default function DevicesPage() {
                       value={formData.device_type}
                       onChange={(e) => setFormData({ ...formData, device_type: e.target.value })}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      title="Select device type"
+                      aria-label="Select device type"
                     >
                       <option value="">Select Type</option>
                       <option value="lighting">Lighting</option>
@@ -481,6 +487,8 @@ export default function DevicesPage() {
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      title="Select device status"
+                      aria-label="Select device status"
                     >
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>

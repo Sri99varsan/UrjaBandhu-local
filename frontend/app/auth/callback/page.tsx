@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import ConsumerSetupModal from '@/components/auth/ConsumerSetupModal'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
@@ -10,6 +11,8 @@ export default function AuthCallbackPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState('Processing authentication...')
+  const [showConsumerSetup, setShowConsumerSetup] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -71,12 +74,12 @@ export default function AuthCallbackPage() {
               return
             }
             
-            // If no connections found, redirect to setup
+            // If no connections found, show setup modal
             if (!connections || connections.length === 0) {
-              setStatus('Setting up your account...')
-              setTimeout(() => {
-                window.location.href = '/setup/consumer-id'
-              }, 1500)
+              setStatus('Account setup required...')
+              setCurrentUserId(data.user.id)
+              setShowConsumerSetup(true)
+              setIsLoading(false)
             } else {
               setStatus('Redirecting to dashboard...')
               setTimeout(() => {
@@ -125,11 +128,12 @@ export default function AuthCallbackPage() {
               return
             }
             
-            // If no connections found, redirect to setup
+            // If no connections found, show setup modal
             if (!connections || connections.length === 0) {
-              setTimeout(() => {
-                window.location.href = '/setup/consumer-id'
-              }, 1000)
+              setStatus('Account setup required...')
+              setCurrentUserId(sessionData.session.user.id)
+              setShowConsumerSetup(true)
+              setIsLoading(false)
             } else {
               setTimeout(() => {
                 window.location.href = '/dashboard'
@@ -157,6 +161,20 @@ export default function AuthCallbackPage() {
     handleAuthCallback()
   }, [router, searchParams])
 
+  const handleConsumerSetupComplete = () => {
+    setShowConsumerSetup(false)
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 500)
+  }
+
+  const handleConsumerSetupSkip = () => {
+    setShowConsumerSetup(false)
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 500)
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-electricity-50 to-energy-50 flex items-center justify-center">
@@ -183,7 +201,7 @@ export default function AuthCallbackPage() {
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
         <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
       </div>
       
       <div className="relative z-10 text-center max-w-md mx-auto p-6">
@@ -201,10 +219,22 @@ export default function AuthCallbackPage() {
         {/* Progress indicator */}
         <div className="mt-6">
           <div className="w-full bg-gray-700 rounded-full h-2">
-            <div className="bg-green-500 h-2 rounded-full animate-pulse" style={{width: isLoading ? '60%' : '100%'}}></div>
+            <div 
+              className={`bg-green-500 h-2 rounded-full animate-pulse ${isLoading ? 'w-3/5' : 'w-full'}`}
+            ></div>
           </div>
         </div>
       </div>
+
+      {/* Consumer Setup Modal */}
+      {showConsumerSetup && currentUserId && (
+        <ConsumerSetupModal
+          isOpen={showConsumerSetup}
+          onComplete={handleConsumerSetupComplete}
+          onSkip={handleConsumerSetupSkip}
+          userId={currentUserId}
+        />
+      )}
     </div>
   )
 }

@@ -1,8 +1,9 @@
 'use client'
 
 import { useAuth } from '@/components/auth/AuthProvider'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -53,18 +54,7 @@ export default function AnalyticsPage() {
   const [avgEfficiency, setAvgEfficiency] = useState(0)
   const [peakDemand, setPeakDemand] = useState(0)
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth')
-      return
-    }
-
-    if (user) {
-      fetchAnalyticsData()
-    }
-  }, [user, loading, router, timeRange])
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoadingData(true)
       
@@ -186,7 +176,18 @@ export default function AnalyticsPage() {
     } finally {
       setLoadingData(false)
     }
-  }
+  }, [user?.id, timeRange])
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth')
+      return
+    }
+
+    if (user) {
+      fetchAnalyticsData()
+    }
+  }, [user, loading, router, timeRange, fetchAnalyticsData])
 
   const downloadReport = () => {
     const csvContent = [
@@ -216,7 +217,7 @@ export default function AnalyticsPage() {
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
           <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
         </div>
         
         <div className="relative z-10 flex items-center space-x-3">
@@ -244,6 +245,8 @@ export default function AnalyticsPage() {
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                title="Select time range for analytics"
+                aria-label="Select time range for analytics"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -333,12 +336,11 @@ export default function AnalyticsPage() {
                     <p className="text-xs text-gray-500">{device.total_consumption} kWh total</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(device.efficiency_score / 100) * 100}%` }}
-                      ></div>
-                    </div>
+                    <ProgressBar 
+                      value={device.efficiency_score}
+                      className="w-20 bg-gray-200 rounded-full h-2"
+                      barClassName="bg-blue-600 h-2 rounded-full"
+                    />
                     <span className="text-xs text-gray-600">{device.efficiency_score}%</span>
                   </div>
                 </div>

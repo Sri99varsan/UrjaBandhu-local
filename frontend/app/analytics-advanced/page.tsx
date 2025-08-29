@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { 
   LineChart, 
   Line, 
@@ -32,6 +32,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
+import { ProgressBar } from '@/components/ui/ProgressBar'
 import { advancedAnalyticsService, TimeSeriesData, ConsumptionPrediction, UsagePattern, DeviceAnalytics, EnergyInsight } from '@/lib/analytics-advanced'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -49,13 +50,7 @@ export default function AdvancedAnalyticsPage() {
   const [deviceAnalytics, setDeviceAnalytics] = useState<DeviceAnalytics[]>([])
   const [insights, setInsights] = useState<EnergyInsight[]>([])
 
-  useEffect(() => {
-    if (user?.id) {
-      loadAdvancedAnalytics()
-    }
-  }, [user?.id, timeRange])
-
-  const loadAdvancedAnalytics = async () => {
+  const loadAdvancedAnalytics = useCallback(async () => {
     if (!user?.id) return
 
     setLoading(true)
@@ -81,7 +76,13 @@ export default function AdvancedAnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id, timeRange])
+
+  useEffect(() => {
+    if (user?.id) {
+      loadAdvancedAnalytics()
+    }
+  }, [user?.id, timeRange, loadAdvancedAnalytics])
 
   // Prepare chart data
   const chartData = timeSeriesData.map(item => ({
@@ -143,7 +144,7 @@ export default function AdvancedAnalyticsPage() {
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
           <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
         </div>
         
         <div className="relative z-10 flex items-center justify-center min-h-screen">
@@ -172,6 +173,8 @@ export default function AdvancedAnalyticsPage() {
               value={timeRange} 
               onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d' | '1y')}
               className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
+              title="Select time range for analytics"
+              aria-label="Select time range for analytics"
             >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
@@ -425,12 +428,11 @@ export default function AdvancedAnalyticsPage() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <div className="w-20 h-2 bg-gray-200 rounded-full">
-                              <div 
-                                className="h-full bg-blue-500 rounded-full" 
-                                style={{ width: `${prediction.confidence * 100}%` }}
-                              ></div>
-                            </div>
+                            <ProgressBar 
+                              value={prediction.confidence * 100}
+                              className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden"
+                              barClassName="h-full bg-blue-500 rounded-full transition-all duration-300"
+                            />
                             <p className="text-xs text-gray-500 mt-1">
                               {(prediction.confidence * 100).toFixed(0)}% confidence
                             </p>
@@ -484,12 +486,11 @@ export default function AdvancedAnalyticsPage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <div className="w-24 h-2 bg-gray-200 rounded-full">
-                                <div 
-                                  className="h-full bg-blue-500 rounded-full" 
-                                  style={{ width: `${pattern.peak_probability * 100}%` }}
-                                ></div>
-                              </div>
+                              <ProgressBar 
+                                value={pattern.peak_probability * 100}
+                                className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden"
+                                barClassName="h-full bg-blue-500 rounded-full transition-all duration-300"
+                              />
                               <span className="text-sm font-medium w-12">
                                 {(pattern.peak_probability * 100).toFixed(0)}%
                               </span>
@@ -550,12 +551,11 @@ export default function AdvancedAnalyticsPage() {
                               {device.efficiency_score}%
                             </span>
                           </div>
-                          <div className="w-full h-2 bg-gray-200 rounded-full">
-                            <div 
-                              className="h-full bg-blue-500 rounded-full" 
-                              style={{ width: `${device.efficiency_score}%` }}
-                            ></div>
-                          </div>
+                          <ProgressBar 
+                            value={device.efficiency_score}
+                            className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+                            barClassName="h-full bg-blue-500 rounded-full transition-all duration-300"
+                          />
                           <div className="flex justify-between text-sm text-gray-600">
                             <span>{device.total_consumption.toFixed(1)} kWh</span>
                             <span>₹{device.cost_contribution.toFixed(0)}</span>
