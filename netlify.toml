@@ -1,0 +1,24 @@
+﻿[build]
+  command = "cd frontend && npm ci && npm run build"
+  publish = "frontend/.next"
+  
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--version"
+
+# Redirect all requests to Next.js
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Environment variables (set these in Netlify dashboard)
+# NEXT_PUBLIC_SUPABASE_URL = "your-supabase-url"
+# NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-supabase-anon-key"
+# SUPABASE_SERVICE_ROLE_KEY = "your-service-role-key"
