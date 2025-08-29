@@ -18,6 +18,7 @@ import {
   User,
   ChevronRight
 } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -70,7 +71,7 @@ export default function AuthenticatedSidebar() {
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-500/25">
-                <Zap className="h-5 w-5 text-black" />
+                <Logo className="h-5 w-5" width={20} height={20} />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">UrjaBandhu</span>
             </Link>
@@ -164,7 +165,7 @@ export default function AuthenticatedSidebar() {
         <div className="flex-1 text-sm font-semibold leading-6 text-white">
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-r from-green-400 to-emerald-500">
-              <Zap className="h-4 w-4 text-black" />
+              <Logo className="h-4 w-4" width={16} height={16} />
             </div>
             <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">UrjaBandhu</span>
           </div>
@@ -202,7 +203,7 @@ export default function AuthenticatedSidebar() {
                 <div className="flex h-16 shrink-0 items-center">
                   <Link href="/dashboard" className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-500/25">
-                      <Zap className="h-5 w-5 text-black" />
+                      <Logo className="h-5 w-5" width={20} height={20} />
                     </div>
                     <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">UrjaBandhu</span>
                   </Link>

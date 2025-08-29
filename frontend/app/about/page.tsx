@@ -1,0 +1,339 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { 
+  Zap, 
+  Target, 
+  Users, 
+  Award, 
+  Leaf, 
+  Globe, 
+  ChevronRight,
+  TrendingUp,
+  Shield,
+  Heart
+} from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+const stats = [
+  { value: "50,000+", label: "Active Users", icon: Users },
+  { value: "₹10M+", label: "Savings Generated", icon: TrendingUp },
+  { value: "500+", label: "Cities Covered", icon: Globe },
+  { value: "98%", label: "User Satisfaction", icon: Heart }
+]
+
+const values = [
+  {
+    icon: Leaf,
+    title: "Environmental Impact",
+    description: "We're committed to reducing carbon footprint and promoting sustainable energy consumption across India."
+  },
+  {
+    icon: Shield,
+    title: "Data Security",
+    description: "Your energy data is protected with enterprise-grade security and privacy measures."
+  },
+  {
+    icon: Target,
+    title: "Customer First",
+    description: "Every feature is designed with our users' needs and feedback at the center of our development process."
+  },
+  {
+    icon: Award,
+    title: "Innovation",
+    description: "We continuously innovate to bring cutting-edge AI and energy optimization technologies to everyone."
+  }
+]
+
+const team = [
+  {
+    name: "Arunavo Roy",
+    role: "Co-Founder & CEO",
+    description: "Passionate about renewable energy and AI, leading the vision to democratize energy optimization.",
+    image: "/api/placeholder/150/150"
+  },
+  {
+    name: "Engineering Team",
+    role: "Development",
+    description: "Expert engineers building scalable AI solutions for energy management and optimization.",
+    image: "/api/placeholder/150/150"
+  },
+  {
+    name: "Data Science Team",
+    role: "AI & Analytics",
+    description: "Developing machine learning models for predictive analytics and energy pattern recognition.",
+    image: "/api/placeholder/150/150"
+  }
+]
+
+export default function AboutPage() {
+  const router = useRouter()
+
+  return (
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
+
+      {/* Navigation */}
+      <nav className="relative z-20 flex items-center justify-between px-6 py-4">
+        <motion.div 
+          className="flex items-center gap-3"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2 shadow-2xl">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/25">
+                <Logo className="h-5 w-5" width={20} height={20} />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                UrjaBandhu
+              </span>
+            </Link>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          className="flex items-center gap-4"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-2 py-2 shadow-xl">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
+                <Link href="/">Home</Link>
+              </Button>
+              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
+                <Link href="/features">Features</Link>
+              </Button>
+              <Button variant="ghost" className="text-green-400 bg-white/10 font-medium transition-all duration-300">
+                About
+              </Button>
+              <Button 
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold shadow-lg shadow-green-500/25 transition-all duration-300"
+                onClick={() => router.push('/auth')}
+              >
+                Sign In
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="relative z-10 px-6 py-12">
+        {/* Header Section */}
+        <motion.div 
+          className="text-center max-w-4xl mx-auto mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+            About{' '}
+            <span className="bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 bg-clip-text text-transparent">
+              UrjaBandhu
+            </span>
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto font-light">
+            Empowering millions of users across India to make smarter energy decisions through cutting-edge AI technology and intuitive design.
+          </p>
+        </motion.div>
+
+        {/* Stats Section */}
+        <motion.div 
+          className="max-w-6xl mx-auto mb-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                className="text-center"
+              >
+                <Card className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl hover:shadow-green-500/20 hover:border-green-500/30 transition-all duration-500">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/10">
+                    <stat.icon className="h-6 w-6 text-green-400" />
+                  </div>
+                  <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
+                  <div className="text-gray-400 text-sm">{stat.label}</div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Mission Section */}
+        <motion.div 
+          className="max-w-4xl mx-auto mb-20 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Our{' '}
+              <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                Mission
+              </span>
+            </h2>
+            <p className="text-xl text-gray-300 leading-relaxed">
+              To democratize energy optimization and make sustainable living accessible to everyone. We believe that by providing intelligent insights and automated solutions, we can help individuals and businesses reduce their carbon footprint while saving money on energy costs.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Values Section */}
+        <motion.div 
+          className="max-w-6xl mx-auto mb-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Our{' '}
+              <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                Values
+              </span>
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              The principles that guide everything we do at UrjaBandhu
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {values.map((value, index) => (
+              <motion.div
+                key={value.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
+                className="group"
+              >
+                <Card className="h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl hover:shadow-green-500/20 hover:border-green-500/30 transition-all duration-500 hover:bg-white/10">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 rounded-xl flex items-center justify-center mb-4 group-hover:from-green-400/30 group-hover:to-emerald-500/30 transition-all duration-300 shadow-lg shadow-green-500/10">
+                      <value.icon className="h-6 w-6 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
+                    </div>
+                    <CardTitle className="text-xl font-semibold text-white group-hover:text-green-300 transition-colors duration-300">
+                      {value.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300 leading-relaxed">
+                      {value.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Team Section */}
+        <motion.div 
+          className="max-w-6xl mx-auto mb-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Meet Our{' '}
+              <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                Team
+              </span>
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Passionate individuals working together to revolutionize energy management
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {team.map((member, index) => (
+              <motion.div
+                key={member.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
+                className="group"
+              >
+                <Card className="h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl hover:shadow-green-500/20 hover:border-green-500/30 transition-all duration-500 hover:bg-white/10">
+                  <CardHeader className="text-center">
+                    <div className="w-24 h-24 bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-green-400/30 group-hover:to-emerald-500/30 transition-all duration-300 shadow-lg shadow-green-500/10">
+                      <Users className="h-12 w-12 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
+                    </div>
+                    <CardTitle className="text-lg font-semibold text-white group-hover:text-green-300 transition-colors duration-300">
+                      {member.name}
+                    </CardTitle>
+                    <div className="text-green-400 text-sm font-medium">{member.role}</div>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300 leading-relaxed text-center">
+                      {member.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* CTA Section */}
+        <motion.div 
+          className="text-center max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+        >
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Join the{' '}
+              <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                Energy Revolution
+              </span>
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Be part of the movement towards sustainable energy consumption and start saving money today.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                onClick={() => router.push('/auth')}
+                size="lg"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold px-8 py-4 text-lg shadow-xl shadow-green-500/25 transition-all duration-300"
+              >
+                Get Started Today
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button 
+                variant="outline"
+                size="lg"
+                className="border-green-400/30 text-green-400 hover:bg-green-400/10 px-8 py-4 text-lg transition-all duration-300"
+                asChild
+              >
+                <Link href="/features">Explore Features</Link>
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}

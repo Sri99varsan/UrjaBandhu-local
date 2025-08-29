@@ -5,7 +5,8 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Eye, EyeOff, Zap, Mail, Lock, User } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 
@@ -74,7 +75,7 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
             className="flex justify-center mb-4"
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-500/25">
-              <Zap className="h-8 w-8 text-black" />
+              <Logo className="h-8 w-8" width={32} height={32} />
             </div>
           </motion.div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">

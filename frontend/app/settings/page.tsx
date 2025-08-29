@@ -13,7 +13,12 @@ import {
   Sun,
   Save,
   Trash2,
-  Settings
+  Settings,
+  Plus,
+  Edit3,
+  Building,
+  Star,
+  MapPin
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -36,6 +41,19 @@ interface UserProfile {
   currency: string
 }
 
+interface ConsumerConnection {
+  id?: string
+  consumer_id: string
+  connection_name: string
+  electricity_board: string
+  address: string
+  connection_type: 'domestic' | 'commercial' | 'industrial'
+  sanctioned_load: number | null
+  phase_type: 'single' | 'three'
+  is_primary: boolean
+  is_active: boolean
+}
+
 export default function SettingsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -43,6 +61,22 @@ export default function SettingsPage() {
   const [loadingData, setLoadingData] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
+  
+  // Consumer connections state
+  const [connections, setConnections] = useState<ConsumerConnection[]>([])
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [editingConnection, setEditingConnection] = useState<ConsumerConnection | null>(null)
+  const [formData, setFormData] = useState<Partial<ConsumerConnection>>({
+    consumer_id: '',
+    connection_name: '',
+    electricity_board: '',
+    address: '',
+    connection_type: 'domestic',
+    sanctioned_load: null,
+    phase_type: 'single',
+    is_primary: false,
+    is_active: true
+  })
 
   useEffect(() => {
     if (!loading && !user) {
@@ -52,6 +86,7 @@ export default function SettingsPage() {
 
     if (user) {
       fetchProfile()
+      loadConnections()
     }
   }, [user, loading, router])
 
@@ -224,6 +259,124 @@ export default function SettingsPage() {
     } : null)
   }
 
+  // Consumer connections functions
+  const loadConnections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('consumer_connections')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setConnections(data || [])
+    } catch (error) {
+      console.error('Error loading connections:', error)
+      toast.error('Failed to load consumer connections')
+    }
+  }
+
+  const saveConnection = async () => {
+    if (!formData.consumer_id || !formData.electricity_board) {
+      toast.error('Please fill in Consumer ID and Electricity Board')
+      return
+    }
+
+    setSaving(true)
+    try {
+      // If this is the first connection, make it primary
+      const isPrimary = connections.length === 0 || formData.is_primary
+
+      const connectionData = {
+        ...formData,
+        user_id: user?.id,
+        is_primary: isPrimary,
+        connection_name: formData.connection_name || `Connection ${connections.length + 1}`
+      }
+
+      let result
+      if (editingConnection?.id) {
+        // Update existing connection
+        result = await supabase
+          .from('consumer_connections')
+          .update(connectionData)
+          .eq('id', editingConnection.id)
+          .select()
+      } else {
+        // Insert new connection
+        result = await supabase
+          .from('consumer_connections')
+          .insert(connectionData)
+          .select()
+      }
+
+      if (result.error) throw result.error
+
+      toast.success(editingConnection ? 'Connection updated!' : 'Connection added!')
+      setFormData({
+        consumer_id: '',
+        connection_name: '',
+        electricity_board: '',
+        address: '',
+        connection_type: 'domestic',
+        sanctioned_load: null,
+        phase_type: 'single',
+        is_primary: false,
+        is_active: true
+      })
+      setShowAddForm(false)
+      setEditingConnection(null)
+      await loadConnections()
+    } catch (error) {
+      console.error('Error saving connection:', error)
+      toast.error('Failed to save connection')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteConnection = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this connection?')) return
+
+    try {
+      const { error } = await supabase
+        .from('consumer_connections')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      toast.success('Connection deleted')
+      await loadConnections()
+    } catch (error) {
+      console.error('Error deleting connection:', error)
+      toast.error('Failed to delete connection')
+    }
+  }
+
+  const setPrimaryConnection = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('consumer_connections')
+        .update({ is_primary: true })
+        .eq('id', id)
+
+      if (error) throw error
+
+      toast.success('Primary connection updated')
+      await loadConnections()
+    } catch (error) {
+      console.error('Error setting primary connection:', error)
+      toast.error('Failed to update primary connection')
+    }
+  }
+
+  const startEditing = (connection: ConsumerConnection) => {
+    setEditingConnection(connection)
+    setFormData(connection)
+    setShowAddForm(true)
+  }
+
   if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
@@ -260,6 +413,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
+    { id: 'consumers', name: 'Consumer IDs', icon: Zap },
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'preferences', name: 'Preferences', icon: Settings },
     { id: 'energy', name: 'Energy Settings', icon: Zap }
@@ -339,6 +493,197 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   )}
+
+                {/* Consumer IDs Tab */}
+                {activeTab === 'consumers' && (
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-white mb-6">Consumer Connections</h3>
+                    
+                    {/* Existing Connections */}
+                    {connections.length > 0 && (
+                      <div className="mb-6">
+                        <div className="grid gap-4">
+                          {connections.map((connection) => (
+                            <div key={connection.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-4 hover:border-green-500/30 transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <h4 className="text-white font-medium flex items-center gap-2">
+                                    <Building className="h-4 w-4 text-green-400" />
+                                    {connection.connection_name}
+                                    {connection.is_primary && (
+                                      <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full border border-green-500/30 flex items-center gap-1">
+                                        <Star className="h-3 w-3" />
+                                        Primary
+                                      </span>
+                                    )}
+                                  </h4>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => startEditing(connection)}
+                                    className="text-gray-400 hover:text-green-400 p-1"
+                                  >
+                                    <Edit3 className="h-4 w-4" />
+                                  </button>
+                                  {!connection.is_primary && (
+                                    <button
+                                      onClick={() => setPrimaryConnection(connection.id!)}
+                                      className="text-gray-400 hover:text-green-400 p-1"
+                                      title="Set as primary"
+                                    >
+                                      <Star className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => deleteConnection(connection.id!)}
+                                    className="text-gray-400 hover:text-red-400 p-1"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <span className="text-gray-400">Consumer ID: </span>
+                                  <span className="text-white font-mono">{connection.consumer_id}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Type: </span>
+                                  <span className="text-white capitalize">{connection.connection_type}</span>
+                                </div>
+                                <div className="md:col-span-2">
+                                  <span className="text-gray-400">Board: </span>
+                                  <span className="text-white">{connection.electricity_board}</span>
+                                </div>
+                                {connection.address && (
+                                  <div className="md:col-span-2">
+                                    <span className="text-gray-400">Address: </span>
+                                    <span className="text-white">{connection.address}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Add/Edit Form */}
+                    {showAddForm && (
+                      <div className="mb-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg p-6">
+                        <h4 className="text-white font-medium mb-4 flex items-center gap-2">
+                          <Plus className="h-4 w-4 text-green-400" />
+                          {editingConnection ? 'Edit Connection' : 'Add New Consumer Connection'}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Consumer ID *</label>
+                            <input
+                              type="text"
+                              value={formData.consumer_id}
+                              onChange={(e) => setFormData(prev => ({ ...prev, consumer_id: e.target.value }))}
+                              placeholder="Enter your Consumer ID"
+                              className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Connection Name</label>
+                            <input
+                              type="text"
+                              value={formData.connection_name}
+                              onChange={(e) => setFormData(prev => ({ ...prev, connection_name: e.target.value }))}
+                              placeholder="e.g., Home, Office, Shop"
+                              className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Electricity Board *</label>
+                            <select
+                              value={formData.electricity_board}
+                              onChange={(e) => setFormData(prev => ({ ...prev, electricity_board: e.target.value }))}
+                              className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            >
+                              <option value="" className="bg-gray-800">Select Board</option>
+                              <option value="MSEB (Maharashtra State Electricity Board)" className="bg-gray-800">MSEB (Maharashtra)</option>
+                              <option value="KSEB (Kerala State Electricity Board)" className="bg-gray-800">KSEB (Kerala)</option>
+                              <option value="TNEB (Tamil Nadu Electricity Board)" className="bg-gray-800">TNEB (Tamil Nadu)</option>
+                              <option value="KPTCL (Karnataka Power Transmission Corporation Limited)" className="bg-gray-800">KPTCL (Karnataka)</option>
+                              <option value="WBSEDCL (West Bengal State Electricity Distribution Company Limited)" className="bg-gray-800">WBSEDCL (West Bengal)</option>
+                              <option value="Other" className="bg-gray-800">Other</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Connection Type</label>
+                            <select
+                              value={formData.connection_type}
+                              onChange={(e) => setFormData(prev => ({ ...prev, connection_type: e.target.value as any }))}
+                              className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            >
+                              <option value="domestic" className="bg-gray-800">Domestic</option>
+                              <option value="commercial" className="bg-gray-800">Commercial</option>
+                              <option value="industrial" className="bg-gray-800">Industrial</option>
+                            </select>
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Address</label>
+                            <textarea
+                              value={formData.address}
+                              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                              placeholder="Enter the address for this connection"
+                              rows={2}
+                              className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-4">
+                          <button
+                            onClick={saveConnection}
+                            disabled={saving}
+                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-medium px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50"
+                          >
+                            {saving ? 'Saving...' : (editingConnection ? 'Update Connection' : 'Add Connection')}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowAddForm(false)
+                              setEditingConnection(null)
+                              setFormData({
+                                consumer_id: '',
+                                connection_name: '',
+                                electricity_board: '',
+                                address: '',
+                                connection_type: 'domestic',
+                                sanctioned_load: null,
+                                phase_type: 'single',
+                                is_primary: false,
+                                is_active: true
+                              })
+                            }}
+                            className="border border-white/20 text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-all duration-200"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Add Button */}
+                    {!showAddForm && (
+                      <button
+                        onClick={() => setShowAddForm(true)}
+                        className="border border-white/20 text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Consumer Connection
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Notifications Tab */}
                 {activeTab === 'notifications' && (

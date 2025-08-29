@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Search, Zap, BarChart3, Brain, Settings } from 'lucide-react'
+import { Search, BarChart3, Brain, Settings } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -16,7 +18,7 @@ export function InspiredHomepage() {
     if (query.trim()) {
       // Store the query in localStorage to pass to chatbot after login
       localStorage.setItem('pendingQuery', query.trim())
-      router.push('/login?redirect=dashboard&hasQuery=true')
+      router.push('/auth?redirect=dashboard&hasQuery=true')
     }
   }
 
@@ -51,7 +53,7 @@ export function InspiredHomepage() {
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2 shadow-2xl">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/25">
-                <Zap className="h-5 w-5 text-black" />
+                <Logo className="h-5 w-5" width={20} height={20} />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                 UrjaBandhu
@@ -68,15 +70,15 @@ export function InspiredHomepage() {
         >
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-2 py-2 shadow-xl">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300">
-                Features
+              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
+                <Link href="/features">Features</Link>
               </Button>
-              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300">
-                About
+              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
+                <Link href="/about">About</Link>
               </Button>
               <Button 
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold shadow-lg shadow-green-500/25 transition-all duration-300"
-                onClick={() => router.push('/login')}
+                                onClick={() => router.push('/auth')}
               >
                 Sign In
               </Button>

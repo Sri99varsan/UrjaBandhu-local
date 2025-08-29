@@ -50,16 +50,39 @@ export default function AuthCallbackPage() {
 
           if (data.session && data.user) {
             console.log('Authentication successful:', data.user.email)
-            setStatus('Authentication successful! Redirecting...')
+            setStatus('Authentication successful! Checking setup...')
             
             // Clear any existing auth state and set new session
             await supabase.auth.setSession(data.session)
             
-            // Small delay to ensure session is properly set
-            setTimeout(() => {
-              // Use window.location.href for a hard redirect to ensure proper state update
-              window.location.href = '/dashboard'
-            }, 1500)
+            // Check if user has any consumer connections
+            const { data: connections, error: connectionsError } = await supabase
+              .from('consumer_connections')
+              .select('id')
+              .eq('user_id', data.user.id)
+              .limit(1)
+            
+            if (connectionsError) {
+              console.error('Error checking connections:', connectionsError)
+              // If there's an error checking connections, proceed to dashboard
+              setTimeout(() => {
+                window.location.href = '/dashboard'
+              }, 1500)
+              return
+            }
+            
+            // If no connections found, redirect to setup
+            if (!connections || connections.length === 0) {
+              setStatus('Setting up your account...')
+              setTimeout(() => {
+                window.location.href = '/setup/consumer-id'
+              }, 1500)
+            } else {
+              setStatus('Redirecting to dashboard...')
+              setTimeout(() => {
+                window.location.href = '/dashboard'
+              }, 1500)
+            }
           } else {
             setError('No session created')
             setStatus('No session created')
@@ -84,10 +107,34 @@ export default function AuthCallbackPage() {
           }
 
           if (sessionData.session) {
-            setStatus('Session found! Redirecting...')
-            setTimeout(() => {
-              window.location.href = '/dashboard'
-            }, 1000)
+            setStatus('Session found! Checking setup...')
+            
+            // Check if user has any consumer connections
+            const { data: connections, error: connectionsError } = await supabase
+              .from('consumer_connections')
+              .select('id')
+              .eq('user_id', sessionData.session.user.id)
+              .limit(1)
+            
+            if (connectionsError) {
+              console.error('Error checking connections:', connectionsError)
+              // If there's an error, proceed to dashboard
+              setTimeout(() => {
+                window.location.href = '/dashboard'
+              }, 1000)
+              return
+            }
+            
+            // If no connections found, redirect to setup
+            if (!connections || connections.length === 0) {
+              setTimeout(() => {
+                window.location.href = '/setup/consumer-id'
+              }, 1000)
+            } else {
+              setTimeout(() => {
+                window.location.href = '/dashboard'
+              }, 1000)
+            }
           } else {
             setStatus('No session found')
             setTimeout(() => {

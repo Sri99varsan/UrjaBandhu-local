@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Zap, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 
@@ -15,7 +16,7 @@ export default function PublicHeader() {
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-5 w-5 text-primary-foreground" />
+              <Logo className="h-5 w-5" width={20} height={20} />
             </div>
             <span className="hidden font-bold text-xl sm:inline-block">UrjaBandhu</span>
           </Link>
