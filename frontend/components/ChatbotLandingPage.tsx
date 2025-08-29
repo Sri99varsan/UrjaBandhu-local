@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
+import { useSpeechServices } from '@/hooks/useSpeechServices'
 import { 
   Zap, 
   BarChart3, 
@@ -14,9 +15,13 @@ import {
   Brain,
   ArrowRight,
   Mic,
+  MicOff,
   Send,
   Sparkles,
-  CheckCircle
+  CheckCircle,
+  Volume2,
+  VolumeX,
+  Square
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -40,12 +45,11 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
   
   // Chat state
   const [inputMessage, setInputMessage] = useState('')
-  const [isListening, setIsListening] = useState(false)
   const [chatMessages, setChatMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'bot'}>>([])
   const [isProcessingMessage, setIsProcessingMessage] = useState(false)
   
-  // Speech recognition
-  const [speechRecognition, setSpeechRecognition] = useState<any>(null)
+  // Enhanced speech services
+  const speechServices = useSpeechServices()
   
   const [analysisSteps, setAnalysisSteps] = useState<AnalysisStep[]>([
     {
@@ -127,45 +131,21 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
     router.push('/dashboard-full')
   }
 
-  // Initialize Speech Recognition
+  // Sync speech transcript with input message
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition()
-        recognition.continuous = false
-        recognition.interimResults = false
-        recognition.lang = 'en-US'
-        
-        recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript
-          setInputMessage(transcript)
-          setIsListening(false)
-          toast.success('✅ Speech captured successfully!')
-        }
-        
-        recognition.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error)
-          setIsListening(false)
-          toast.error('❌ Speech recognition failed. Please try again.')
-        }
-        
-        recognition.onend = () => {
-          setIsListening(false)
-        }
-        
-        setSpeechRecognition(recognition)
-      }
+    if (speechServices.transcript) {
+      setInputMessage(speechServices.transcript)
+      speechServices.clearTranscript()
     }
-  }, [])
+  }, [speechServices.transcript, speechServices.clearTranscript])
 
   // Handle text input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputMessage(e.target.value)
   }
 
-  // Handle sending message
-  const handleSendMessage = async () => {
+  // Handle sending message with optional TTS
+  const handleSendMessage = async (withTTS: boolean = false) => {
     if (!inputMessage.trim() || isProcessingMessage) return
     
     const userMessage = {
@@ -204,6 +184,14 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
       }
       
       setChatMessages(prev => [...prev, botResponse])
+      
+      // Optional: Speak the bot response
+      if (withTTS) {
+        setTimeout(() => {
+          speechServices.speakText(data.response)
+        }, 500)
+      }
+      
     } catch (error) {
       console.error('Chat error:', error)
       const errorResponse = {
@@ -225,20 +213,12 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
     }
   }
 
-  // Toggle speech recognition
-  const toggleSpeechRecognition = () => {
-    if (!speechRecognition) {
-      toast.error('Speech recognition is not supported in your browser. Please use Chrome or Edge.')
-      return
-    }
-    
-    if (isListening) {
-      speechRecognition.stop()
-      setIsListening(false)
+  // Handle speech input toggle
+  const handleSpeechToggle = () => {
+    if (speechServices.isListening) {
+      speechServices.stopSpeechToText()
     } else {
-      toast.success('🎤 Listening... Speak now!')
-      speechRecognition.start()
-      setIsListening(true)
+      speechServices.startSpeechToText()
     }
   }
 
@@ -647,7 +627,20 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                               ? 'bg-green-500 text-black' 
                               : 'bg-gray-800/50 text-white'
                           }`}>
-                            <p className="text-sm">{message.text}</p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm flex-1">{message.text}</p>
+                              {message.sender === 'bot' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="ml-2 p-1 h-6 w-6"
+                                  onClick={() => speechServices.speakText(message.text)}
+                                  disabled={speechServices.isSpeaking}
+                                >
+                                  <Volume2 className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </motion.div>
                       ))}
@@ -684,6 +677,52 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                     </motion.div>
                   )}
                   
+                  {/* Speech Status Indicator */}
+                  {(speechServices.isListening || speechServices.isProcessingAudio || speechServices.isSpeaking) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mb-4 flex items-center justify-center"
+                    >
+                      <div className="bg-gray-800/50 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        {speechServices.isListening && (
+                          <>
+                            <motion.div
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ repeat: Infinity, duration: 1 }}
+                            >
+                              <Mic className="h-4 w-4 text-red-400" />
+                            </motion.div>
+                            <span className="text-sm">Listening...</span>
+                          </>
+                        )}
+                        {speechServices.isProcessingAudio && (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                            >
+                              <Brain className="h-4 w-4 text-blue-400" />
+                            </motion.div>
+                            <span className="text-sm">Processing speech...</span>
+                          </>
+                        )}
+                        {speechServices.isSpeaking && (
+                          <>
+                            <motion.div
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ repeat: Infinity, duration: 0.8 }}
+                            >
+                              <Volume2 className="h-4 w-4 text-purple-400" />
+                            </motion.div>
+                            <span className="text-sm">Speaking...</span>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                  
                   {/* Input Area */}
                   <motion.div 
                     className="flex items-center gap-3"
@@ -705,24 +744,53 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          className={`p-1 ${isListening ? 'bg-red-500/20' : ''}`}
-                          onClick={toggleSpeechRecognition}
+                          className={`p-1 ${speechServices.isListening ? 'bg-red-500/20' : ''}`}
+                          onClick={handleSpeechToggle}
                           disabled={isProcessingMessage}
+                          title={speechServices.isListening ? 'Stop listening' : 'Start speech-to-text'}
                         >
-                          <Mic className={`h-4 w-4 ${isListening ? 'text-red-400' : 'text-green-400'}`} />
+                          <Mic className={`h-4 w-4 ${speechServices.isListening ? 'text-red-400' : 'text-green-400'}`} />
+                        </Button>
+                      </motion.div>
+                      {speechServices.isSpeaking && (
+                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="p-1 bg-blue-500/20"
+                            onClick={() => speechServices.stopSpeaking()}
+                            title="Stop speaking"
+                          >
+                            <VolumeX className="h-4 w-4 text-blue-400" />
+                          </Button>
+                        </motion.div>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button 
+                          size="sm" 
+                          className="bg-green-500 hover:bg-green-600 disabled:opacity-50"
+                          onClick={() => handleSendMessage()}
+                          disabled={!inputMessage.trim() || isProcessingMessage}
+                          title="Send message"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="bg-purple-500/20 border-purple-400/30 hover:bg-purple-500/30 disabled:opacity-50"
+                          onClick={() => handleSendMessage(true)}
+                          disabled={!inputMessage.trim() || isProcessingMessage}
+                          title="Send message with speech response"
+                        >
+                          <Volume2 className="h-4 w-4 text-purple-400" />
                         </Button>
                       </motion.div>
                     </div>
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button 
-                        size="sm" 
-                        className="bg-green-500 hover:bg-green-600 disabled:opacity-50"
-                        onClick={handleSendMessage}
-                        disabled={!inputMessage.trim() || isProcessingMessage}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </motion.div>
                   </motion.div>
                 </CardContent>
               </Card>
