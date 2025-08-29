@@ -4,6 +4,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import PublicHeader from '@/components/navigation/PublicHeader'
 import AuthenticatedSidebar from '@/components/navigation/AuthenticatedSidebar'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 interface NavigationWrapperProps {
   children: React.ReactNode
@@ -12,12 +13,29 @@ interface NavigationWrapperProps {
 export default function NavigationWrapper({ children }: NavigationWrapperProps) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
+  const [showLoading, setShowLoading] = useState(true)
 
-  // Don't show any navigation on auth pages or homepage
+  // Don't show loading for too long
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoading(false)
+    }, 2000) // Only show loading for 2 seconds max
+
+    if (!loading) {
+      setShowLoading(false)
+      clearTimeout(timer)
+    }
+
+    return () => clearTimeout(timer)
+  }, [loading])
+
+  // Don't show any navigation on auth pages, homepage, features, or about pages
   const isAuthPage = pathname?.startsWith('/auth')
   const isHomePage = pathname === '/'
+  const isFeaturesPage = pathname === '/features'
+  const isAboutPage = pathname === '/about'
   
-  if (loading) {
+  if (loading && showLoading) {
     return (
       <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
         {/* Background effects */}
@@ -34,13 +52,13 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
     )
   }
 
-  if (isAuthPage || isHomePage) {
-    // Auth pages and homepage get no navigation
+  if (isAuthPage || isHomePage || isFeaturesPage || isAboutPage) {
+    // Auth pages, homepage, features, and about pages get no navigation wrapper
     return <>{children}</>
   }
 
   if (user) {
-    // Authenticated users get sidebar layout
+    // Authenticated users get sidebar layout (for dashboard and other authenticated pages)
     return (
       <div className="min-h-screen bg-black relative">
         {/* Background effects */}
@@ -62,7 +80,7 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
 
   // Unauthenticated users get public header
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <PublicHeader />
       <main>
         {children}

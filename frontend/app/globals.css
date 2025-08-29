@@ -54,8 +54,35 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    /* Ensure the HTML element fills the full height */
+    height: 100%;
+    /* Set a dark background that will show when content doesn't fill the page */
+    background: #0a0a0a;
+    /* Prevent over-scroll from showing white background */
+    overflow-x: hidden;
+  }
+  
   body {
     @apply bg-background text-foreground;
+    /* Ensure body extends full height and inherits background */
+    min-height: 100%;
+    /* Let individual pages set their own backgrounds */
+    background: inherit;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+  }
+  
+  /* Ensure the root container extends infinitely but with transparent background */
+  #__next,
+  body > div {
+    min-height: 100vh;
+  }
+  
+  /* Handle over-scroll behavior for modern browsers */
+  html {
+    overscroll-behavior: none;
   }
 }
 

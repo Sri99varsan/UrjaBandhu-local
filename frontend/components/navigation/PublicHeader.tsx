@@ -10,41 +10,41 @@ export default function PublicHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-black/80 backdrop-blur-md supports-[backdrop-filter]:bg-black/80">
       <div className="container flex h-16 items-center">
         {/* Logo */}
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-green-400 to-emerald-500">
               <Logo className="h-5 w-5" width={20} height={20} />
             </div>
-            <span className="hidden font-bold text-xl sm:inline-block">UrjaBandhu</span>
+            <span className="hidden font-bold text-xl sm:inline-block text-white">UrjaBandhu</span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-            <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            <Link href="/" className="transition-colors hover:text-green-400 text-gray-300">
               Home
             </Link>
-            <Link href="/features" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            <Link href="/features" className="transition-colors hover:text-green-400 text-gray-300">
               Features
             </Link>
-            <Link href="/pricing" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            <Link href="/pricing" className="transition-colors hover:text-green-400 text-gray-300">
               Pricing
             </Link>
-            <Link href="/about" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            <Link href="/about" className="transition-colors hover:text-green-400 text-gray-300">
               About
             </Link>
           </nav>
 
           {/* Auth Buttons */}
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex">
+            <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex text-gray-300 hover:text-green-400 hover:bg-white/5">
               <Link href="/auth">Sign In</Link>
             </Button>
-            <Button size="sm" asChild>
+            <Button size="sm" asChild className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-black font-semibold">
               <Link href="/auth">Get Started</Link>
             </Button>
           </div>

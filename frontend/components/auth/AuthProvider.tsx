@@ -22,17 +22,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
+    
+    // Set a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn('Auth initialization timeout, proceeding without auth')
+        setLoading(false)
+      }
+    }, 5000) // 5 second timeout
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }: any) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      if (mounted) {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+        clearTimeout(timeoutId)
+      }
+    }).catch((error: any) => {
+      if (mounted) {
+        console.error('Error getting session:', error)
+        setLoading(false)
+        clearTimeout(timeoutId)
+      }
     })
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      if (!mounted) return
+      
       console.log('Auth state change:', event, session?.user?.email)
       
       setSession(session)
@@ -53,7 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      clearTimeout(timeoutId)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const createOrUpdateProfile = async (user: User) => {
