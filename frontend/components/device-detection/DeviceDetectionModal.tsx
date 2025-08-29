@@ -263,7 +263,7 @@ export default function DeviceDetectionModal({
                   {/* OCR Text */}
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <h4 className="text-sm font-medium text-gray-800 mb-2">Detected Text</h4>
-                    <p className="text-sm text-gray-600 italic">"{detectionResult.detected_text}"</p>
+                    <p className="text-sm text-gray-600 italic">&ldquo;{detectionResult.detected_text}&rdquo;</p>
                     <p className="text-xs text-gray-500 mt-1">
                       OCR Confidence: {Math.round(detectionResult.confidence * 100)}%
                     </p>
@@ -311,7 +311,7 @@ export default function DeviceDetectionModal({
                         <div>
                           <h4 className="text-sm font-medium text-yellow-800">No devices matched</h4>
                           <p className="text-sm text-yellow-700 mt-1">
-                            The detected text didn't match any devices in our catalog. You can add the device manually.
+                            The detected text didn&apos;t match any devices in our catalog. You can add the device manually.
                           </p>
                         </div>
                       </div>

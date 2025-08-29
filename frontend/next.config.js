@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: {
-    // Fix workspace root detection warning
-    outputFileTracingRoot: __dirname,
-  },
+  outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [
       {

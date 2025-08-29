@@ -301,7 +301,7 @@ export default function DatabaseTestPage() {
           <h3 className="text-lg font-semibold text-blue-900 mb-2">📋 Next Steps</h3>
           <ol className="list-decimal list-inside text-blue-800 space-y-2">
             <li>Sign in to test authenticated features</li>
-            <li>Add some devices using the "Add Sample Device" button</li>
+            <li>Add some devices using the &ldquo;Add Sample Device&rdquo; button</li>
             <li>Test the OCR function with the button above</li>
             <li>Check your Supabase dashboard to see the data</li>
             <li>Start building your dashboard components!</li>

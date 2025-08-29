@@ -274,7 +274,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5, duration: 1 }}
                   >
-                    Let's make{' '}
+                    Let&apos;s make{' '}
                     <motion.span 
                       className="bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 bg-clip-text text-transparent"
                       animate={{ 
@@ -466,7 +466,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
               >
                 Analysis Complete!
               </motion.h2>
-              <p className="text-slate-400">Here's what I found about your energy usage</p>
+              <p className="text-slate-400">Here&apos;s what I found about your energy usage</p>
             </motion.div>
             
             {/* Quick Stats */}
@@ -553,15 +553,15 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                         >
                           {initialQuery ? (
                             <>
-                              Great question: "<em className="text-green-300">{initialQuery}</em>" <br/><br/>
-                              I've analyzed your energy usage in response to your query. Your current consumption is <strong>2.4 kWh today</strong> 
-                              with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you'll spend 
+                              Great question: &ldquo;<em className="text-green-300">{initialQuery}</em>&rdquo; <br/><br/>
+                              I&apos;ve analyzed your energy usage in response to your query. Your current consumption is <strong>2.4 kWh today</strong> 
+                              with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you&apos;ll spend 
                               <strong> ₹380 by month-end</strong>. Let me provide specific insights related to your question.
                             </>
                           ) : (
                             <>
-                              Hello! I've analyzed your energy usage. Your current consumption is <strong>2.4 kWh today</strong> 
-                              with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you'll spend 
+                              Hello! I&apos;ve analyzed your energy usage. Your current consumption is <strong>2.4 kWh today</strong> 
+                              with spending at <strong>₹127 this month</strong>. Based on your patterns, I predict you&apos;ll spend 
                               <strong> ₹380 by month-end</strong>. Would you like me to suggest ways to reduce your electricity bill?
                             </>
                           )}

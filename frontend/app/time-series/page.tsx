@@ -269,7 +269,7 @@ export default function TimeSeriesDashboard() {
 
           <Card className="bg-black/40 backdrop-blur-sm border-green-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Today's Total</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-300">Today&apos;s Total</CardTitle>
               <Activity className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
@@ -292,7 +292,7 @@ export default function TimeSeriesDashboard() {
                 {formatCurrency(stats?.estimatedCost || 0)}
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                Today's bill estimate
+                Today&apos;s bill estimate
               </p>
             </CardContent>
           </Card>
