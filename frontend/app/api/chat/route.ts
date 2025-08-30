@@ -8,8 +8,7 @@ function generateSmartMockupResponse(message: string): string {
     const festivalSuggestions = getCurrentAndUpcomingFestivals()
 
     if (festivalSuggestions.length > 0) {
-      const nearestFestival = festivalSuggestions[0]
-      return generateFestivalPrompt(nearestFestival)
+      return generateFestivalPrompt()
     } else {
       return `🎉 **Festival Energy Tips**
 

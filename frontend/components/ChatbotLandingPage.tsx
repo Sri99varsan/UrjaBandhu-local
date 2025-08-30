@@ -118,7 +118,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
       // Show festival prompt only if festival is within 7 days
       if (nearestFestival.daysUntil <= 7 && nearestFestival.daysUntil >= -1) {
         setTimeout(() => {
-          const festivalPrompt = generateFestivalPrompt(nearestFestival)
+          const festivalPrompt = generateFestivalPrompt()
           const botMessage = {
             id: Date.now().toString(),
             text: festivalPrompt,
