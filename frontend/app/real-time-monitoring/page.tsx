@@ -23,10 +23,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
   dataPipeline, 
-  useRealTimeData, 
   EnergyDataPoint, 
   RealTimeMetrics 
 } from '@/lib/data-pipeline/real-time-service'
+import { useRealTimeData } from '@/lib/data-pipeline/real-time-hooks'
 import {
   LineChart,
   Line,
