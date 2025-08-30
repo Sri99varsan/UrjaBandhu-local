@@ -30,13 +30,15 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    // Only apply rewrites in development
+    // Only apply rewrites in development for specific backend APIs
     if (process.env.NODE_ENV === 'development') {
       return [
         {
-          source: '/api/:path*',
+          source: '/api/backend/:path*',
           destination: 'http://localhost:8000/api/:path*',
         },
+        // Add other specific backend API routes here if needed
+        // The /api/chat route will be handled by Next.js API routes
       ];
     }
     return [];

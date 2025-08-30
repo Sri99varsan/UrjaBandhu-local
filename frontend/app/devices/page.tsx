@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useAuth } from '@/components/auth/AuthProvider'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -181,11 +181,11 @@ export default function DevicesPage() {
 
   const toggleDeviceStatus = async (device: Device) => {
     const newStatus = device.status === 'active' ? 'inactive' : 'active'
-    
+
     try {
       const { error } = await supabase
         .from('devices')
-        .update({ 
+        .update({
           status: newStatus,
           updated_at: new Date().toISOString()
         })
@@ -241,22 +241,24 @@ export default function DevicesPage() {
   }
 
   const getDeviceIcon = (type: string | undefined) => {
-    if (!type) return '⚡'
+    if (!type) return ''
     
     switch (type.toLowerCase()) {
       case 'lighting':
-        return '💡'
+        return ''
       case 'cooling':
       case 'air conditioner':
-        return '❄️'
+        return ''
       case 'heating':
-        return '🔥'
+        return ''
       case 'appliance':
-        return '📺'
+        return ''
       case 'kitchen':
-        return '🍳'
+        return ''
+      case 'entertainment':
+        return ''
       default:
-        return '⚡'
+        return ''
     }
   }
 
@@ -265,9 +267,9 @@ export default function DevicesPage() {
       <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
         {/* Background effects */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-          <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
+          <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse [animation-delay:2s]" />
         </div>
         
         <div className="relative z-10 flex items-center space-x-3">
@@ -279,219 +281,237 @@ export default function DevicesPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Device Management</h1>
-              <p className="mt-2 text-gray-600">
-                Monitor and manage your electrical devices
-              </p>
-            </div>
-            <div className="mt-4 sm:mt-0 flex space-x-3">
-              <button
-                onClick={() => setShowDetectionModal(true)}
-                className="inline-flex items-center px-4 py-2 border border-blue-600 rounded-md shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                Detect Device
-              </button>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Device
-              </button>
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse [animation-delay:2s]" />
+      </div>
+
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-white">Device Management</h1>
+                <p className="mt-2 text-gray-300">
+                  Monitor and manage your electrical devices
+                </p>
+              </div>
+              <div className="mt-4 sm:mt-0 flex space-x-3">
+                <button
+                  onClick={() => setShowDetectionModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-green-500/30 rounded-md shadow-sm text-sm font-medium text-green-400 bg-white/5 backdrop-blur-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Detect Device
+                </button>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Device
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Device Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {devices.map((device) => (
-            <div key={device.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">{getDeviceIcon(device.device_type)}</span>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{device.name}</h3>
-                      <p className="text-sm text-gray-500 capitalize">{device.device_type}</p>
+          {/* Device Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {devices.map((device) => (
+              <div key={device.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl hover:shadow-green-500/20 hover:border-green-500/30 transition-all duration-500 hover:bg-white/10 overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">{getDeviceIcon(device.device_type)}</span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">{device.name}</h3>
+                        <p className="text-sm text-gray-400 capitalize">{device.device_type}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => openEditModal(device)}
+                        className="text-gray-400 hover:text-green-400 transition-colors duration-200"
+                        title="Edit device"
+                        aria-label="Edit device"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDevice(device.id)}
+                        className="text-gray-400 hover:text-red-400 transition-colors duration-200"
+                        title="Delete device"
+                        aria-label="Delete device"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => openEditModal(device)}
-                      className="text-gray-400 hover:text-gray-600"
-                      title="Edit device"
-                      aria-label="Edit device"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteDevice(device.id)}
-                      className="text-gray-400 hover:text-red-600"
-                      title="Delete device"
-                      aria-label="Delete device"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Status</span>
-                    <button
-                      onClick={() => toggleDeviceStatus(device)}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        device.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      <Power className="h-3 w-3 mr-1" />
-                      {device.status}
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Power Rating</span>
-                    <span className="text-sm font-medium text-gray-900">{device.power_rating}W</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Current Usage</span>
-                    <span className="text-sm font-medium text-gray-900">{device.current_consumption} kW</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Location</span>
-                    <span className="text-sm font-medium text-gray-900">{device.location}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Efficiency</span>
-                    <div className="flex items-center">
-                      <ProgressBar 
-                        value={device.efficiency_score}
-                        className={`w-16 bg-gray-200 rounded-full h-2 mr-2`}
-                        barClassName={`h-2 rounded-full ${
-                          device.efficiency_score >= 80
-                            ? 'bg-green-500'
-                            : device.efficiency_score >= 60
-                            ? 'bg-yellow-500'
-                            : 'bg-red-500'
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Status</span>
+                      <button
+                        onClick={() => toggleDeviceStatus(device)}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                          device.status === 'active'
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                         }`}
-                      />
-                      <span className="text-sm font-medium text-gray-900">{device.efficiency_score}%</span>
+                      >
+                        <Power className="h-3 w-3 mr-1" />
+                        {device.status}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Power Rating</span>
+                      <span className="text-sm font-medium text-white">{device.power_rating}W</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Current Usage</span>
+                      <span className="text-sm font-medium text-white">{device.current_consumption}kW</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Location</span>
+                      <span className="text-sm font-medium text-white">{device.location}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Efficiency</span>
+                      <div className="flex items-center">
+                        <ProgressBar
+                          value={device.efficiency_score}
+                          className={`w-16 bg-gray-700 rounded-full h-2 mr-2`}
+                          barClassName={`h-2 rounded-full ${
+                            device.efficiency_score >= 80
+                              ? 'bg-green-500'
+                              : device.efficiency_score >= 60
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
+                          }`}
+                        />
+                        <span className="text-sm font-medium text-white">{device.efficiency_score}%</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {devices.length === 0 && (
-          <div className="text-center py-12">
-            <Zap className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No devices</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by adding your first device.</p>
-            <div className="mt-6">
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Device
-              </button>
-            </div>
+            ))}
           </div>
-        )}
+
+          {devices.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-400/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                <Zap className="h-8 w-8 text-green-400" />
+              </div>
+              <h3 className="mt-2 text-lg font-medium text-white">No devices found</h3>
+              <p className="mt-1 text-sm text-gray-400">Get started by adding your first device or detecting one with AI.</p>
+              <div className="mt-6 flex justify-center space-x-3">
+                <button
+                  onClick={() => setShowDetectionModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-green-500/30 rounded-md shadow-sm text-sm font-medium text-green-400 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all duration-200"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Detect Device
+                </button>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all duration-200"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Device
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add/Edit Device Modal */}
       {(showAddModal || editingDevice) && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative p-5 border border-white/10 w-96 shadow-lg rounded-2xl bg-white/5 backdrop-blur-md m-4">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-lg font-medium text-white mb-4">
                 {editingDevice ? 'Edit Device' : 'Add New Device'}
               </h3>
               <form onSubmit={editingDevice ? handleEditDevice : handleAddDevice}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Device Name</label>
+                    <label className="block text-sm font-medium text-gray-300">Device Name</label>
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-white/20 rounded-md px-3 py-2 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                       placeholder="e.g., Living Room AC"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Device Type</label>
+                    <label className="block text-sm font-medium text-gray-300">Device Type</label>
                     <select
                       required
                       value={formData.device_type}
                       onChange={(e) => setFormData({ ...formData, device_type: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-white/20 rounded-md px-3 py-2 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                       title="Select device type"
                       aria-label="Select device type"
                     >
-                      <option value="">Select Type</option>
-                      <option value="lighting">Lighting</option>
-                      <option value="cooling">Cooling</option>
-                      <option value="heating">Heating</option>
-                      <option value="appliance">Appliance</option>
-                      <option value="kitchen">Kitchen</option>
-                      <option value="entertainment">Entertainment</option>
-                      <option value="other">Other</option>
+                      <option value="" className="bg-gray-800">Select Type</option>
+                      <option value="lighting" className="bg-gray-800">Lighting</option>
+                      <option value="cooling" className="bg-gray-800">Cooling</option>
+                      <option value="heating" className="bg-gray-800">Heating</option>
+                      <option value="appliance" className="bg-gray-800">Appliance</option>
+                      <option value="kitchen" className="bg-gray-800">Kitchen</option>
+                      <option value="entertainment" className="bg-gray-800">Entertainment</option>
+                      <option value="other" className="bg-gray-800">Other</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Power Rating (Watts)</label>
+                    <label className="block text-sm font-medium text-gray-300">Power Rating (Watts)</label>
                     <input
                       type="number"
                       required
                       value={formData.power_rating}
                       onChange={(e) => setFormData({ ...formData, power_rating: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-white/20 rounded-md px-3 py-2 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                       placeholder="e.g., 1500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Location</label>
+                    <label className="block text-sm font-medium text-gray-300">Location</label>
                     <input
                       type="text"
                       required
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-white/20 rounded-md px-3 py-2 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                       placeholder="e.g., Living Room"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
+                    <label className="block text-sm font-medium text-gray-300">Status</label>
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-white/20 rounded-md px-3 py-2 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
                       title="Select device status"
                       aria-label="Select device status"
                     >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
+                      <option value="active" className="bg-gray-800">Active</option>
+                      <option value="inactive" className="bg-gray-800">Inactive</option>
                     </select>
                   </div>
                 </div>
@@ -500,13 +520,13 @@ export default function DevicesPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-white/20 rounded-md text-sm font-medium text-gray-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
                   >
                     {editingDevice ? 'Update' : 'Add'} Device
                   </button>

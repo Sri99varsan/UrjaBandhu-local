@@ -7,12 +7,16 @@ let genAI: GoogleGenerativeAI | null = null;
 function initializeGemini() {
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
 
+  console.log('🔑 API Key check:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'Not found');
+  console.log('🌍 Environment variables loaded:', Object.keys(process.env).filter(key => key.includes('GOOGLE')));
+
   if (!apiKey) {
-    console.error('Google Gemini API key not found in environment variables');
+    console.error('❌ Google Gemini API key not found in environment variables');
     throw new Error('Google Gemini API key not configured');
   }
 
   if (!genAI) {
+    console.log('✨ Creating new GoogleGenerativeAI instance...');
     genAI = new GoogleGenerativeAI(apiKey);
   }
 
@@ -41,10 +45,13 @@ Guidelines:
 Please respond in a conversational, helpful manner while staying focused on energy efficiency and consumption optimization.`;
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 Chat API called');
   try {
     const { messages } = await request.json()
+    console.log('📨 Received messages:', messages?.length || 0);
 
     if (!messages || messages.length === 0) {
+      console.log('❌ No messages provided');
       return NextResponse.json(
         { error: 'No messages provided' },
         { status: 400 }
@@ -53,14 +60,18 @@ export async function POST(request: NextRequest) {
 
     const lastMessage = messages[messages.length - 1]
     if (!lastMessage?.content) {
+      console.log('❌ Invalid message format');
       return NextResponse.json(
         { error: 'Invalid message format' },
         { status: 400 }
       )
     }
 
+    console.log('💬 Processing message:', lastMessage.content.substring(0, 50) + '...');
+
     try {
       // Initialize Gemini
+      console.log('🤖 Initializing Gemini...');
       const gemini = initializeGemini();
 
       // Configure the model with safety settings
