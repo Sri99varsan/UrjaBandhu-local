@@ -59,7 +59,7 @@ UrjaBandhu/
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/your-username/urjabandhu.git
+git clone https://github.com/SrivarsanK/UrjaBandhu.git
 cd urjabandhu
 ```
 
@@ -96,33 +96,25 @@ docker-compose --profile cache up -d
 
 ## 📈 Development Roadmap
 
-### Phase 1: Foundation (Week 1-2) ✅
+### Phase 1: Foundation ✅
 - [x] Project structure setup
 - [x] Basic UI mockups
 - [x] Sample data integration
 
-### Phase 2: Core Features (Week 3-5) 🚧
-- [ ] OCR device detection
-- [ ] Time series data handling
-- [ ] Basic analytics
+### Phase 2: Core Features ✅
+- [x] OCR device detection
+- [x] Time series data handling
+- [x] Basic analytics
 
-### Phase 3: Advanced Analytics (Week 6-9) ⏳
-- [ ] NILM implementation
-- [ ] Time series foundation models
-- [ ] Advanced visualizations
+### Phase 3: Advanced Analytics ✅
+- [x] NILM implementation
+- [x] Time series foundation models
+- [x] Advanced visualizations
 
-### Phase 4: AI Integration (Week 10-14) ⏳
-- [ ] AI chatbot
-- [ ] Personalized recommendations
-- [ ] Multi-language TTS/STT
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Phase 4: AI Integration ✅
+- [x] AI chatbot
+- [x] Personalized recommendations
+- [x] Multi-language TTS/STT
 
 ## 📝 License
 
