@@ -165,7 +165,7 @@ export function InspiredHomepage() {
         >
           {/* Dynamic UrjaBandhu Text */}
           <motion.div 
-            className="mb-16 py-8"
+            className="mb-8 py-4"
             initial={{ opacity: 0, scale: 0.8, y: -30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ 
@@ -175,19 +175,18 @@ export function InspiredHomepage() {
               bounce: 0.4
             }}
           >
-            <div className="relative overflow-visible min-h-[200px]">
-              {/* Enhanced Background glow effect */}
-              <div className="absolute inset-0 -inset-y-16 -inset-x-8 bg-gradient-to-r from-green-400/15 via-emerald-500/25 to-green-600/15 blur-[60px] rounded-full animate-pulse" />
-              <div className="absolute inset-0 -inset-y-8 -inset-x-4 bg-gradient-to-r from-green-500/10 via-emerald-400/20 to-green-500/10 blur-[40px] rounded-full animate-pulse [animation-delay:1s]" />
+            <div className="relative overflow-visible min-h-[160px]">
+              {/* Subtle Background glow effect */}
+              <div className="absolute inset-0 -inset-y-4 -inset-x-4 bg-gradient-to-r from-green-400/8 via-emerald-500/12 to-green-600/8 blur-[30px] rounded-full animate-pulse" />
               
               {/* Main text */}
               <motion.h2 
                 className="relative text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black text-center tracking-tight leading-[1.1] py-4 min-h-[1.5em] overflow-visible"
                 animate={{ 
                   textShadow: [
-                    "0 0 30px rgba(34, 197, 94, 0.4)",
-                    "0 0 60px rgba(34, 197, 94, 0.7)",
-                    "0 0 30px rgba(34, 197, 94, 0.4)"
+                    "0 0 15px rgba(34, 197, 94, 0.3)",
+                    "0 0 25px rgba(34, 197, 94, 0.5)",
+                    "0 0 15px rgba(34, 197, 94, 0.3)"
                   ]
                 }}
                 transition={{ 
@@ -196,14 +195,14 @@ export function InspiredHomepage() {
                   ease: "easeInOut"
                 }}
               >
-                <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-2xl">
+                <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-lg">
                   {typedText}
                 </span>
                 <motion.span 
                   className="text-green-400 ml-2"
                   animate={{ 
                     opacity: [1, 0, 1],
-                    scale: [1, 1.2, 1]
+                    scale: [1, 1.1, 1]
                   }}
                   transition={{ 
                     duration: 1.2,
@@ -211,7 +210,7 @@ export function InspiredHomepage() {
                     ease: "easeInOut"
                   }}
                 >
-                  |
+                  _
                 </motion.span>
               </motion.h2>
             </div>
