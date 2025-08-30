@@ -30,11 +30,14 @@ export default function DashboardNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
+    console.log('DashboardNavigation: handleSignOut called')
     try {
       await signOut()
-      router.push('/')
-      toast.success('Signed out successfully')
+      console.log('DashboardNavigation: signOut completed, redirecting to /')
+      // Use window.location for a hard redirect to ensure the user is logged out
+      window.location.href = '/'
     } catch (error) {
+      console.error('DashboardNavigation: signOut error:', error)
       toast.error('Failed to sign out')
     }
   }

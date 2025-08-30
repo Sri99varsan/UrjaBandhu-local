@@ -10,7 +10,7 @@ import {
   Zap, 
   BarChart3, 
   TrendingUp, 
-  DollarSign,
+  IndianRupee,
   Activity,
   Brain,
   ArrowRight,
@@ -65,7 +65,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
       title: 'Current Spending',
       description: 'Calculating electricity costs and trends',
       value: '₹127 this month',
-      icon: DollarSign,
+      icon: IndianRupee,
       completed: false
     },
     {

@@ -66,6 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await createOrUpdateProfile(session.user)
       }
       
+      // Handle sign out
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out, clearing state')
+        setSession(null)
+        setUser(null)
+        setLoading(false)
+      }
+      
       // Handle token refresh
       if (event === 'TOKEN_REFRESHED' && session) {
         console.log('Token refreshed')
@@ -144,8 +152,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
+    console.log('SignOut initiated...')
+    try {
+      setLoading(true)
+      
+      // Clear any local storage first
+      if (typeof window !== 'undefined') {
+        localStorage.clear()
+        sessionStorage.clear()
+      }
+      
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('SignOut error:', error)
+        throw error
+      }
+      console.log('SignOut successful')
+      
+      // Explicitly clear state
+      setSession(null)
+      setUser(null)
+      setLoading(false)
+    } catch (error) {
+      console.error('SignOut failed:', error)
+      setLoading(false)
       throw error
     }
   }

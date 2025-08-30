@@ -1,71 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
 
-// Initialize Gemini client
-let genAI: GoogleGenerativeAI | null = null;
-
-function initializeGemini() {
+// Function to create Google Gemini client
+function createGeminiClient() {
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
 
-  if (!apiKey) {
-    console.error('Google Gemini API key not found in environment variables');
-    throw new Error('Google Gemini API key not configured');
+  console.log('🔑 Checking API key:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'Not found');
+
+  if (!apiKey || apiKey === 'your-actual-gemini-api-key-here') {
+    console.warn('❌ Google Gemini API key not configured properly');
+    return null;
   }
 
-  if (!genAI) {
-    genAI = new GoogleGenerativeAI(apiKey);
+  try {
+    console.log('✨ Creating Google Gemini client...');
+    return new GoogleGenerativeAI(apiKey);
+  } catch (error) {
+    console.error('💥 Error creating Gemini client:', error);
+    return null;
   }
-
-  return genAI;
 }
 
-// Energy domain specific system prompt
-const ENERGY_SYSTEM_PROMPT = `You are UrjaBandhu, an AI energy advisor specialized in helping users understand and optimize their electricity consumption. You provide practical, actionable advice about energy efficiency, cost savings, and environmental impact.
-
-Key responsibilities:
-- Analyze energy consumption patterns and provide insights
-- Suggest practical energy-saving tips
-- Explain electricity bills and cost optimization
-- Provide environmental impact information
-- Recommend appliance efficiency improvements
-- Answer questions about renewable energy options
-
-Guidelines:
-- Always use ₹ (Indian Rupees) for cost calculations
-- Provide specific, actionable recommendations
-- Include approximate savings amounts when possible
-- Be helpful, friendly, and encouraging about energy conservation
-- Focus on practical solutions suitable for Indian households
-- If asked about topics outside energy efficiency, politely redirect to energy-related topics
-
-Please respond in a conversational, helpful manner while staying focused on energy efficiency and consumption optimization.`;
-
 export async function POST(request: NextRequest) {
-  try {
-    const { messages } = await request.json()
+  console.log('🚀 Chat API called');
 
-    if (!messages || messages.length === 0) {
+  try {
+    console.log('📥 Parsing request body...');
+    const { message, context } = await request.json()
+    console.log('📝 Received message:', message);
+
+    if (!message || typeof message !== 'string') {
+      console.log('❌ Invalid message format');
       return NextResponse.json(
-        { error: 'No messages provided' },
+        { error: 'Message is required and must be a string' },
         { status: 400 }
       )
     }
 
-    const lastMessage = messages[messages.length - 1]
-    if (!lastMessage?.content) {
-      return NextResponse.json(
-        { error: 'Invalid message format' },
-        { status: 400 }
-      )
+    // For now, return a test response to verify basic functionality
+    console.log('✅ Returning test response');
+    return NextResponse.json({
+      response: `Test response for: "${message}". The server is working! Now testing Gemini integration...`,
+      timestamp: new Date().toISOString(),
+      source: 'test-mode',
+      model: 'test'
+    });
+
+    // Create Gemini client (commented out for testing)
+    /*
+    console.log('🤖 Creating Gemini client...');
+    const genAI = createGeminiClient()
+
+    if (!genAI) {
+      console.warn('⚠️ No AI service configured, falling back to mock responses');
+      return NextResponse.json({
+        response: generateFallbackResponse(message.toLowerCase()),
+        timestamp: new Date().toISOString(),
+        source: 'fallback'
+      })
     }
 
     try {
-      // Initialize Gemini
-      const gemini = initializeGemini();
+      // Create the system prompt for energy domain expertise
+      const systemPrompt = `You are UrjaBandhu AI, an expert energy consultant specializing in Indian electricity consumption and optimization. 
 
-      // Configure the model with safety settings
-      const model = gemini.getGenerativeModel({
+Your expertise includes:
+- Electricity bill analysis and cost optimization
+- Appliance energy efficiency recommendations
+- Peak/off-peak hour strategies for Indian electricity boards
+- Solar panel and renewable energy advice for Indian homes
+- Environmental impact calculations
+- Smart home automation for energy savings
+- Regional electricity tariff optimization
+
+User Context: ${context ? JSON.stringify(context) : 'New user, no previous data'}
+
+Guidelines:
+- Always provide practical, actionable advice
+- Use Indian rupees (₹) for cost calculations
+- Reference common Indian appliances and usage patterns
+- Mention relevant Indian electricity boards when applicable
+- Keep responses concise but informative
+- Offer specific numbers and percentages when possible
+- Be encouraging about energy conservation efforts
+
+Respond in a friendly, helpful tone as if you're a personal energy advisor.
+
+User Query: ${message}`;
+
+      // Get the Gemini Pro model for better responses
+      const model = genAI.getGenerativeModel({
         model: "gemini-1.5-pro",
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.9,
+          topK: 40,
+          maxOutputTokens: 1000,
+        },
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -75,106 +106,61 @@ export async function POST(request: NextRequest) {
             category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
             threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
           },
-          {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
         ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.8,
-          maxOutputTokens: 1024,
-        },
       });
 
-      // Prepare the conversation context
-      const conversationHistory = messages.map((msg: any) => {
-        if (msg.role === 'user') {
-          return `User: ${msg.content}`;
-        } else if (msg.role === 'assistant') {
-          return `Assistant: ${msg.content}`;
-        }
-        return '';
-      }).filter(Boolean).join('\n');
+      console.log('🔄 Making API call with Gemini model: gemini-1.5-pro');
+      console.log('📤 Sending prompt to Gemini...');
 
-      // Create the full prompt
-      const fullPrompt = `${ENERGY_SYSTEM_PROMPT}
+      // Generate content using Gemini Pro
+      const result = await model.generateContent(systemPrompt);
 
-Previous conversation:
-${conversationHistory}
+      console.log('📥 Received result from Gemini API');
 
-Please respond to the user's latest message as UrjaBandhu, the energy advisor.`;
-
-      console.log('Sending request to Gemini Pro...');
-
-      // Generate content using Gemini
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      const text = response.text();
-
-      if (!text) {
-        throw new Error('No response generated from Gemini');
+      if (!result || !result.response) {
+        throw new Error('No response received from Gemini API');
       }
 
-      console.log('Gemini Pro response received successfully');
+      const response = await result.response;
+      const aiResponse = response.text();
 
-      // Return successful response
+      if (!aiResponse || aiResponse.trim() === '') {
+        throw new Error('Empty response from Gemini API');
+      }
+
+      console.log('✅ Successfully processed Gemini response');
+      console.log('📊 Response length:', aiResponse.length, 'characters');
+
       return NextResponse.json({
-        response: text,
+        response: aiResponse,
         timestamp: new Date().toISOString(),
-        source: 'gemini-pro',
+        source: 'google-gemini-pro',
         model: 'gemini-1.5-pro',
         usage: {
-          promptTokens: result.response.usageMetadata?.promptTokenCount || 0,
-          completionTokens: result.response.usageMetadata?.candidatesTokenCount || 0,
-          totalTokens: result.response.usageMetadata?.totalTokenCount || 0
+          model: 'gemini-1.5-pro',
+          prompt_tokens: systemPrompt.length,
+          completion_tokens: aiResponse.length
         }
       });
 
     } catch (aiError: any) {
-      console.error('Gemini API Error:', {
+      console.error('💥 Gemini API error details:', {
         message: aiError?.message || 'Unknown error',
-        status: aiError?.status || 'No status',
-        error: aiError
+        stack: aiError?.stack || 'No stack trace',
+        name: aiError?.name || 'Unknown error type',
+        code: aiError?.code || 'No error code'
       });
 
-      // Check for specific error types
-      if (aiError?.message?.includes('API_KEY_INVALID')) {
-        return NextResponse.json({
-          error: 'Invalid Gemini API key. Please check your configuration.',
-          source: 'gemini-error'
-        }, { status: 401 });
-      }
-
-      if (aiError?.message?.includes('PERMISSION_DENIED')) {
-        return NextResponse.json({
-          error: 'Gemini API access denied. Please check your API key permissions.',
-          source: 'gemini-error'
-        }, { status: 403 });
-      }
-
-      if (aiError?.message?.includes('QUOTA_EXCEEDED')) {
-        return NextResponse.json({
-          error: 'Gemini API quota exceeded. Please try again later.',
-          source: 'gemini-error'
-        }, { status: 429 });
-      }
-
-      // Fallback to mock responses for other errors
-      console.log('Falling back to mock response due to Gemini error');
+      // Fallback to mock responses if AI fails
       return NextResponse.json({
-        response: generateFallbackResponse(lastMessage.content.toLowerCase()),
+        response: generateFallbackResponse(message.toLowerCase()),
         timestamp: new Date().toISOString(),
         source: 'fallback-after-error',
         model: 'fallback',
-        error: `Gemini temporarily unavailable: ${aiError?.message || 'Unknown error'}`
+        error: `AI service temporarily unavailable: ${aiError?.message || 'Unknown error'}`
       });
     }
+    */
 
   } catch (error) {
     console.error('Chat API error:', error)

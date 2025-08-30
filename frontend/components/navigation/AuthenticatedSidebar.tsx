@@ -46,11 +46,14 @@ export default function AuthenticatedSidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
+    console.log('AuthenticatedSidebar: handleSignOut called')
     try {
       await signOut()
-      router.push('/')
+      console.log('AuthenticatedSidebar: signOut completed, redirecting to /')
+      // Use window.location for a hard redirect to ensure the user is logged out
+      window.location.href = '/'
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('AuthenticatedSidebar: signOut error:', error)
     }
   }
 

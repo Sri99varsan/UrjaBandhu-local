@@ -37,58 +37,12 @@ export function InspiredHomepage() {
         
         {/* Gradient Orbs */}
         <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/20 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/15 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/15 rounded-full blur-[80px] animate-pulse [animation-delay:2s]" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/10 rounded-full blur-[120px] animate-pulse [animation-delay:4s]" />
       </div>
 
-      {/* Navigation */}
-      <nav className="relative z-20 flex items-center justify-between px-6 py-4">
-        <motion.div 
-          className="flex items-center gap-3"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          {/* Glassmorphism container for logo */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/25">
-                <Logo className="h-5 w-5" width={20} height={20} />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                UrjaBandhu
-              </span>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          className="flex items-center gap-4"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-2 py-2 shadow-xl">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
-                <Link href="/features">Features</Link>
-              </Button>
-              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
-                <Link href="/about">About</Link>
-              </Button>
-              <Button 
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold shadow-lg shadow-green-500/25 transition-all duration-300"
-                                onClick={() => router.push('/auth')}
-              >
-                Sign In
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      </nav>
-
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-[80vh] px-6">
+      <div className="flex flex-col items-center justify-center min-h-screen px-6">
         <motion.div 
           className="text-center max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
