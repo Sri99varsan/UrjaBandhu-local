@@ -16,7 +16,7 @@ export function createClient() {
       key: !!supabaseAnonKey,
       nodeEnv: process.env.NODE_ENV
     })
-    
+
     throw new Error(
       'Missing Supabase environment variables. Please check your .env.local file:\n' +
       `NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? 'Set' : 'Missing'}\n` +
@@ -26,7 +26,7 @@ export function createClient() {
 
   // Production configuration improvements
   const isProduction = process.env.NODE_ENV === 'production'
-  
+
   supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       // Production-optimized settings
@@ -42,7 +42,7 @@ export function createClient() {
       fetch: (url, options = {}) => {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), isProduction ? 15000 : 10000)
-        
+
         return fetch(url, {
           ...options,
           signal: controller.signal,
@@ -50,13 +50,13 @@ export function createClient() {
       },
     },
   })
-  
+
   console.log('Supabase client created:', {
     environment: isProduction ? 'production' : 'development',
     url: supabaseUrl,
     hasKey: !!supabaseAnonKey
   })
-  
+
   return supabaseClient
 }
 
