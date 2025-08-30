@@ -117,23 +117,26 @@ export function InspiredHomepage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Link href="/about">
-              <Button className="bg-white/5 hover:bg-white/10 border border-white/20 text-gray-300 hover:text-white px-4 py-2 rounded-lg backdrop-blur-md transition-all duration-300 text-sm hover:border-white/30">
-                About
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => router.push('/about')}
+              className="bg-white/5 hover:bg-white/10 border border-white/20 text-gray-300 hover:text-white px-4 py-2 rounded-lg backdrop-blur-md transition-all duration-300 text-sm hover:border-white/30 cursor-pointer"
+            >
+              About
+            </Button>
             
-            <Link href="/features">
-              <Button className="bg-white/5 hover:bg-white/10 border border-white/20 text-gray-300 hover:text-white px-4 py-2 rounded-lg backdrop-blur-md transition-all duration-300 text-sm hover:border-white/30">
-                Features
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => router.push('/features')}
+              className="bg-white/5 hover:bg-white/10 border border-white/20 text-gray-300 hover:text-white px-4 py-2 rounded-lg backdrop-blur-md transition-all duration-300 text-sm hover:border-white/30 cursor-pointer"
+            >
+              Features
+            </Button>
             
-            <Link href="/ai-chatbot">
-              <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black px-6 py-2 rounded-lg font-semibold transition-all duration-300 text-sm">
-                Get Started
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => router.push('/ai-chatbot')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black px-6 py-2 rounded-lg font-semibold transition-all duration-300 text-sm cursor-pointer"
+            >
+              Get Started
+            </Button>
           </motion.div>
         </div>
       </motion.nav>
