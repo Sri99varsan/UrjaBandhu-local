@@ -13,13 +13,13 @@ function AuthPageContent() {
 
   useEffect(() => {
     if (!loading && user) {
-      const redirect = searchParams.get('redirect') || 'dashboard'
+      const redirect = searchParams.get('redirect') || 'ai-chatbot'
       const hasQuery = searchParams.get('hasQuery') === 'true'
       
       if (hasQuery) {
-        // If user came from homepage with a query, redirect to dashboard
-        // The dashboard will pick up the query from localStorage
-        router.push('/dashboard')
+        // If user came from homepage with a query, redirect to AI chatbot
+        // The AI chatbot will pick up the query from localStorage
+        router.push('/ai-chatbot')
       } else {
         router.push(`/${redirect}`)
       }

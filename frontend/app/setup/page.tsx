@@ -19,12 +19,12 @@ export default function SetupPage() {
 
   const handleSetupComplete = () => {
     setIsModalOpen(false)
-    router.push('/dashboard')
+    router.push('/ai-chatbot')
   }
 
   const handleSkipSetup = () => {
     setIsModalOpen(false)
-    router.push('/dashboard')
+    router.push('/ai-chatbot')
   }
 
   if (loading) {

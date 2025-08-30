@@ -44,16 +44,31 @@ export default function AuthenticatedSidebar() {
   const router = useRouter()
   const { user, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   const handleSignOut = async () => {
     console.log('AuthenticatedSidebar: handleSignOut called')
+    setIsSigningOut(true)
     try {
+      // Show loading state
+      setIsMobileMenuOpen(false)
+      
       await signOut()
       console.log('AuthenticatedSidebar: signOut completed, redirecting to /')
-      // Use window.location for a hard redirect to ensure the user is logged out
-      window.location.href = '/'
+      
+      // Force a hard redirect to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+      
     } catch (error) {
       console.error('AuthenticatedSidebar: signOut error:', error)
+      // Even if sign out fails, redirect anyway for security
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+    } finally {
+      setIsSigningOut(false)
     }
   }
 
@@ -147,11 +162,21 @@ export default function AuthenticatedSidebar() {
           <div className="mt-auto">
             <Button
               onClick={handleSignOut}
+              disabled={isSigningOut}
               variant="ghost"
-              className="w-full justify-start gap-x-3 text-gray-300 hover:text-green-400 hover:bg-white/5 transition-all duration-200"
+              className="w-full justify-start gap-x-3 text-gray-300 hover:text-green-400 hover:bg-white/5 transition-all duration-200 disabled:opacity-50"
             >
-              <LogOut className="h-5 w-5" />
-              Sign Out
+              {isSigningOut ? (
+                <>
+                  <div className="h-5 w-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                  Signing out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-5 w-5" />
+                  Sign Out
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -277,11 +302,21 @@ export default function AuthenticatedSidebar() {
                 <div className="mt-auto">
                   <Button
                     onClick={handleSignOut}
+                    disabled={isSigningOut}
                     variant="ghost"
-                    className="w-full justify-start gap-x-3 text-gray-300 hover:text-green-400 hover:bg-white/5 transition-all duration-200"
+                    className="w-full justify-start gap-x-3 text-gray-300 hover:text-green-400 hover:bg-white/5 transition-all duration-200 disabled:opacity-50"
                   >
-                    <LogOut className="h-5 w-5" />
-                    Sign Out
+                    {isSigningOut ? (
+                      <>
+                        <div className="h-5 w-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                        Signing out...
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="h-5 w-5" />
+                        Sign Out
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

@@ -18,7 +18,7 @@ export function InspiredHomepage() {
     if (query.trim()) {
       // Store the query in localStorage to pass to chatbot after login
       localStorage.setItem('pendingQuery', query.trim())
-      router.push('/auth?redirect=dashboard&hasQuery=true')
+      router.push('/auth?redirect=ai-chatbot&hasQuery=true')
     }
   }
 

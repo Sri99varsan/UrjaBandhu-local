@@ -28,17 +28,30 @@ export default function DashboardNavigation() {
   const router = useRouter()
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   const handleSignOut = async () => {
     console.log('DashboardNavigation: handleSignOut called')
+    setIsSigningOut(true)
     try {
+      setIsMobileMenuOpen(false)
+      
       await signOut()
       console.log('DashboardNavigation: signOut completed, redirecting to /')
-      // Use window.location for a hard redirect to ensure the user is logged out
-      window.location.href = '/'
+      
+      // Force a hard redirect to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+      
     } catch (error) {
       console.error('DashboardNavigation: signOut error:', error)
-      toast.error('Failed to sign out')
+      // Even if sign out fails, redirect anyway for security
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+    } finally {
+      setIsSigningOut(false)
     }
   }
 
@@ -85,10 +98,20 @@ export default function DashboardNavigation() {
             </div>
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isSigningOut}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+              {isSigningOut ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2" />
+                  Signing out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </>
+              )}
             </button>
           </div>
 
@@ -149,11 +172,21 @@ export default function DashboardNavigation() {
             <div className="mt-3 space-y-1">
               <button
                 onClick={handleSignOut}
-                className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                disabled={isSigningOut}
+                className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 disabled:opacity-50"
               >
                 <div className="flex items-center">
-                  <LogOut className="h-4 w-4 mr-3" />
-                  Sign Out
+                  {isSigningOut ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-3" />
+                      Signing out...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="h-4 w-4 mr-3" />
+                      Sign Out
+                    </>
+                  )}
                 </div>
               </button>
             </div>

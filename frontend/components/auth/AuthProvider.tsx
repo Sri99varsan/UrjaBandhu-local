@@ -162,21 +162,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.clear()
       }
       
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error('SignOut error:', error)
-        throw error
-      }
-      console.log('SignOut successful')
-      
-      // Explicitly clear state
+      // Force clear auth state before calling signOut
       setSession(null)
       setUser(null)
+      
+      const { error } = await supabase.auth.signOut({
+        scope: 'global' // Sign out from all sessions
+      })
+      
+      if (error) {
+        console.error('SignOut error:', error)
+        // Even if there's an error, still clear local state
+        setSession(null)
+        setUser(null)
+        setLoading(false)
+        // Don't throw - allow redirect to proceed
+        return
+      }
+      
+      console.log('SignOut successful')
       setLoading(false)
     } catch (error) {
       console.error('SignOut failed:', error)
+      // Clear state even on error
+      setSession(null)
+      setUser(null)
       setLoading(false)
-      throw error
+      // Don't throw - allow redirect to proceed
     }
   }
 

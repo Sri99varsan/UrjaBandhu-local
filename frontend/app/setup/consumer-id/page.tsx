@@ -210,7 +210,7 @@ export default function ConsumerSetupPage() {
   }
 
   const skipSetup = () => {
-    router.push('/dashboard')
+    router.push('/ai-chatbot')
   }
 
   const continueToApp = () => {
@@ -218,7 +218,7 @@ export default function ConsumerSetupPage() {
       toast.error('Please add at least one consumer connection or skip setup')
       return
     }
-    router.push('/dashboard')
+    router.push('/ai-chatbot')
   }
 
   if (loading) {
