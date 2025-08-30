@@ -28,6 +28,8 @@ function AuthCallbackContent() {
         const errorParam = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
 
+        console.log('OAuth callback started. Code:', !!code, 'Error:', errorParam)
+
         // Handle OAuth errors immediately
         if (errorParam) {
           console.error('OAuth error:', errorParam, errorDescription)
@@ -39,18 +41,21 @@ function AuthCallbackContent() {
         // Handle successful OAuth callback
         if (code) {
           console.log('Processing OAuth code...')
+          setStatus('Exchanging authorization code...')
           
           // Set a maximum timeout for the entire process
           const overallTimeout = setTimeout(() => {
             console.log('Overall process timeout - redirecting anyway')
-            window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
-          }, 5000) // 5 second max
+            // Use environment-based URL
+            const baseUrl = window.location.origin
+            window.location.href = `${baseUrl}/ai-chatbot`
+          }, 8000) // Increased to 8 seconds
           
           try {
             // Exchange code for session with timeout
             const exchangePromise = supabase.auth.exchangeCodeForSession(code)
             const exchangeTimeout = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Exchange timeout')), 3000)
+              setTimeout(() => reject(new Error('Exchange timeout')), 5000) // Increased timeout
             )
             
             const { data, error: exchangeError } = await Promise.race([
@@ -61,17 +66,21 @@ function AuthCallbackContent() {
             if (exchangeError) {
               console.error('Session exchange failed:', exchangeError)
               clearTimeout(overallTimeout)
-              // Don't show error, just redirect to try again
-              window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+              setError('Failed to complete authentication')
+              setTimeout(() => router.push('/auth?error=exchange_failed'), 2000)
               return
             }
 
             if (data.session && data.user) {
               console.log('Authentication successful for:', data.user.email)
               clearTimeout(overallTimeout)
+              setStatus('Setting up your account...')
               
               // Store user ID
               setCurrentUserId(data.user.id)
+              
+              // Give the session time to propagate
+              await new Promise(resolve => setTimeout(resolve, 500))
               
               // Quick connection check with very short timeout
               try {
@@ -83,7 +92,7 @@ function AuthCallbackContent() {
                   .single()
                 
                 const quickTimeout = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Quick timeout')), 1000)
+                  setTimeout(() => reject(new Error('Quick timeout')), 2000) // Increased timeout
                 )
                 
                 const { data: connections } = await Promise.race([
@@ -99,8 +108,12 @@ function AuthCallbackContent() {
                   return
                 } else {
                   // Existing user - redirect immediately
-                  console.log('Existing user - redirecting')
-                  window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+                  console.log('Existing user - redirecting to chatbot')
+                  const baseUrl = window.location.origin
+                  // Add a small delay to ensure session is set
+                  setTimeout(() => {
+                    window.location.href = `${baseUrl}/ai-chatbot`
+                  }, 1000)
                   return
                 }
               } catch (dbError) {
@@ -110,12 +123,17 @@ function AuthCallbackContent() {
                 setIsLoading(false)
                 return
               }
+            } else {
+              console.error('No session or user data received')
+              setError('Authentication failed - no session')
+              setTimeout(() => router.push('/auth?error=no_session'), 2000)
+              return
             }
           } catch (error) {
             console.error('OAuth exchange error:', error)
             clearTimeout(overallTimeout)
-            // Don't show error, just redirect
-            window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+            setError('Authentication failed')
+            setTimeout(() => router.push('/auth?error=exchange_error'), 2000)
             return
           }
         }
@@ -124,7 +142,7 @@ function AuthCallbackContent() {
         try {
           const sessionCheck = supabase.auth.getSession()
           const sessionTimeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Session timeout')), 2000)
+            setTimeout(() => reject(new Error('Session timeout')), 3000)
           )
           
           const { data: sessionData, error: sessionError } = await Promise.race([
@@ -140,7 +158,8 @@ function AuthCallbackContent() {
 
           // Has session - redirect to chatbot immediately
           console.log('Existing session found - redirecting')
-          window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+          const baseUrl = window.location.origin
+          window.location.href = `${baseUrl}/ai-chatbot`
           
         } catch (error) {
           console.log('Session check failed - redirecting to auth')
@@ -149,8 +168,8 @@ function AuthCallbackContent() {
 
       } catch (error) {
         console.error('Callback error:', error)
-        // Don't show error to user, just redirect
-        window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+        setError('Authentication failed')
+        setTimeout(() => router.push('/auth?error=callback_error'), 2000)
       } finally {
         if (!showConsumerSetup) {
           setTimeout(() => setIsLoading(false), 500)
@@ -164,14 +183,16 @@ function AuthCallbackContent() {
 
   const handleConsumerSetupComplete = () => {
     setShowConsumerSetup(false)
-    // Immediate redirect to production URL
-    window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+    // Immediate redirect to correct URL based on environment
+    const baseUrl = window.location.origin
+    window.location.href = `${baseUrl}/ai-chatbot`
   }
 
   const handleConsumerSetupSkip = () => {
     setShowConsumerSetup(false)
     // Redirect to dashboard
-    window.location.href = 'https://urjabandhu.vercel.app/dashboard/'
+    const baseUrl = window.location.origin
+    window.location.href = `${baseUrl}/dashboard`
   }
 
   if (error) {
