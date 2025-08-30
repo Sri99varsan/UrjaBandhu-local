@@ -49,12 +49,14 @@ export default function DevicesPage() {
   })
 
   const fetchDevices = useCallback(async () => {
+    if (!user?.id) return
+    
     try {
       setLoadingData(true)
       const { data, error } = await supabase
         .from('devices')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -77,10 +79,10 @@ export default function DevicesPage() {
       return
     }
 
-    if (user) {
+    if (user?.id) {
       fetchDevices()
     }
-  }, [user, loading, router, fetchDevices])
+  }, [user?.id, loading])
 
   const handleAddDevice = async (e: React.FormEvent) => {
     e.preventDefault()

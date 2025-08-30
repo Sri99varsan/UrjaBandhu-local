@@ -82,7 +82,7 @@ export default function AdvancedAnalyticsPage() {
     if (user?.id) {
       loadAdvancedAnalytics()
     }
-  }, [user?.id, timeRange, loadAdvancedAnalytics])
+  }, [user?.id])
 
   // Prepare chart data
   const chartData = timeSeriesData.map(item => ({

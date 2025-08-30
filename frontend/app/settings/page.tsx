@@ -298,7 +298,7 @@ export default function SettingsPage() {
       
       loadData()
     }
-  }, [user, loading, router, fetchProfile, loadConnections])
+  }, [user?.id, loading])
 
   const saveConnection = async () => {
     if (!formData.consumer_id || !formData.electricity_board) {

@@ -169,10 +169,10 @@ export default function AnalyticsPage() {
       return
     }
 
-    if (user) {
+    if (user?.id) {
       fetchAnalyticsData()
     }
-  }, [user, loading, router, timeRange, fetchAnalyticsData])
+  }, [user?.id, loading, timeRange])
 
   const downloadReport = () => {
     const csvContent = [
