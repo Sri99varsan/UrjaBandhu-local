@@ -2,7 +2,7 @@
 # UrjaBandhu Project .gitignore
 # ================================================================
 # This file specifies which files should be ignored by Git.
-# IMPORTANT: Package files and configuration files are NOT ignored!
+# IMPORTANT: All package files and configuration files are tracked!
 # ================================================================
 
 # Environment Variables
@@ -38,19 +38,6 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-# Keep important package files (DO NOT IGNORE)
-!package.json
-!package-lock.json
-!yarn.lock
-!pnpm-lock.yaml
-!requirements.txt
-!pyproject.toml
-!poetry.lock
-!Pipfile
-!Pipfile.lock
-!composer.json
-!composer.lock
 
 # IDEs
 .vscode/
@@ -91,28 +78,10 @@ lerna-debug.log*
 models/
 checkpoints/
 
-# Data files (keep small config files, ignore large datasets)
+# Data files (ignore large datasets)
 data/large/
 datasets/large/
 *.csv
-# Keep small config JSONs but ignore large data files
-!*config*.json
-!*settings*.json
-!*.config.js
-!*.config.ts
-!next.config.js
-!next.config.ts
-!tailwind.config.js
-!tailwind.config.ts
-!tsconfig.json
-!jsconfig.json
-!eslint.config.js
-!.eslintrc.json
-!.prettierrc.json
-!vite.config.js
-!vite.config.ts
-!nuxt.config.js
-!nuxt.config.ts
 *.parquet
 
 # Cache
@@ -141,15 +110,22 @@ tmp/
 temp/
 
 # ================================================================
-# EXPLICITLY KEEP THESE IMPORTANT FILES (DO NOT IGNORE)
+# EXPLICITLY KEEP THESE IMPORTANT FILES (FORCE TRACKING)
 # ================================================================
-# Package management files
+# Package management files - ALWAYS TRACKED
 !package.json
 !package-lock.json
 !yarn.lock
 !pnpm-lock.yaml
+!requirements.txt
+!pyproject.toml
+!poetry.lock
+!Pipfile
+!Pipfile.lock
+!composer.json
+!composer.lock
 
-# Configuration files
+# Configuration files - ALWAYS TRACKED
 !*.config.js
 !*.config.ts
 !*.config.json
@@ -166,21 +142,16 @@ temp/
 !vite.config.ts
 !nuxt.config.js
 !nuxt.config.ts
+!*config*.json
+!*settings*.json
 
-# Docker and deployment files
+# Docker and deployment files - ALWAYS TRACKED
 !Dockerfile
 !docker-compose.yml
 !netlify.toml
 !vercel.json
 
-# Python package files
-!requirements.txt
-!pyproject.toml
-!poetry.lock
-!Pipfile
-!Pipfile.lock
-
-# Documentation and project files
+# Documentation and project files - ALWAYS TRACKED
 !README.md
 !*.md
 !LICENSE
