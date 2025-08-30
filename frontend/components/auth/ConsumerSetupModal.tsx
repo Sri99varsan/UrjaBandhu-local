@@ -184,10 +184,13 @@ export default function ConsumerSetupModal({ isOpen, onComplete, onSkip, userId 
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white border border-gray-700">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-black/90 backdrop-blur-md border border-white/20 text-white shadow-2xl"
+                       style={{
+                         background: 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(16,16,16,0.95) 50%, rgba(0,32,0,0.85) 100%)'
+                       }}>
         <DialogHeader className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+            <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg">
               <Zap className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -347,13 +350,13 @@ export default function ConsumerSetupModal({ isOpen, onComplete, onSkip, userId 
           <Button
             onClick={saveConnections}
             disabled={saving}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
+            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700"
           >
             {saving ? 'Saving...' : 'Save & Continue'}
           </Button>
         </div>
 
-        <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+        <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
           <p className="text-sm text-blue-200">
             <strong>Where to find your Consumer Number:</strong> Check your electricity bill - it&apos;s usually a 10-12 digit number 
             labeled as &quot;Consumer Number&quot;, &quot;Consumer ID&quot;, &quot;Account Number&quot;, or &quot;Service Connection Number&quot;.

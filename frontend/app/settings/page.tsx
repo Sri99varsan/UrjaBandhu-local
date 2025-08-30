@@ -430,7 +430,7 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold text-gray-900">Failed to load profile</h2>
           <button 
             onClick={fetchProfile}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold rounded-lg shadow-lg shadow-green-500/25 transition-all duration-200"
           >
             Retry
           </button>
@@ -717,7 +717,7 @@ export default function SettingsPage() {
                     {!showAddForm && (
                       <button
                         onClick={() => setShowAddForm(true)}
-                        className="border border-white/20 text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+                        className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/15 hover:border-white/30 px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-lg"
                       >
                         <Plus className="h-4 w-4" />
                         Add Consumer Connection

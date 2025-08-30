@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast, { Toaster } from 'react-hot-toast'
 import { useSpeechServices } from '@/hooks/useSpeechServices'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
 import { 
   Zap, 
   BarChart3, 
@@ -627,13 +630,39 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                               ? 'bg-green-500 text-black' 
                               : 'bg-gray-800/50 text-white'
                           }`}>
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm flex-1">{message.text}</p>
+                            <div className="flex items-start justify-between">
+                              {message.sender === 'user' ? (
+                                <p className="text-sm flex-1">{message.text}</p>
+                              ) : (
+                                <div className="text-sm flex-1 prose prose-sm prose-invert max-w-none markdown-content">
+                                  <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    rehypePlugins={[rehypeHighlight]}
+                                    components={{
+                                      // Custom styling for markdown elements
+                                      h1: ({node, ...props}) => <h1 className="text-lg font-bold text-green-400 mb-2" {...props} />,
+                                      h2: ({node, ...props}) => <h2 className="text-base font-semibold text-green-300 mb-2" {...props} />,
+                                      h3: ({node, ...props}) => <h3 className="text-sm font-medium text-green-200 mb-1" {...props} />,
+                                      p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                                      ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+                                      ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+                                      strong: ({node, ...props}) => <strong className="font-semibold text-green-300" {...props} />,
+                                      em: ({node, ...props}) => <em className="italic text-green-200" {...props} />,
+                                      code: ({node, ...props}) => <code className="bg-gray-700 text-green-300 px-1 py-0.5 rounded text-xs" {...props} />,
+                                      pre: ({node, ...props}) => <pre className="bg-gray-700 p-2 rounded text-xs overflow-x-auto" {...props} />,
+                                      blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-green-400 pl-3 italic text-gray-300" {...props} />,
+                                      a: ({node, ...props}) => <a className="text-green-400 hover:text-green-300 underline" {...props} />,
+                                    }}
+                                  >
+                                    {message.text}
+                                  </ReactMarkdown>
+                                </div>
+                              )}
                               {message.sender === 'bot' && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="ml-2 p-1 h-6 w-6"
+                                  className="ml-2 p-1 h-6 w-6 flex-shrink-0"
                                   onClick={() => speechServices.speakText(message.text)}
                                   disabled={speechServices.isSpeaking}
                                 >

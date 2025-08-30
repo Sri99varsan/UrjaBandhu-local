@@ -127,8 +127,13 @@ export default function AIInsightsDashboard() {
 
   if (loading || insightsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-        <div className="flex items-center space-x-3">
+      <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
+        
+        <div className="flex items-center space-x-3 bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl p-6 relative z-10">
           <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-lg font-medium text-white">Loading AI Insights...</span>
         </div>
@@ -137,8 +142,13 @@ export default function AIInsightsDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+      <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
+      
+      <div className="max-w-7xl mx-auto space-y-8 relative z-10 p-6">
         
         {/* Header */}
         <motion.div
@@ -151,7 +161,7 @@ export default function AIInsightsDashboard() {
               <Brain className="h-8 w-8 text-green-400" />
               AI Energy Insights
             </h1>
-            <p className="text-gray-400 mt-2">Advanced AI-powered energy optimization and recommendations</p>
+            <p className="text-gray-400 mt-2">Intelligent energy analysis powered by AI to optimize your consumption and reduce costs</p>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -161,12 +171,11 @@ export default function AIInsightsDashboard() {
                 refetchInsights()
                 toast.success('Insights refreshed!')
               }}
-              className="border-green-500/30 text-green-400 hover:bg-green-500/20"
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              Refresh AI Analysis
+              Refresh Analysis
             </Button>
-            <Button className="bg-gradient-to-r from-green-500 to-emerald-500 text-black">
+            <Button>
               <Share2 className="h-4 w-4 mr-2" />
               Share Report
             </Button>
@@ -180,14 +189,14 @@ export default function AIInsightsDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-black/40 backdrop-blur-sm border-green-500/20">
+            <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-400">
                   <Award className="h-5 w-5" />
                   Energy Efficiency Score
                 </CardTitle>
-                <CardDescription>
-                  AI-calculated efficiency rating based on comprehensive analysis
+                <CardDescription className="text-gray-300">
+                  AI-powered efficiency rating based on your energy usage patterns and optimization potential
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -244,24 +253,24 @@ export default function AIInsightsDashboard() {
           transition={{ delay: 0.2 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-black/40 border border-green-500/20">
-              <TabsTrigger value="insights" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
+            <TabsList className="grid w-full grid-cols-5 bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-lg">
+              <TabsTrigger value="insights" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 data-[state=active]:border-green-500/50 rounded-lg transition-all duration-200">
                 <Lightbulb className="h-4 w-4 mr-2" />
                 Insights
               </TabsTrigger>
-              <TabsTrigger value="recommendations" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+              <TabsTrigger value="recommendations" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 data-[state=active]:border-blue-500/50 rounded-lg transition-all duration-200">
                 <Target className="h-4 w-4 mr-2" />
                 Recommendations
               </TabsTrigger>
-              <TabsTrigger value="patterns" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400">
+              <TabsTrigger value="patterns" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/50 rounded-lg transition-all duration-200">
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Patterns
               </TabsTrigger>
-              <TabsTrigger value="environmental" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
+              <TabsTrigger value="environmental" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 data-[state=active]:border-emerald-500/50 rounded-lg transition-all duration-200">
                 <TreePine className="h-4 w-4 mr-2" />
                 Environmental
               </TabsTrigger>
-              <TabsTrigger value="automation" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400">
+              <TabsTrigger value="automation" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400 data-[state=active]:border-orange-500/50 rounded-lg transition-all duration-200">
                 <Settings className="h-4 w-4 mr-2" />
                 Automation
               </TabsTrigger>
@@ -277,24 +286,24 @@ export default function AIInsightsDashboard() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="bg-black/40 backdrop-blur-sm border-green-500/20 hover:border-green-500/40 transition-all duration-300">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300">
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-lg bg-black/40 ${getInsightColor(insight.type)}`}>
+                            <div className={`p-2 rounded-lg bg-gray-700/40 backdrop-blur-sm border border-white/10 ${getInsightColor(insight.type)}`}>
                               {getInsightIcon(insight.type)}
                             </div>
                             <div>
                               <CardTitle className="text-white">{insight.title}</CardTitle>
-                              <CardDescription className="mt-1">{insight.description}</CardDescription>
+                              <CardDescription className="mt-1 text-gray-300">{insight.description}</CardDescription>
                               <div className="flex items-center gap-2 mt-2">
                                 <Badge className={getImpactColor(insight.impact)}>
                                   {insight.impact.toUpperCase()} IMPACT
                                 </Badge>
-                                <Badge variant="outline" className="border-green-500/30 text-green-400">
+                                <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10">
                                   {formatCurrency(insight.savings_potential)}/month
                                 </Badge>
-                                <Badge variant="outline" className="border-blue-500/30 text-blue-400">
+                                <Badge variant="outline" className="border-blue-500/30 text-blue-400 bg-blue-500/10">
                                   {(insight.confidence_score * 100).toFixed(0)}% confidence
                                 </Badge>
                               </div>
@@ -326,7 +335,7 @@ export default function AIInsightsDashboard() {
                             </div>
                             <Button 
                               size="sm" 
-                              className="bg-gradient-to-r from-green-500 to-emerald-500 text-black"
+                              variant="default"
                             >
                               <Play className="h-3 w-3 mr-1" />
                               Apply Insight
@@ -345,23 +354,23 @@ export default function AIInsightsDashboard() {
               {recommendations && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300">
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-green-400">
                           {formatCurrency(recommendations.total_potential_savings)}
                         </div>
-                        <p className="text-sm text-gray-300">Monthly Savings Potential</p>
+                        <p className="text-sm text-gray-300">Potential Monthly Savings</p>
                       </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 border-blue-500/30">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-blue-500/40 transition-all duration-300">
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-blue-400">
                           {recommendations.recommendations.length}
                         </div>
-                        <p className="text-sm text-gray-300">Active Recommendations</p>
+                        <p className="text-sm text-gray-300">Smart Recommendations</p>
                       </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-orange-500/20 to-red-500/20 border-orange-500/30">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-orange-500/40 transition-all duration-300">
                       <CardContent className="p-4 text-center">
                         <div className="text-2xl font-bold text-orange-400">
                           {recommendations.implementation_timeline}
@@ -379,19 +388,19 @@ export default function AIInsightsDashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
-                        <Card className="bg-black/40 backdrop-blur-sm border-blue-500/20">
+                        <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-blue-500/40 transition-all duration-300">
                           <CardHeader>
                             <div className="flex items-center justify-between">
                               <div>
                                 <CardTitle className="text-white flex items-center gap-2">
                                   {rec.device_name && (
-                                    <Badge variant="outline" className="border-purple-500/30 text-purple-400">
+                                    <Badge variant="outline" className="border-purple-500/30 text-purple-400 bg-purple-500/10">
                                       {rec.device_name}
                                     </Badge>
                                   )}
                                   {rec.title}
                                 </CardTitle>
-                                <CardDescription className="mt-1">{rec.description}</CardDescription>
+                                <CardDescription className="mt-1 text-gray-300">{rec.description}</CardDescription>
                               </div>
                               <div className="text-right">
                                 <div className="text-lg font-bold text-green-400">
@@ -432,7 +441,7 @@ export default function AIInsightsDashboard() {
                                 <Button
                                   onClick={() => handleExecuteRecommendation(rec.id, rec.title)}
                                   disabled={executingActions.has(rec.id)}
-                                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                                  variant="default"
                                 >
                                   {executingActions.has(rec.id) ? (
                                     <>
@@ -468,45 +477,45 @@ export default function AIInsightsDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      <Card className="bg-black/40 backdrop-blur-sm border-purple-500/20">
+                      <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-purple-500/40 transition-all duration-300">
                         <CardHeader>
                           <CardTitle className="text-white capitalize">
                             {pattern.pattern_type} Usage Pattern
                           </CardTitle>
-                          <CardDescription>
-                            AI analysis of your {pattern.pattern_type} energy consumption patterns
+                          <CardDescription className="text-gray-300">
+                            Smart analysis of your {pattern.pattern_type} energy usage patterns and trends
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            <div className="text-center p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                            <div className="text-center p-4 bg-gray-700/30 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-gray-700/40 transition-all duration-200">
                               <div className="text-2xl font-bold text-purple-400">
                                 {pattern.peak_hours.length}
                               </div>
-                              <p className="text-sm text-gray-300">Peak Hours</p>
+                              <p className="text-sm text-gray-300">Peak Usage Hours</p>
                             </div>
-                            <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                            <div className="text-center p-4 bg-gray-700/30 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-gray-700/40 transition-all duration-200">
                               <div className="text-2xl font-bold text-blue-400">
                                 {(pattern.consumption_variance * 100).toFixed(0)}%
                               </div>
-                              <p className="text-sm text-gray-300">Variance</p>
+                              <p className="text-sm text-gray-300">Usage Variance</p>
                             </div>
-                            <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                            <div className="text-center p-4 bg-gray-700/30 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-gray-700/40 transition-all duration-200">
                               <div className="text-2xl font-bold text-green-400">
                                 {(pattern.cost_efficiency_score * 100).toFixed(0)}%
                               </div>
-                              <p className="text-sm text-gray-300">Efficiency</p>
+                              <p className="text-sm text-gray-300">Efficiency Score</p>
                             </div>
-                            <div className="text-center p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                            <div className="text-center p-4 bg-gray-700/30 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-gray-700/40 transition-all duration-200">
                               <div className="text-2xl font-bold text-orange-400">
                                 {pattern.anomalies_detected}
                               </div>
-                              <p className="text-sm text-gray-300">Anomalies</p>
+                              <p className="text-sm text-gray-300">Detected Anomalies</p>
                             </div>
                           </div>
 
                           <div>
-                            <h4 className="font-medium text-white mb-3">Optimization Opportunities:</h4>
+                            <h4 className="font-medium text-white mb-3">Smart Optimization Opportunities:</h4>
                             <ul className="space-y-2">
                               {pattern.optimization_opportunities.map((opportunity, oppIndex) => (
                                 <li key={oppIndex} className="flex items-start gap-2 text-sm text-gray-300">
@@ -529,16 +538,16 @@ export default function AIInsightsDashboard() {
               {impact && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="bg-gradient-to-br from-red-500/20 to-orange-500/20 border-red-500/30">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-red-500/40 transition-all duration-300">
                       <CardContent className="p-4 text-center">
                         <ThermometerSun className="h-8 w-8 text-red-400 mx-auto mb-2" />
                         <div className="text-xl font-bold text-red-400">
                           {impact.carbon_footprint_kg.toFixed(0)} kg
                         </div>
-                        <p className="text-sm text-gray-300">Monthly Carbon Footprint</p>
+                        <p className="text-sm text-gray-300">Current Carbon Footprint</p>
                       </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300">
                       <CardContent className="p-4 text-center">
                         <TreePine className="h-8 w-8 text-green-400 mx-auto mb-2" />
                         <div className="text-xl font-bold text-green-400">
@@ -547,40 +556,40 @@ export default function AIInsightsDashboard() {
                         <p className="text-sm text-gray-300">Reduction Potential</p>
                       </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-500/30">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-yellow-500/40 transition-all duration-300">
                       <CardContent className="p-4 text-center">
                         <Battery className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
                         <div className="text-xl font-bold text-yellow-400">
                           {(impact.renewable_energy_score * 100).toFixed(0)}%
                         </div>
-                        <p className="text-sm text-gray-300">Renewable Energy</p>
+                        <p className="text-sm text-gray-300">Renewable Energy Usage</p>
                       </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border-emerald-500/30">
+                    <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-emerald-500/40 transition-all duration-300">
                       <CardContent className="p-4 text-center">
                         <Recycle className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
                         <div className="text-xl font-bold text-emerald-400">
                           {impact.eco_friendly_rating}/10
                         </div>
-                        <p className="text-sm text-gray-300">Eco Rating</p>
+                        <p className="text-sm text-gray-300">Sustainability Rating</p>
                       </CardContent>
                     </Card>
                   </div>
 
-                  <Card className="bg-black/40 backdrop-blur-sm border-emerald-500/20">
+                  <Card className="bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl hover:bg-gray-800/40 hover:border-emerald-500/40 transition-all duration-300">
                     <CardHeader>
                       <CardTitle className="text-emerald-400 flex items-center gap-2">
                         <Leaf className="h-5 w-5" />
-                        Green Energy Recommendations
+                        Sustainability Recommendations
                       </CardTitle>
-                      <CardDescription>
-                        Actionable steps to reduce your environmental impact
+                      <CardDescription className="text-gray-300">
+                        AI-powered suggestions to reduce your environmental impact and increase energy efficiency
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-3">
                         {impact.green_recommendations.map((recommendation, index) => (
-                          <li key={index} className="flex items-start gap-3 p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                          <li key={index} className="flex items-start gap-3 p-3 bg-gray-700/30 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-gray-700/40 transition-all duration-200">
                             <CheckCircle className="h-5 w-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                             <span className="text-gray-300">{recommendation}</span>
                           </li>
@@ -594,18 +603,18 @@ export default function AIInsightsDashboard() {
 
             {/* Automation Tab */}
             <TabsContent value="automation" className="space-y-6">
-              <div className="text-center py-12">
+              <div className="text-center py-12 bg-gray-800/30 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
                 <Settings className="h-16 w-16 text-orange-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">AI-Powered Automation Coming Soon</h3>
-                <p className="text-gray-400 mb-6">
-                  Fully automated energy optimization based on AI insights and recommendations
+                <h3 className="text-xl font-semibold text-white mb-2">Smart Automation Coming Soon</h3>
+                <p className="text-gray-300 mb-6">
+                  Advanced AI-driven automation that learns your patterns and optimizes energy usage automatically
                 </p>
                 <Button 
                   onClick={() => router.push('/automation')}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 text-white"
+                  variant="default"
                 >
                   <Settings className="h-4 w-4 mr-2" />
-                  Configure Manual Automation
+                  Set Up Manual Controls
                 </Button>
               </div>
             </TabsContent>

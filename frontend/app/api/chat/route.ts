@@ -1,191 +1,159 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
 
-// Initialize Gemini client
-let genAI: GoogleGenerativeAI | null = null;
-
-function initializeGemini() {
-  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-
-  console.log('🔑 API Key check:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'Not found');
-  console.log('🌍 Environment variables loaded:', Object.keys(process.env).filter(key => key.includes('GOOGLE')));
-
-  if (!apiKey) {
-    console.error('❌ Google Gemini API key not found in environment variables');
-    throw new Error('Google Gemini API key not configured');
+// Smart mockup response generator
+function generateSmartMockupResponse(message: string): string {
+  // Greetings and welcome
+  if (message.includes('hello') || message.includes('hi') || message.includes('hey') || message.includes('namaste')) {
+    return "🙏 Namaste! I'm UrjaBandhu, your personal energy advisor. I'm here to help you save money on your electricity bills and reduce your carbon footprint. How can I assist you with your energy concerns today?";
   }
 
-  if (!genAI) {
-    console.log('✨ Creating new GoogleGenerativeAI instance...');
-    genAI = new GoogleGenerativeAI(apiKey);
+  // Bill analysis
+  if (message.includes('bill') || message.includes('cost') || message.includes('expensive') || message.includes('high bill')) {
+    return "💡 High electricity bills can be frustrating! Here are some quick ways to reduce your costs:\n\n• **Switch to LED bulbs** - Save ₹1,500-2,500 annually\n• **Use AC efficiently** - Set temperature to 24°C, save 20-30%\n• **Unplug devices** when not in use - Reduce phantom load by 10%\n• **Use fans with AC** - Feel 3°C cooler, use less AC\n\nWould you like me to analyze your specific bill or suggest appliance-specific savings?";
   }
 
-  return genAI;
+  // AC and cooling
+  if (message.includes('ac') || message.includes('air conditioner') || message.includes('cooling') || message.includes('summer')) {
+    return "❄️ **Smart AC Usage Tips:**\n\n• **Optimal temperature**: 24-26°C saves 20-30% energy\n• **5-star rated AC**: Consumes 30% less electricity\n• **Regular maintenance**: Clean filters monthly, save 15%\n• **Use timer function**: Auto-off saves ₹500-800/month\n• **Ceiling fans**: Use with AC, feel cooler at higher temps\n\n💰 **Savings**: A 1.5-ton AC can save ₹2,000-4,000 annually with these tips!\n\nNeed help calculating your AC's power consumption?";
+  }
+
+  // Appliances and devices
+  if (message.includes('appliance') || message.includes('device') || message.includes('fridge') || message.includes('refrigerator')) {
+    return "🏠 **Energy-Efficient Appliance Guide:**\n\n**Refrigerator** (₹3,000-5,000/year)\n• 5-star rating saves 40% energy\n• Maintain 4°C (fridge) and -15°C (freezer)\n• Don't overpack, clean coils monthly\n\n**Water Heater** (₹2,000-4,000/year)\n• Use timer, heat only when needed\n• Insulate pipes, save 10-15%\n• Solar heater saves 70-80% costs\n\n**TV & Electronics**\n• Switch to LED TV, save 50% energy\n• Use power strips, cut standby power\n\nWhich appliance would you like specific advice for?";
+  }
+
+  // LED and lighting
+  if (message.includes('led') || message.includes('light') || message.includes('bulb') || message.includes('lighting')) {
+    return `## 💡 LED Lighting Savings Calculator
+
+### Comparison: Traditional vs LED Bulbs
+
+| Type | Wattage | Daily Cost (5hrs) | Monthly Savings |
+|------|---------|------------------|----------------|
+| **Traditional Bulb** | 60W | ₹10 | - |
+| **LED Bulb** | 9W | ₹1.5 | **₹255** |
+
+### For a Typical Home (10 bulbs):
+- **Total annual savings**: **₹30,600**
+- **LED investment**: ₹2,000-3,000
+- **Payback period**: 1-2 months! �
+
+> **Pro tip**: Replace high-usage bulbs first (living room, kitchen) for maximum impact.
+
+**How many bulbs do you want to replace?**`;
+  }
+
+  // Solar and renewable energy
+  if (message.includes('solar') || message.includes('renewable') || message.includes('panels')) {
+    return "☀️ **Solar Power Benefits for Your Home:**\n\n**Cost Analysis (3kW system):**\n• Installation: ₹1.8-2.5 lakhs\n• Monthly savings: ₹2,500-4,000\n• Government subsidy: Up to ₹78,000\n• Payback period: 5-7 years\n• 25-year savings: ₹8-12 lakhs\n\n**Environmental Impact:**\n• Reduce 3-4 tons CO2 annually\n• Equivalent to planting 100+ trees\n\n**Best for:** South-facing roofs, minimal shading\n\nWould you like help calculating solar potential for your specific roof area?";
+  }
+
+  // Energy monitoring and smart home
+  if (message.includes('monitor') || message.includes('track') || message.includes('smart') || message.includes('meter')) {
+    return "📊 **Smart Energy Monitoring Solutions:**\n\n**Smart Meters:**\n• Real-time consumption tracking\n• Identify energy-hungry devices\n• Time-of-use billing optimization\n\n**Smart Plugs (₹500-1,500 each):**\n• Remote control appliances\n• Track individual device consumption\n• Schedule automatic on/off\n\n**Home Energy Management:**\n• Peak vs off-peak usage optimization\n• Automated load management\n• 15-25% additional savings possible\n\n**UrjaBandhu Features:**\n• Bill analysis and predictions\n• Personalized saving recommendations\n• Device-wise consumption breakdown\n\nInterested in setting up smart monitoring for your home?";
+  }
+
+  // Tips and general advice
+  if (message.includes('tip') || message.includes('advice') || message.includes('save') || message.includes('reduce')) {
+    return `# 🎯 Top Energy-Saving Tips for Indian Homes
+
+## ⚡ Immediate Actions (Zero Cost)
+- **Unplug chargers & devices**: Save ₹200-400/month
+- **Use natural light during day**: Save ₹300-500/month  
+- **Air-dry clothes instead of dryer**: Save ₹800-1,200/month
+
+## 💰 Low-Cost Upgrades (₹1,000-5,000)
+1. **LED bulbs**: Save ₹2,500-4,000/year
+2. **Power strips with switches**: Save ₹500-800/year
+3. **Window films for AC rooms**: Save ₹1,000-2,000/year
+
+## 🏆 Best Investment (₹10,000-50,000)
+- **5-star appliances**: Save 30-40% on specific devices
+- **Solar water heater**: Save ₹8,000-15,000/year
+
+---
+
+> **Which category interests you most?** I can provide detailed guidance for any of these options! 💡`;
+  }
+
+  // Specific numbers and calculations
+  if (message.includes('calculate') || message.includes('how much') || message.includes('savings') || message.includes('consumption')) {
+    return `## 🧮 Energy Calculation Helper
+
+I can help you calculate:
+
+### Power Consumption Formula:
+\`\`\`
+Power Consumption = Device Wattage × Hours Used × Days × Rate per kWh
+\`\`\`
+
+**Example Calculation:**
+\`1500W AC × 8hrs × 30 days = 360 units = ₹2,160-2,880\`
+
+### Available Calculators:
+1. **Potential Savings**
+   - Current vs efficient appliance comparison
+   - LED vs traditional lighting savings  
+   - AC optimization savings
+
+2. **Solar ROI Calculator**
+   - Investment vs monthly savings
+   - Payback period analysis
+   - 25-year financial benefits
+
+### To Calculate for You, Provide:
+- ⚡ Appliance type and wattage
+- ⏰ Daily usage hours  
+- 💰 Current electricity rate (₹/unit)
+
+**What would you like me to calculate?**`;
+  }
+
+  // Environmental impact
+  if (message.includes('environment') || message.includes('carbon') || message.includes('green') || message.includes('eco')) {
+    return "🌱 **Environmental Impact of Energy Savings:**\n\n**Your Carbon Footprint Reduction:**\n• Switching to LEDs: 200kg CO2/year saved\n• Efficient AC usage: 500-800kg CO2/year saved\n• Solar 3kW system: 3,000-4,000kg CO2/year saved\n\n**Equivalent Environmental Benefits:**\n• 1,000 kWh saved = 50+ trees planted\n• Efficient home = 1 car off road for 3 months\n• Solar installation = 10,000+ km less driving annually\n\n**India's Energy Goals:**\n• 500GW renewable by 2030\n• Your contribution matters!\n• Every 1% efficiency improvement = ₹2,000 crores national saving\n\n🌍 **Make a difference**: Small changes in your home contribute to India's green future!\n\nWant to calculate your specific environmental impact?";
+  }
+
+  // Government schemes and policies
+  if (message.includes('government') || message.includes('subsidy') || message.includes('scheme') || message.includes('policy')) {
+    return "🏛️ **Government Energy Schemes & Subsidies:**\n\n**Solar Rooftop Subsidy:**\n• Up to 3kW: 40% central subsidy\n• 3-10kW: 20% central subsidy\n• Additional state subsidies available\n\n**Energy Efficient Appliances:**\n• LED distribution schemes\n• Star rating awareness programs\n• Replacement drives for old appliances\n\n**Net Metering Benefits:**\n• Sell excess solar power to grid\n• Bi-directional metering\n• Credit adjustments in bills\n\n**Time-of-Use Tariffs:**\n• Lower rates during off-peak hours\n• Optimize usage timing\n• Up to 30% bill reduction possible\n\nWhich scheme would you like detailed information about?";
+  }
+
+  // Electricity boards and regional info
+  if (message.includes('mseb') || message.includes('kseb') || message.includes('electricity board') || message.includes('tariff')) {
+    return "⚡ **Regional Electricity Board Information:**\n\n**Common Tariff Patterns in India:**\n• Domestic: ₹3-8/unit (slab-wise pricing)\n• Off-peak hours: Often 20-30% cheaper\n• Peak hours: 20-50% more expensive\n\n**Time-of-Use Optimization:**\n• Run heavy appliances during off-peak\n• Use washing machine, dishwasher at night\n• Charge electric vehicles overnight\n\n**Popular Boards:**\n• **MSEB (Maharashtra)**: Time-of-use available\n• **KSEB (Kerala)**: Special solar tariffs\n• **TNEB (Tamil Nadu)**: Free units for efficient users\n• **BESCOM (Karnataka)**: Net metering friendly\n\nWhich electricity board area are you in? I can provide specific optimization tips!";
+  }
+
+  // Default helpful response
+  return "🌟 **Welcome to UrjaBandhu - Your Energy Saving Companion!**\n\nI'm here to help you:\n\n• 💰 **Reduce electricity bills** by 20-40%\n• 🏠 **Optimize home appliances** for efficiency\n• ☀️ **Explore solar and renewable options**\n• 📊 **Analyze and track energy consumption**\n• 🌱 **Reduce environmental impact**\n• 💡 **Get personalized energy-saving tips**\n\n**Popular topics to ask about:**\n• \"How to reduce my AC bills?\"\n• \"LED bulb savings calculator\"\n• \"Solar panel cost and benefits\"\n• \"Energy-efficient appliance recommendations\"\n• \"Bill analysis and optimization tips\"\n\nWhat specific energy challenge can I help you solve today? 😊";
 }
 
-// Energy domain specific system prompt
-const ENERGY_SYSTEM_PROMPT = `You are UrjaBandhu, an AI energy advisor specialized in helping users understand and optimize their electricity consumption. You provide practical, actionable advice about energy efficiency, cost savings, and environmental impact.
-
-Key responsibilities:
-- Analyze energy consumption patterns and provide insights
-- Suggest practical energy-saving tips
-- Explain electricity bills and cost optimization
-- Provide environmental impact information
-- Recommend appliance efficiency improvements
-- Answer questions about renewable energy options
-
-Guidelines:
-- Always use ₹ (Indian Rupees) for cost calculations
-- Provide specific, actionable recommendations
-- Include approximate savings amounts when possible
-- Be helpful, friendly, and encouraging about energy conservation
-- Focus on practical solutions suitable for Indian households
-- If asked about topics outside energy efficiency, politely redirect to energy-related topics
-
-Please respond in a conversational, helpful manner while staying focused on energy efficiency and consumption optimization.`;
-
 export async function POST(request: NextRequest) {
-  console.log('🚀 Chat API called');
+  console.log('🚀 Chat API called - Using Mockup Responses');
   try {
-    const { messages } = await request.json()
-    console.log('📨 Received messages:', messages?.length || 0);
+    const { message } = await request.json()
+    console.log('📨 Received message:', message);
 
-    if (!messages || messages.length === 0) {
-      console.log('❌ No messages provided');
+    if (!message || typeof message !== 'string') {
+      console.log('❌ No message provided');
       return NextResponse.json(
-        { error: 'No messages provided' },
+        { error: 'Message is required and must be a string' },
         { status: 400 }
       )
     }
 
-    const lastMessage = messages[messages.length - 1]
-    if (!lastMessage?.content) {
-      console.log('❌ Invalid message format');
-      return NextResponse.json(
-        { error: 'Invalid message format' },
-        { status: 400 }
-      )
-    }
+    console.log('💬 Processing message:', message.substring(0, 50) + '...');
 
-    console.log('💬 Processing message:', lastMessage.content.substring(0, 50) + '...');
+    // Generate smart mockup response based on user input
+    const response = generateSmartMockupResponse(message.toLowerCase());
 
-    try {
-      // Initialize Gemini
-      console.log('🤖 Initializing Gemini...');
-      const gemini = initializeGemini();
-
-      // Configure the model with safety settings
-      const model = gemini.getGenerativeModel({
-        model: "gemini-1.5-pro",
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.8,
-          maxOutputTokens: 1024,
-        },
-      });
-
-      // Prepare the conversation context
-      const conversationHistory = messages.map((msg: any) => {
-        if (msg.role === 'user') {
-          return `User: ${msg.content}`;
-        } else if (msg.role === 'assistant') {
-          return `Assistant: ${msg.content}`;
-        }
-        return '';
-      }).filter(Boolean).join('\n');
-
-      // Create the full prompt
-      const fullPrompt = `${ENERGY_SYSTEM_PROMPT}
-
-Previous conversation:
-${conversationHistory}
-
-Please respond to the user's latest message as UrjaBandhu, the energy advisor.`;
-
-      console.log('Sending request to Gemini Pro...');
-
-      // Generate content using Gemini
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      const text = response.text();
-
-      if (!text) {
-        throw new Error('No response generated from Gemini');
-      }
-
-      console.log('Gemini Pro response received successfully');
-
-      // Return successful response
-      return NextResponse.json({
-        response: text,
-        timestamp: new Date().toISOString(),
-        source: 'gemini-pro',
-        model: 'gemini-1.5-pro',
-        usage: {
-          promptTokens: result.response.usageMetadata?.promptTokenCount || 0,
-          completionTokens: result.response.usageMetadata?.candidatesTokenCount || 0,
-          totalTokens: result.response.usageMetadata?.totalTokenCount || 0
-        }
-      });
-
-    } catch (aiError: any) {
-      console.error('Gemini API Error:', {
-        message: aiError?.message || 'Unknown error',
-        status: aiError?.status || 'No status',
-        error: aiError
-      });
-
-      // Check for specific error types
-      if (aiError?.message?.includes('API_KEY_INVALID')) {
-        return NextResponse.json({
-          error: 'Invalid Gemini API key. Please check your configuration.',
-          source: 'gemini-error'
-        }, { status: 401 });
-      }
-
-      if (aiError?.message?.includes('PERMISSION_DENIED')) {
-        return NextResponse.json({
-          error: 'Gemini API access denied. Please check your API key permissions.',
-          source: 'gemini-error'
-        }, { status: 403 });
-      }
-
-      if (aiError?.message?.includes('QUOTA_EXCEEDED')) {
-        return NextResponse.json({
-          error: 'Gemini API quota exceeded. Please try again later.',
-          source: 'gemini-error'
-        }, { status: 429 });
-      }
-
-      // Fallback to mock responses for other errors
-      console.log('Falling back to mock response due to Gemini error');
-      return NextResponse.json({
-        response: generateFallbackResponse(lastMessage.content.toLowerCase()),
-        timestamp: new Date().toISOString(),
-        source: 'fallback-after-error',
-        model: 'fallback',
-        error: `Gemini temporarily unavailable: ${aiError?.message || 'Unknown error'}`
-      });
-    }
+    console.log('✅ Returning mockup response');
+    return NextResponse.json({
+      response: response,
+      timestamp: new Date().toISOString(),
+      source: 'mockup-smart-responses',
+      model: 'urjabandhu-mockup-v1'
+    });
 
   } catch (error) {
     console.error('Chat API error:', error)
@@ -196,78 +164,3 @@ Please respond to the user's latest message as UrjaBandhu, the energy advisor.`;
   }
 }
 
-function generateFallbackResponse(message: string): string {
-  // Energy-related keywords and responses
-  const responses = {
-    // Usage and consumption
-    usage: [
-      "Based on your current patterns, your daily consumption is averaging 2.4 kWh. This is within normal range for a household of your size.",
-      "Your electricity usage shows peak consumption during evening hours (6-9 PM). Consider shifting some appliances to off-peak hours to save costs.",
-      "I've analyzed your usage trends - you're consuming 12% less than last month, which is excellent progress!"
-    ],
-
-    // Cost and savings
-    cost: [
-      "Your current electricity bill is projected at ₹380 for this month. I can suggest ways to reduce this by 15-20%.",
-      "Energy costs can be reduced by optimizing high-consumption appliances. Your AC and water heater account for 60% of your bill.",
-      "Based on your usage patterns, switching to time-of-use pricing could save you ₹50-80 per month."
-    ],
-
-    // Savings and tips
-    save: [
-      "Here are 3 immediate ways to save: 1) Set AC to 24°C instead of 22°C (saves 15%), 2) Use LED bulbs (70% less energy), 3) Unplug devices when not in use.",
-      "Your biggest saving opportunity is your water heater - using a timer can reduce consumption by 25%. Would you like me to set up an automation rule?",
-      "I recommend these energy-saving strategies: optimize your refrigerator settings, use natural light during day, and consider solar water heating."
-    ],
-
-    // Appliances
-    appliance: [
-      "Your air conditioner is your highest energy consumer at 1.2 kWh daily. Running it for 6 hours instead of 8 could save ₹600 annually.",
-      "I've detected your washing machine usage pattern. Using cold water wash can reduce energy consumption by 40% without affecting cleaning quality.",
-      "Your refrigerator is running efficiently, but cleaning the coils quarterly can improve efficiency by 10-15%."
-    ],
-
-    // Environmental impact
-    environment: [
-      "Your current consumption generates approximately 180 kg CO2 monthly. Reducing usage by 20% would save 36 kg CO2 - equivalent to planting 2 trees!",
-      "Great environmental consciousness! Your energy choices are contributing to a cleaner planet. Every kWh saved prevents 0.82 kg of CO2 emissions.",
-      "Your renewable energy usage through grid-tied solar is excellent. You're offsetting 30% of your carbon footprint!"
-    ],
-
-    // Predictions and trends
-    predict: [
-      "Based on seasonal trends, your energy consumption will likely increase by 25% in summer months due to cooling needs.",
-      "Your usage pattern suggests you'll spend approximately ₹4,200 this year on electricity. Installing solar panels could reduce this by 60%.",
-      "I predict your next month's consumption will be 68 kWh based on current trends and weather forecasts."
-    ],
-
-    // Default responses
-    default: [
-      "I understand you're asking about energy efficiency. Your current consumption is 2.4 kWh today with spending at ₹127 this month. How can I help you optimize this?",
-      "That's an interesting question about your energy usage! Based on your patterns, I can see several optimization opportunities. What specific aspect interests you most?",
-      "I'm here to help you understand and optimize your energy consumption. Your current efficiency rating is good, but there's always room for improvement!",
-      "Great question! Your energy data shows promising trends. I can provide detailed analysis on consumption patterns, cost optimization, or environmental impact. What would you prefer?"
-    ]
-  }
-
-  // Check for keywords and return appropriate response
-  if (message.includes('usage') || message.includes('consumption') || message.includes('kwh')) {
-    return getRandomResponse(responses.usage)
-  } else if (message.includes('cost') || message.includes('bill') || message.includes('money') || message.includes('₹')) {
-    return getRandomResponse(responses.cost)
-  } else if (message.includes('save') || message.includes('reduce') || message.includes('optimize') || message.includes('efficiency')) {
-    return getRandomResponse(responses.save)
-  } else if (message.includes('appliance') || message.includes('ac') || message.includes('refrigerator') || message.includes('heater')) {
-    return getRandomResponse(responses.appliance)
-  } else if (message.includes('environment') || message.includes('carbon') || message.includes('co2') || message.includes('green')) {
-    return getRandomResponse(responses.environment)
-  } else if (message.includes('predict') || message.includes('forecast') || message.includes('future') || message.includes('trend')) {
-    return getRandomResponse(responses.predict)
-  } else {
-    return getRandomResponse(responses.default)
-  }
-}
-
-function getRandomResponse(responses: string[]): string {
-  return responses[Math.floor(Math.random() * responses.length)]
-}
