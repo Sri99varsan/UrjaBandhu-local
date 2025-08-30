@@ -28,352 +28,305 @@ function AuthCallbackContent() {
         const errorParam = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
 
-        console.log('OAuth callback started. Code:', !!code, 'Error:', errorParam)
+        // Get environment variables for proper configuration
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL
+        const isProduction = process.env.NODE_ENV === 'production'
+
+        console.log('OAuth callback started', {
+          hasCode: !!code,
+          error: errorParam,
+          environment: isProduction ? 'production' : 'development',
+          supabaseUrl: supabaseUrl?.substring(0, 30) + '...',
+          appUrl: appUrl,
+          currentUrl: window.location.href
+        })
 
         // Handle OAuth errors immediately
         if (errorParam) {
-          console.error('OAuth error:', errorParam, errorDescription)
-          setError(errorDescription || 'Authentication failed')
-          setTimeout(() => router.push('/auth?error=oauth_error'), 1000)
+          const errorDetails = {
+            error: errorParam,
+            description: errorDescription,
+            hostname: window.location.hostname,
+            origin: window.location.origin,
+            fullUrl: window.location.href,
+            expectedAppUrl: appUrl,
+            timestamp: new Date().toISOString(),
+            environment: isProduction ? 'production' : 'development'
+          }
+          console.error('OAuth error details:', errorDetails)
+          
+          let errorMessage = 'OAuth authentication failed'
+          if (errorParam === 'access_denied') {
+            errorMessage = 'Access was denied. Please try again.'
+          } else if (errorParam === 'redirect_uri_mismatch') {
+            errorMessage = 'OAuth configuration error. Please contact support.'
+          }
+          
+          setError(errorMessage)
+          setIsLoading(false)
+          
+          // Use environment-based redirect URL
+          const authUrl = appUrl ? `${appUrl}/auth` : '/auth'
+          setTimeout(() => {
+            if (appUrl && window.location.origin !== appUrl) {
+              window.location.href = authUrl
+            } else {
+              router.push('/auth')
+            }
+          }, 3000)
           return
         }
 
-        // Handle successful OAuth callback
-        if (code) {
-          console.log('Processing OAuth code...')
-          setStatus('Exchanging authorization code...')
+        if (!code) {
+          console.error('No OAuth code received')
+          setError('No authorization code received')
+          setIsLoading(false)
           
-          // Add production environment detection
-          const isProduction = process.env.NODE_ENV === 'production' || window.location.hostname !== 'localhost'
-          console.log('Environment detected:', isProduction ? 'Production' : 'Development')
-          
-          // Set a maximum timeout for the entire process
-          const overallTimeout = setTimeout(() => {
-            console.log('Overall process timeout - redirecting anyway')
-            // Use environment-based URL
-            const baseUrl = window.location.origin
-            window.location.href = `${baseUrl}/ai-chatbot`
-          }, isProduction ? 15000 : 8000) // Longer timeout for production
-          
-          try {
-            // Add retry logic for production
-            let retryCount = 0
-            const maxRetries = isProduction ? 3 : 1
-            let exchangeData = null
-            let exchangeError = null
-            
-            while (retryCount < maxRetries && !exchangeData) {
-              if (retryCount > 0) {
-                console.log(`Retry attempt ${retryCount} for session exchange...`)
-                setStatus(`Retrying authentication... (${retryCount}/${maxRetries})`)
-                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)) // Progressive delay
-              }
-              
-              try {
-                // Exchange code for session with timeout
-                const exchangePromise = supabase.auth.exchangeCodeForSession(code)
-                const exchangeTimeout = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Exchange timeout')), isProduction ? 10000 : 5000)
-                )
-                
-                const result = await Promise.race([
-                  exchangePromise, 
-                  exchangeTimeout
-                ]) as any
-                
-                exchangeData = result.data
-                exchangeError = result.error
-                
-                if (exchangeError) {
-                  console.error(`Exchange attempt ${retryCount + 1} failed:`, exchangeError)
-                  retryCount++
-                } else {
-                  break
-                }
-              } catch (error) {
-                console.error(`Exchange attempt ${retryCount + 1} threw error:`, error)
-                exchangeError = error
-                retryCount++
-              }
-            }
-            
-            const { data, error: finalExchangeError } = { data: exchangeData, error: exchangeError }
-            
-            if (finalExchangeError) {
-              console.error('All session exchange attempts failed:', finalExchangeError)
-              clearTimeout(overallTimeout)
-              
-              // In production, try direct redirect with session check
-              if (isProduction) {
-                console.log('Production fallback: Checking for existing session...')
-                setStatus('Checking authentication status...')
-                
-                try {
-                  const { data: sessionData } = await supabase.auth.getSession()
-                  if (sessionData.session) {
-                    console.log('Found existing session in production fallback')
-                    const baseUrl = window.location.origin
-                    window.location.href = `${baseUrl}/ai-chatbot`
-                    return
-                  }
-                } catch (sessionError) {
-                  console.error('Session check also failed:', sessionError)
-                }
-              }
-              
-              setError('Failed to complete authentication')
-              setTimeout(() => router.push('/auth?error=exchange_failed'), 2000)
-              return
-            }
-
-            if (data.session && data.user) {
-              console.log('Authentication successful for:', data.user.email)
-              clearTimeout(overallTimeout)
-              setStatus('Setting up your account...')
-              
-              // Store user ID
-              setCurrentUserId(data.user.id)
-              
-              // Give the session time to propagate (longer in production)
-              await new Promise(resolve => setTimeout(resolve, isProduction ? 1500 : 500))
-              
-              // Quick connection check with production-aware timeout
-              try {
-                const connectionCheck = supabase
-                  .from('consumer_connections')
-                  .select('id')
-                  .eq('user_id', data.user.id)
-                  .limit(1)
-                  .single()
-                
-                const quickTimeout = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('DB timeout')), isProduction ? 5000 : 2000)
-                )
-                
-                const { data: connections } = await Promise.race([
-                  connectionCheck, 
-                  quickTimeout
-                ]) as any
-                
-                if (!connections) {
-                  // New user - show setup modal
-                  console.log('New user detected - no consumer connections found')
-                  setStatus('Welcome! Setting up your account...')
-                  setShowConsumerSetup(true)
-                  setIsLoading(false)
-                  return
-                } else {
-                  // Existing user - redirect immediately
-                  console.log('Existing user found - redirecting to dashboard')
-                  const baseUrl = window.location.origin
-                  setStatus('Redirecting to your dashboard...')
-                  // Add a delay to ensure session is set (longer in production)
-                  setTimeout(() => {
-                    window.location.href = `${baseUrl}/ai-chatbot`
-                  }, isProduction ? 2000 : 1000)
-                  return
-                }
-              } catch (dbError) {
-                // Database check failed - handle based on environment
-                console.error('Consumer connections check failed:', dbError)
-                console.log('User ID:', data.user.id)
-                console.log('Error details:', JSON.stringify(dbError))
-                
-                if (isProduction) {
-                  // In production, assume new user and show setup after longer wait
-                  console.log('Production DB check failed - assuming new user, showing setup after delay')
-                  setStatus('Setting up new account...')
-                  setTimeout(() => {
-                    setShowConsumerSetup(true)
-                    setIsLoading(false)
-                  }, 2000)
-                } else {
-                  // In development, show setup immediately
-                  console.log('Development DB check failed - showing setup immediately')
-                  setStatus('Setting up your account...')
-                  setShowConsumerSetup(true)
-                  setIsLoading(false)
-                }
-                return
-              }
+          const authUrl = appUrl ? `${appUrl}/auth` : '/auth'
+          setTimeout(() => {
+            if (appUrl && window.location.origin !== appUrl) {
+              window.location.href = authUrl
             } else {
-              console.error('No session or user data received')
-              setError('Authentication failed - no session')
-              setTimeout(() => router.push('/auth?error=no_session'), 2000)
-              return
+              router.push('/auth')
             }
-          } catch (error) {
-            console.error('OAuth exchange error:', error)
-            clearTimeout(overallTimeout)
-            setError('Authentication failed')
-            setTimeout(() => router.push('/auth?error=exchange_error'), 2000)
-            return
-          }
+          }, 3000)
+          return
         }
 
-        // No code - check existing session quickly
-        try {
-          console.log('No OAuth code found - checking for existing session')
-          setStatus('Checking authentication status...')
+        // Validate environment configuration
+        if (!supabaseUrl) {
+          console.error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
+          setError('Configuration error: Missing Supabase URL')
+          setIsLoading(false)
+          return
+        }
+
+        // Exchange code for session
+        setStatus('Verifying authentication...')
+        const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
+        
+        if (sessionError) {
+          console.error('Session exchange error:', sessionError)
+          setError(`Authentication failed: ${sessionError.message}`)
+          setIsLoading(false)
           
-          const sessionCheck = supabase.auth.getSession()
-          const sessionTimeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Session timeout')), 3000)
-          )
+          const authUrl = appUrl ? `${appUrl}/auth` : '/auth'
+          setTimeout(() => {
+            if (appUrl && window.location.origin !== appUrl) {
+              window.location.href = authUrl
+            } else {
+              router.push('/auth')
+            }
+          }, 3000)
+          return
+        }
+
+        if (!sessionData?.user) {
+          console.error('No user after session exchange')
+          setError('Authentication failed: No user data received')
+          setIsLoading(false)
           
-          const { data: sessionData, error: sessionError } = await Promise.race([
-            sessionCheck,
-            sessionTimeout
-          ]) as any
+          const authUrl = appUrl ? `${appUrl}/auth` : '/auth'
+          setTimeout(() => {
+            if (appUrl && window.location.origin !== appUrl) {
+              window.location.href = authUrl
+            } else {
+              router.push('/auth')
+            }
+          }, 3000)
+          return
+        }
+
+        const user = sessionData.user
+        setCurrentUserId(user.id)
+        console.log('User authenticated:', user.id)
+
+        // Check if user profile exists
+        setStatus('Checking user profile...')
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, phone')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Profile check error:', profileError)
+          setError('Failed to check user profile')
+          setIsLoading(false)
+          return
+        }
+
+        // If no profile exists, this is a new user - create profile
+        if (!profile) {
+          console.log('New user detected, creating profile...')
+          setStatus('Setting up your account...')
           
-          if (sessionError || !sessionData.session) {
-            console.log('No session found - redirecting to auth page')
-            setError('No authentication session found. Please sign in again.')
-            setTimeout(() => router.push('/auth'), 2000)
+          const { error: profileCreateError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: user.id,
+              first_name: user.user_metadata?.full_name?.split(' ')[0] || '',
+              last_name: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+              email: user.email,
+              phone: null
+            }])
+
+          if (profileCreateError) {
+            console.error('Profile creation error:', profileCreateError)
+            setError('Failed to create user profile')
+            setIsLoading(false)
             return
           }
+          
+          console.log('Profile created for new user')
+          
+          // Show consumer setup modal for new users
+          setIsLoading(false)
+          setShowConsumerSetup(true)
+          return
+        }
 
-          // Has session - check if user needs setup or can go to dashboard
-          console.log('Existing session found for user:', sessionData.session.user?.email)
-          setCurrentUserId(sessionData.session.user.id)
-          
-          try {
-            const { data: connections } = await supabase
-              .from('consumer_connections')
-              .select('id')
-              .eq('user_id', sessionData.session.user.id)
-              .limit(1)
-              .single()
-            
-            if (!connections) {
-              console.log('Existing user but no connections - showing setup')
-              setShowConsumerSetup(true)
-              setIsLoading(false)
-            } else {
-              console.log('Existing user with connections - redirecting to dashboard')
-              const baseUrl = window.location.origin
-              setStatus('Redirecting to your dashboard...')
-              setTimeout(() => {
-                window.location.href = `${baseUrl}/ai-chatbot`
-              }, 1000)
-            }
-          } catch (dbError) {
-            console.log('Database check failed for existing session - showing setup')
-            setShowConsumerSetup(true)
-            setIsLoading(false)
-          }
-          
-        } catch (error) {
-          console.error('Session check failed:', error)
-          setError('Failed to verify authentication. Please sign in again.')
-          setTimeout(() => router.push('/auth'), 2000)
+        // Existing user - check if they have consumer connections
+        setStatus('Checking your connections...')
+        const { data: connections, error: connectionError } = await supabase
+          .from('consumer_connections')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+
+        if (connectionError) {
+          console.error('Connection check error:', connectionError)
+          // Continue to dashboard even if connection check fails
+        }
+
+        if (!connections || connections.length === 0) {
+          // Existing user with no connections - show setup modal
+          console.log('Existing user with no connections, showing setup modal')
+          setIsLoading(false)
+          setShowConsumerSetup(true)
+          return
+        }
+
+        // User has connections - go to dashboard
+        console.log('User has connections, redirecting to dashboard')
+        setStatus('Redirecting to dashboard...')
+        
+        // Use environment-based redirect URL
+        const dashboardUrl = appUrl ? `${appUrl}/dashboard` : '/dashboard'
+        if (appUrl && window.location.origin !== appUrl) {
+          window.location.href = dashboardUrl
+        } else {
+          router.push('/dashboard')
         }
 
       } catch (error) {
-        console.error('Callback error:', error)
-        setError('Authentication failed')
-        setTimeout(() => router.push('/auth?error=callback_error'), 2000)
-      } finally {
-        if (!showConsumerSetup) {
-          setTimeout(() => setIsLoading(false), 500)
-        }
+        console.error('Callback handling error:', error)
+        setError('An unexpected error occurred during authentication')
+        setIsLoading(false)
+        
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL
+        const authUrl = appUrl ? `${appUrl}/auth` : '/auth'
+        setTimeout(() => {
+          if (appUrl && window.location.origin !== appUrl) {
+            window.location.href = authUrl
+          } else {
+            router.push('/auth')
+          }
+        }, 3000)
       }
     }
 
-    // Start immediately
     handleAuthCallback()
   }, [router, searchParams, callbackProcessed])
 
   const handleConsumerSetupComplete = () => {
     setShowConsumerSetup(false)
-    // Immediate redirect to correct URL based on environment
-    const baseUrl = window.location.origin
-    window.location.href = `${baseUrl}/ai-chatbot`
+    
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    const dashboardUrl = appUrl ? `${appUrl}/dashboard` : '/dashboard'
+    
+    if (appUrl && window.location.origin !== appUrl) {
+      window.location.href = dashboardUrl
+    } else {
+      router.push('/dashboard')
+    }
   }
 
   const handleConsumerSetupSkip = () => {
     setShowConsumerSetup(false)
-    // Redirect to dashboard
-    const baseUrl = window.location.origin
-    window.location.href = `${baseUrl}/dashboard`
+    
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    const dashboardUrl = appUrl ? `${appUrl}/dashboard` : '/dashboard'
+    
+    if (appUrl && window.location.origin !== appUrl) {
+      window.location.href = dashboardUrl
+    } else {
+      router.push('/dashboard')
+    }
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-electricity-50 to-energy-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xl">✕</span>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
             </div>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Error</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <div className="text-sm text-gray-500 space-y-1">
-            <p>Status: {status}</p>
-            <p>Redirecting to sign in page...</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Authentication Error</h3>
+            <div className="mt-2">
+              <p className="text-sm text-gray-500">{error}</p>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs text-gray-400">Redirecting to login page...</p>
+            </div>
           </div>
         </div>
       </div>
     )
   }
 
+  if (showConsumerSetup && currentUserId) {
+    return (
+      <ConsumerSetupModal
+        isOpen={showConsumerSetup}
+        onComplete={handleConsumerSetupComplete}
+        onSkip={handleConsumerSetupSkip}
+        userId={currentUserId}
+      />
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
-      {/* Background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
-      </div>
-      
-      <div className="relative z-10 text-center max-w-md mx-auto p-6">
-        <div className="flex items-center justify-center mb-6">
-          <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <h2 className="text-xl font-semibold text-white mb-2">
-          {status.includes('successful') ? '🎉 Success!' : 'Completing Sign In'}
-        </h2>
-        <p className="text-gray-300 mb-4">{status}</p>
-        <div className="text-sm text-gray-400">
-          <p>Please wait, this will only take a moment...</p>
-        </div>
-        
-        {/* Progress indicator */}
-        <div className="mt-6">
-          <div className="w-full bg-gray-700 rounded-full h-2">
-            <div 
-              className={`bg-green-500 h-2 rounded-full animate-pulse ${isLoading ? 'w-3/5' : 'w-full'}`}
-            ></div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+            <svg className="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Please wait</h3>
+          <div className="mt-2">
+            <p className="text-sm text-gray-500">{status}</p>
           </div>
         </div>
       </div>
-
-      {/* Consumer Setup Modal */}
-      {showConsumerSetup && currentUserId && (
-        <ConsumerSetupModal
-          isOpen={showConsumerSetup}
-          onComplete={handleConsumerSetupComplete}
-          onSkip={handleConsumerSetupSkip}
-          userId={currentUserId}
-        />
-      )}
     </div>
   )
 }
 
-export default function AuthCallbackPage() {
+export default function AuthCallback() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-          <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
-        </div>
-        <div className="relative z-10 flex items-center space-x-3">
-          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-lg font-medium text-white">Loading...</span>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Loading...</p>
         </div>
       </div>
     }>
