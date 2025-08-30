@@ -82,10 +82,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
+    // Listen for custom auth refresh events
+    const handleAuthRefresh = async () => {
+      console.log('Auth refresh requested')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setSession(session)
+        setUser(session.user)
+        setLoading(false)
+      }
+    }
+
+    window.addEventListener('auth-session-refresh', handleAuthRefresh)
+
     return () => {
       mounted = false
       clearTimeout(timeoutId)
       subscription.unsubscribe()
+      window.removeEventListener('auth-session-refresh', handleAuthRefresh)
     }
   }, [])
 

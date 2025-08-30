@@ -38,133 +38,91 @@ function AuthCallbackContent() {
 
         // If we have a code, exchange it for a session first
         if (code) {
-          setStatus('Exchanging code for session...')
+          setStatus('Completing sign in...')
           console.log('OAuth code received, exchanging for session...')
           
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-          
-          if (exchangeError) {
-            console.error('Error exchanging code for session:', exchangeError)
-            setError('Failed to complete authentication')
-            setStatus('Session exchange failed')
-            setTimeout(() => {
+          try {
+            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+            
+            if (exchangeError) {
+              console.error('Error exchanging code for session:', exchangeError)
+              setError('Failed to complete authentication')
+              setStatus('Authentication failed')
               router.push('/auth?error=session_error')
-            }, 2000)
-            return
-          }
-
-          if (data.session && data.user) {
-            console.log('OAuth successful for user:', data.user.email)
-            setStatus('Authentication successful! Checking setup...')
-            
-            // Check if user has any consumer connections
-            const { data: connections, error: connectionsError } = await supabase
-              .from('consumer_connections')
-              .select('id')
-              .eq('user_id', data.user.id)
-              .limit(1)
-            
-            if (connectionsError) {
-              console.error('Error checking connections:', connectionsError)
-              // If there's an error, show setup for safety
-              setStatus('Account setup required...')
-              setCurrentUserId(data.user.id)
-              setShowConsumerSetup(true)
-              setIsLoading(false)
               return
             }
-            
-            // If no connections found, show setup modal
-            if (!connections || connections.length === 0) {
-              console.log('New user detected, showing setup modal')
-              setStatus('Welcome! Let\'s set up your account...')
-              setCurrentUserId(data.user.id)
-              setShowConsumerSetup(true)
-              setIsLoading(false)
-            } else {
-              console.log('Existing user detected, redirecting to AI chatbot')
-              setStatus('Redirecting to AI chatbot...')
-              setTimeout(() => {
+
+            if (data.session && data.user) {
+              console.log('OAuth successful for user:', data.user.email)
+              setStatus('Setting up your account...')
+              
+              // Trigger a custom event to refresh AuthProvider immediately
+              window.dispatchEvent(new CustomEvent('auth-session-refresh'))
+              
+              // Quick check for existing connections
+              const { data: connections } = await supabase
+                .from('consumer_connections')
+                .select('id')
+                .eq('user_id', data.user.id)
+                .limit(1)
+                .single()
+              
+              if (!connections) {
+                // New user - show setup modal
+                console.log('New user detected, showing setup modal')
+                setCurrentUserId(data.user.id)
+                setShowConsumerSetup(true)
+                setIsLoading(false)
+              } else {
+                // Existing user - redirect immediately
+                console.log('Existing user detected, redirecting to AI chatbot')
                 window.location.href = '/ai-chatbot'
-              }, 1500)
+              }
+              return
             }
+          } catch (error) {
+            console.error('OAuth processing error:', error)
+            setError('Authentication failed')
+            router.push('/auth?error=oauth_failed')
             return
           }
         }
 
         // If no code but we have a setup param, check existing session
-        setStatus('Checking authentication...')
+        setStatus('Verifying session...')
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
         
-        if (sessionError) {
-          console.error('Session error:', sessionError)
-          setError('Session error')
-          setStatus('Session check failed')
-          setTimeout(() => {
-            router.push('/auth?error=session_error')
-          }, 2000)
-          return
-        }
-
-        if (!sessionData.session) {
-          console.log('No session found, redirecting to auth')
-          setStatus('No session found')
-          setTimeout(() => {
-            router.push('/auth')
-          }, 1000)
+        if (sessionError || !sessionData.session) {
+          console.log('No valid session found, redirecting to auth')
+          router.push('/auth')
           return
         }
 
         console.log('Session found for user:', sessionData.session.user.email)
-        setStatus('Authentication successful! Checking setup...')
         
-        // Check if user has any consumer connections
-        const { data: connections, error: connectionsError } = await supabase
+        // Quick check for existing connections
+        const { data: connections } = await supabase
           .from('consumer_connections')
           .select('id')
           .eq('user_id', sessionData.session.user.id)
           .limit(1)
+          .single()
         
-        if (connectionsError) {
-          console.error('Error checking connections:', connectionsError)
-          // If there's an error checking connections, show setup for new users
-          if (setupParam === 'true') {
-            setStatus('Account setup required...')
-            setCurrentUserId(sessionData.session.user.id)
-            setShowConsumerSetup(true)
-            setIsLoading(false)
-            return
-          } else {
-            // Existing flow, proceed to AI chatbot
-            setTimeout(() => {
-              window.location.href = '/ai-chatbot'
-            }, 1500)
-            return
-          }
-        }
-        
-        // If no connections found or setup requested, show setup modal
-        if (!connections || connections.length === 0 || setupParam === 'true') {
-          console.log('New user detected, showing setup modal')
-          setStatus('Welcome! Let\'s set up your account...')
+        // Show setup modal if no connections or setup requested
+        if (!connections || setupParam === 'true') {
+          console.log('Showing setup modal for user')
           setCurrentUserId(sessionData.session.user.id)
           setShowConsumerSetup(true)
           setIsLoading(false)
         } else {
           console.log('Existing user detected, redirecting to AI chatbot')
-          setStatus('Redirecting to AI chatbot...')
-          setTimeout(() => {
-            window.location.href = '/ai-chatbot'
-          }, 1500)
+          window.location.href = '/ai-chatbot'
         }
 
       } catch (error) {
-        console.error('Unexpected error in auth callback:', error)
-        setError('Unexpected error occurred')
-        setStatus('Unexpected error')
-        setTimeout(() => {
-          router.push('/auth?error=unexpected_error')
-        }, 2000)
+        console.error('Auth callback error:', error)
+        setError('Authentication failed')
+        router.push('/auth?error=callback_failed')
       } finally {
         if (!showConsumerSetup) {
           setIsLoading(false)
@@ -177,16 +135,14 @@ function AuthCallbackContent() {
 
   const handleConsumerSetupComplete = () => {
     setShowConsumerSetup(false)
-    setTimeout(() => {
-      window.location.href = '/ai-chatbot'
-    }, 500)
+    // Immediate redirect without delay
+    window.location.href = '/ai-chatbot'
   }
 
   const handleConsumerSetupSkip = () => {
     setShowConsumerSetup(false)
-    setTimeout(() => {
-      window.location.href = '/dashboard'
-    }, 500)
+    // Immediate redirect without delay
+    window.location.href = '/dashboard'
   }
 
   if (error) {
@@ -227,7 +183,7 @@ function AuthCallbackContent() {
         </h2>
         <p className="text-gray-300 mb-4">{status}</p>
         <div className="text-sm text-gray-400">
-          <p>Please wait, this may take a few moments...</p>
+          <p>Please wait, this will only take a moment...</p>
         </div>
         
         {/* Progress indicator */}
