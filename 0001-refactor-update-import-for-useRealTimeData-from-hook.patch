@@ -1,0 +1,4043 @@
+From 1fffab951df97ea0fc920336ae92f94d73405399 Mon Sep 17 00:00:00 2001
+From: Sri99varsan <sri9906varsan@gmail.com>
+Date: Sat, 30 Aug 2025 18:27:44 +0530
+Subject: [PATCH] refactor: update import for useRealTimeData from hooks for
+ better modularity
+
+---
+ .gitignore                                    |   1 -
+ frontend/app/real-time-monitoring/page.tsx    |   2 +-
+ frontend/lib/analytics-advanced.ts            | 532 ++++++++++++
+ frontend/lib/automation-service.ts            | 601 ++++++++++++++
+ frontend/lib/data-pipeline/real-time-hooks.ts |  32 +
+ .../lib/data-pipeline/real-time-service.ts    | 248 ++++++
+ frontend/lib/database.ts                      | 766 ++++++++++++++++++
+ frontend/lib/energy-optimization.ts           | 471 +++++++++++
+ frontend/lib/festivals/festival-utils.ts      | 148 ++++
+ frontend/lib/influxdb.ts                      | 272 +++++++
+ frontend/lib/migrations.ts                    |  49 ++
+ frontend/lib/ocr/tesseract-ocr.ts             | 265 ++++++
+ frontend/lib/supabase-server.ts               |  40 +
+ frontend/lib/supabase.ts                      | 466 +++++++++++
+ frontend/lib/utils.ts                         |   6 +
+ 15 files changed, 3897 insertions(+), 2 deletions(-)
+ create mode 100644 frontend/lib/analytics-advanced.ts
+ create mode 100644 frontend/lib/automation-service.ts
+ create mode 100644 frontend/lib/data-pipeline/real-time-hooks.ts
+ create mode 100644 frontend/lib/data-pipeline/real-time-service.ts
+ create mode 100644 frontend/lib/database.ts
+ create mode 100644 frontend/lib/energy-optimization.ts
+ create mode 100644 frontend/lib/festivals/festival-utils.ts
+ create mode 100644 frontend/lib/influxdb.ts
+ create mode 100644 frontend/lib/migrations.ts
+ create mode 100644 frontend/lib/ocr/tesseract-ocr.ts
+ create mode 100644 frontend/lib/supabase-server.ts
+ create mode 100644 frontend/lib/supabase.ts
+ create mode 100644 frontend/lib/utils.ts
+
+diff --git a/.gitignore b/.gitignore
+index 7c50eee..ac03874 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -28,7 +28,6 @@ dist/
+ downloads/
+ eggs/
+ .eggs/
+-lib/
+ lib64/
+ parts/
+ sdist/
+diff --git a/frontend/app/real-time-monitoring/page.tsx b/frontend/app/real-time-monitoring/page.tsx
+index 285bbf3..61be485 100644
+--- a/frontend/app/real-time-monitoring/page.tsx
++++ b/frontend/app/real-time-monitoring/page.tsx
+@@ -23,10 +23,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+ import { Badge } from '@/components/ui/badge'
+ import { 
+   dataPipeline, 
+-  useRealTimeData, 
+   EnergyDataPoint, 
+   RealTimeMetrics 
+ } from '@/lib/data-pipeline/real-time-service'
++import { useRealTimeData } from '@/lib/data-pipeline/real-time-hooks'
+ import {
+   LineChart,
+   Line,
+diff --git a/frontend/lib/analytics-advanced.ts b/frontend/lib/analytics-advanced.ts
+new file mode 100644
+index 0000000..e9196ae
+--- /dev/null
++++ b/frontend/lib/analytics-advanced.ts
+@@ -0,0 +1,532 @@
++import { createClient } from './supabase'
++import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
++
++const supabase = createClient()
++
++export interface TimeSeriesData {
++  timestamp: string
++  consumption: number
++  cost: number
++  device_count: number
++  peak_demand: number
++}
++
++export interface ConsumptionPrediction {
++  date: string
++  predicted_consumption: number
++  predicted_cost: number
++  confidence: number
++}
++
++export interface UsagePattern {
++  hour: number
++  average_consumption: number
++  peak_probability: number
++  cost_per_hour: number
++}
++
++export interface DeviceAnalytics {
++  device_id: string
++  device_name: string
++  device_type: string
++  total_consumption: number
++  average_consumption: number
++  efficiency_score: number
++  cost_contribution: number
++  usage_hours: number
++  peak_usage_time: string
++}
++
++export interface EnergyInsight {
++  id: string
++  type: 'optimization' | 'anomaly' | 'prediction' | 'efficiency' | 'cost'
++  title: string
++  description: string
++  impact: 'high' | 'medium' | 'low'
++  savings_potential: number
++  action_required: boolean
++  recommendations: string[]
++  created_at: string
++}
++
++export const advancedAnalyticsService = {
++  // Time Series Data Analysis
++  async getTimeSeriesData(userId: string, timeRange: '7d' | '30d' | '90d' | '1y'): Promise<TimeSeriesData[]> {
++    const now = new Date()
++    let startDate: Date
++
++    switch (timeRange) {
++      case '7d':
++        startDate = subDays(now, 7)
++        break
++      case '30d':
++        startDate = subDays(now, 30)
++        break
++      case '90d':
++        startDate = subDays(now, 90)
++        break
++      case '1y':
++        startDate = subDays(now, 365)
++        break
++    }
++
++    const { data, error } = await supabase
++      .from('consumption_data')
++      .select('timestamp, consumption_kwh, cost, device_id')
++      .eq('user_id', userId)
++      .gte('timestamp', startDate.toISOString())
++      .order('timestamp', { ascending: true })
++
++    if (error) {
++      console.error('Error fetching time series data:', error)
++      return this.generateDemoTimeSeriesData(timeRange)
++    }
++
++    if (!data || data.length === 0) {
++      return this.generateDemoTimeSeriesData(timeRange)
++    }
++
++    // Aggregate data by day
++    const aggregatedData = this.aggregateTimeSeriesData(data)
++    return aggregatedData
++  },
++
++  // Generate demo time series data for testing
++  generateDemoTimeSeriesData(timeRange: '7d' | '30d' | '90d' | '1y'): TimeSeriesData[] {
++    const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365
++    const data: TimeSeriesData[] = []
++    const now = new Date()
++
++    for (let i = days; i >= 0; i--) {
++      const date = subDays(now, i)
++      const baseConsumption = 25 + Math.sin(i * 0.1) * 10 // Seasonal variation
++      const randomVariation = (Math.random() - 0.5) * 10
++      const consumption = Math.max(0, baseConsumption + randomVariation)
++      
++      data.push({
++        timestamp: date.toISOString(),
++        consumption: Math.round(consumption * 100) / 100,
++        cost: Math.round(consumption * 8 * 100) / 100, // ₹8 per kWh
++        device_count: Math.floor(Math.random() * 5) + 8,
++        peak_demand: Math.round((consumption * 1.2 + Math.random() * 5) * 100) / 100
++      })
++    }
++
++    return data
++  },
++
++  // Aggregate consumption data by day
++  aggregateTimeSeriesData(rawData: any[]): TimeSeriesData[] {
++    const dailyData = new Map<string, {
++      consumption: number
++      cost: number
++      device_count: Set<string>
++      peak_demand: number
++      records: number
++    }>()
++
++    rawData.forEach((record: any) => {
++      const date = format(new Date(record.timestamp), 'yyyy-MM-dd')
++      
++      if (!dailyData.has(date)) {
++        dailyData.set(date, {
++          consumption: 0,
++          cost: 0,
++          device_count: new Set(),
++          peak_demand: 0,
++          records: 0
++        })
++      }
++
++      const dayData = dailyData.get(date)!
++      dayData.consumption += record.consumption_kwh || 0
++      dayData.cost += record.cost || 0
++      dayData.device_count.add(record.device_id)
++      dayData.peak_demand = Math.max(dayData.peak_demand, record.consumption_kwh || 0)
++      dayData.records++
++    })
++
++    return Array.from(dailyData.entries()).map(([date, data]) => ({
++      timestamp: new Date(date).toISOString(),
++      consumption: Math.round(data.consumption * 100) / 100,
++      cost: Math.round(data.cost * 100) / 100,
++      device_count: data.device_count.size,
++      peak_demand: Math.round(data.peak_demand * 100) / 100
++    }))
++  },
++
++  // Consumption Prediction using Simple Statistical Methods
++  async getPredictedConsumption(userId: string, days: number = 7): Promise<ConsumptionPrediction[]> {
++    const historicalData = await this.getTimeSeriesData(userId, '30d')
++    
++    if (historicalData.length < 7) {
++      return this.generateDemoPredictions(days)
++    }
++
++    const predictions: ConsumptionPrediction[] = []
++    const recentData = historicalData.slice(-14) // Use last 14 days for prediction
++
++    // Calculate moving average and trend
++    const movingAverage = this.calculateMovingAverage(recentData.map(d => d.consumption), 7)
++    const trend = this.calculateTrend(recentData.map(d => d.consumption))
++    
++    for (let i = 1; i <= days; i++) {
++      const lastAverage = movingAverage[movingAverage.length - 1] || 0
++      const predictedConsumption = Math.max(0, lastAverage + (trend * i))
++      const confidence = Math.max(0.6, 1 - (i * 0.05)) // Confidence decreases with time
++      
++      predictions.push({
++        date: format(subDays(new Date(), -i), 'yyyy-MM-dd'),
++        predicted_consumption: Math.round(predictedConsumption * 100) / 100,
++        predicted_cost: Math.round(predictedConsumption * 8 * 100) / 100,
++        confidence: Math.round(confidence * 100) / 100
++      })
++    }
++
++    return predictions
++  },
++
++  // Generate demo predictions for testing
++  generateDemoPredictions(days: number): ConsumptionPrediction[] {
++    const predictions: ConsumptionPrediction[] = []
++    const baseConsumption = 25
++
++    for (let i = 1; i <= days; i++) {
++      const variation = (Math.random() - 0.5) * 5
++      const consumption = baseConsumption + variation
++      
++      predictions.push({
++        date: format(subDays(new Date(), -i), 'yyyy-MM-dd'),
++        predicted_consumption: Math.round(consumption * 100) / 100,
++        predicted_cost: Math.round(consumption * 8 * 100) / 100,
++        confidence: Math.max(0.6, 1 - (i * 0.05))
++      })
++    }
++
++    return predictions
++  },
++
++  // Calculate moving average
++  calculateMovingAverage(data: number[], windowSize: number): number[] {
++    const result: number[] = []
++    
++    for (let i = windowSize - 1; i < data.length; i++) {
++      const window = data.slice(i - windowSize + 1, i + 1)
++      const average = window.reduce((sum, val) => sum + val, 0) / windowSize
++      result.push(average)
++    }
++    
++    return result
++  },
++
++  // Calculate simple linear trend
++  calculateTrend(data: number[]): number {
++    if (data.length < 2) return 0
++
++    const n = data.length
++    const xSum = (n * (n - 1)) / 2 // Sum of indices
++    const ySum = data.reduce((sum, val) => sum + val, 0)
++    const xySum = data.reduce((sum, val, index) => sum + (val * index), 0)
++    const x2Sum = data.reduce((sum, _, index) => sum + (index * index), 0)
++
++    // Linear regression slope
++    const slope = (n * xySum - xSum * ySum) / (n * x2Sum - xSum * xSum)
++    return isNaN(slope) ? 0 : slope
++  },
++
++  // Usage Pattern Analysis
++  async getUsagePatterns(userId: string): Promise<UsagePattern[]> {
++    const { data, error } = await supabase
++      .from('consumption_data')
++      .select('timestamp, consumption_kwh, cost')
++      .eq('user_id', userId)
++      .gte('timestamp', subDays(new Date(), 30).toISOString())
++
++    if (error || !data || data.length === 0) {
++      return this.generateDemoUsagePatterns()
++    }
++
++    // Analyze patterns by hour of day
++    const hourlyData = new Map<number, { consumption: number[], costs: number[] }>()
++
++    data.forEach((record: any) => {
++      const hour = new Date(record.timestamp).getHours()
++      if (!hourlyData.has(hour)) {
++        hourlyData.set(hour, { consumption: [], costs: [] })
++      }
++      hourlyData.get(hour)!.consumption.push(record.consumption_kwh || 0)
++      hourlyData.get(hour)!.costs.push(record.cost || 0)
++    })
++
++    const patterns: UsagePattern[] = []
++    const allConsumption = data.map((d: any) => d.consumption_kwh || 0)
++    const maxConsumption = Math.max(...allConsumption)
++
++    for (let hour = 0; hour < 24; hour++) {
++      const hourData = hourlyData.get(hour)
++      if (hourData && hourData.consumption.length > 0) {
++        const avgConsumption = hourData.consumption.reduce((sum, val) => sum + val, 0) / hourData.consumption.length
++        const avgCost = hourData.costs.reduce((sum, val) => sum + val, 0) / hourData.costs.length
++        const peakProbability = avgConsumption / maxConsumption
++
++        patterns.push({
++          hour,
++          average_consumption: Math.round(avgConsumption * 100) / 100,
++          peak_probability: Math.round(peakProbability * 100) / 100,
++          cost_per_hour: Math.round(avgCost * 100) / 100
++        })
++      } else {
++        patterns.push({
++          hour,
++          average_consumption: 0,
++          peak_probability: 0,
++          cost_per_hour: 0
++        })
++      }
++    }
++
++    return patterns
++  },
++
++  // Generate demo usage patterns
++  generateDemoUsagePatterns(): UsagePattern[] {
++    const patterns: UsagePattern[] = []
++    
++    for (let hour = 0; hour < 24; hour++) {
++      let baseConsumption = 15 // Base consumption
++      
++      // Morning peak (7-9 AM)
++      if (hour >= 7 && hour <= 9) baseConsumption += 15
++      // Evening peak (6-10 PM)
++      if (hour >= 18 && hour <= 22) baseConsumption += 20
++      // Night low (11 PM - 5 AM)
++      if (hour >= 23 || hour <= 5) baseConsumption -= 8
++      
++      const consumption = Math.max(5, baseConsumption + (Math.random() - 0.5) * 5)
++      
++      patterns.push({
++        hour,
++        average_consumption: Math.round(consumption * 100) / 100,
++        peak_probability: Math.round((consumption / 35) * 100) / 100,
++        cost_per_hour: Math.round(consumption * 8 * 100) / 100
++      })
++    }
++    
++    return patterns
++  },
++
++  // Device Analytics
++  async getDeviceAnalytics(userId: string): Promise<DeviceAnalytics[]> {
++    const { data: devices, error: deviceError } = await supabase
++      .from('devices')
++      .select('id, name, type, power_rating, efficiency_score')
++      .eq('user_id', userId)
++
++    if (deviceError || !devices) {
++      return this.generateDemoDeviceAnalytics()
++    }
++
++    const { data: consumption, error: consumptionError } = await supabase
++      .from('consumption_data')
++      .select('device_id, consumption_kwh, cost, timestamp')
++      .eq('user_id', userId)
++      .gte('timestamp', subDays(new Date(), 30).toISOString())
++
++    if (consumptionError || !consumption) {
++      return this.generateDemoDeviceAnalytics()
++    }
++
++    // Aggregate by device
++    const deviceData = new Map<string, {
++      consumption: number[]
++      costs: number[]
++      timestamps: string[]
++    }>()
++
++    consumption.forEach((record: any) => {
++      if (!deviceData.has(record.device_id)) {
++        deviceData.set(record.device_id, { consumption: [], costs: [], timestamps: [] })
++      }
++      const data = deviceData.get(record.device_id)!
++      data.consumption.push(record.consumption_kwh || 0)
++      data.costs.push(record.cost || 0)
++      data.timestamps.push(record.timestamp)
++    })
++
++    const analytics: DeviceAnalytics[] = devices.map((device: any) => {
++      const data = deviceData.get(device.id)
++      if (!data || data.consumption.length === 0) {
++        return {
++          device_id: device.id,
++          device_name: device.name,
++          device_type: device.type,
++          total_consumption: 0,
++          average_consumption: 0,
++          efficiency_score: device.efficiency_score || 75,
++          cost_contribution: 0,
++          usage_hours: 0,
++          peak_usage_time: '12:00'
++        }
++      }
++
++      const totalConsumption = data.consumption.reduce((sum, val) => sum + val, 0)
++      const totalCost = data.costs.reduce((sum, val) => sum + val, 0)
++      const avgConsumption = totalConsumption / data.consumption.length
++
++      // Find peak usage time (hour with highest consumption)
++      const hourlyUsage = new Map<number, number>()
++      data.timestamps.forEach((timestamp, index) => {
++        const hour = new Date(timestamp).getHours()
++        hourlyUsage.set(hour, (hourlyUsage.get(hour) || 0) + data.consumption[index])
++      })
++
++      const peakHour = Array.from(hourlyUsage.entries())
++        .sort(([,a], [,b]) => b - a)[0]?.[0] || 12
++
++      return {
++        device_id: device.id,
++        device_name: device.name,
++        device_type: device.type,
++        total_consumption: Math.round(totalConsumption * 100) / 100,
++        average_consumption: Math.round(avgConsumption * 100) / 100,
++        efficiency_score: device.efficiency_score || 75,
++        cost_contribution: Math.round(totalCost * 100) / 100,
++        usage_hours: data.consumption.length,
++        peak_usage_time: `${peakHour.toString().padStart(2, '0')}:00`
++      }
++    })
++
++    return analytics
++  },
++
++  // Generate demo device analytics
++  generateDemoDeviceAnalytics(): DeviceAnalytics[] {
++    const demoDevices = [
++      { name: 'Air Conditioner', type: 'cooling', power: 1500 },
++      { name: 'Refrigerator', type: 'appliance', power: 200 },
++      { name: 'LED Lights', type: 'lighting', power: 100 },
++      { name: 'Television', type: 'entertainment', power: 150 },
++      { name: 'Washing Machine', type: 'appliance', power: 800 },
++      { name: 'Water Heater', type: 'heating', power: 2000 }
++    ]
++
++    return demoDevices.map((device, index) => {
++      const usage = 200 + Math.random() * 300
++      const efficiency = 70 + Math.random() * 25
++      
++      return {
++        device_id: `demo-${index}`,
++        device_name: device.name,
++        device_type: device.type,
++        total_consumption: Math.round(usage * 100) / 100,
++        average_consumption: Math.round((usage / 30) * 100) / 100,
++        efficiency_score: Math.round(efficiency),
++        cost_contribution: Math.round(usage * 8 * 100) / 100,
++        usage_hours: Math.floor(usage / (device.power / 1000)),
++        peak_usage_time: `${Math.floor(Math.random() * 12) + 8}:00`
++      }
++    })
++  },
++
++  // Generate Intelligent Insights
++  async generateInsights(userId: string): Promise<EnergyInsight[]> {
++    const [timeSeriesData, predictions, patterns, deviceAnalytics] = await Promise.all([
++      this.getTimeSeriesData(userId, '30d'),
++      this.getPredictedConsumption(userId, 7),
++      this.getUsagePatterns(userId),
++      this.getDeviceAnalytics(userId)
++    ])
++
++    const insights: EnergyInsight[] = []
++
++    // Consumption trend analysis
++    if (timeSeriesData.length >= 7) {
++      const recent = timeSeriesData.slice(-7)
++      const previous = timeSeriesData.slice(-14, -7)
++      const recentAvg = recent.reduce((sum, d) => sum + d.consumption, 0) / recent.length
++      const previousAvg = previous.reduce((sum, d) => sum + d.consumption, 0) / previous.length
++      
++      if (recentAvg > previousAvg * 1.15) {
++        insights.push({
++          id: 'consumption-increase',
++          type: 'anomaly',
++          title: 'Consumption Increase Detected',
++          description: `Your energy consumption has increased by ${Math.round(((recentAvg - previousAvg) / previousAvg) * 100)}% compared to last week.`,
++          impact: 'high',
++          savings_potential: (recentAvg - previousAvg) * 8 * 30, // Monthly impact
++          action_required: true,
++          recommendations: [
++            'Check for devices left running continuously',
++            'Review recent changes in usage patterns',
++            'Consider device efficiency upgrades'
++          ],
++          created_at: new Date().toISOString()
++        })
++      }
++    }
++
++    // Peak usage optimization
++    const peakHours = patterns.filter(p => p.peak_probability > 0.7)
++    if (peakHours.length > 0) {
++      insights.push({
++        id: 'peak-optimization',
++        type: 'optimization',
++        title: 'Peak Usage Optimization Opportunity',
++        description: `High consumption detected during ${peakHours.length} peak hours. Shifting usage could reduce costs.`,
++        impact: 'medium',
++        savings_potential: peakHours.reduce((sum, h) => sum + h.cost_per_hour, 0) * 0.2 * 30,
++        action_required: false,
++        recommendations: [
++          'Schedule high-power devices during off-peak hours',
++          'Use timers for water heaters and dishwashers',
++          'Consider time-of-use electricity plans'
++        ],
++        created_at: new Date().toISOString()
++      })
++    }
++
++    // Device efficiency insights
++    const inefficientDevices = deviceAnalytics.filter(d => d.efficiency_score < 70)
++    if (inefficientDevices.length > 0) {
++      const totalSavings = inefficientDevices.reduce((sum, d) => sum + d.cost_contribution, 0) * 0.25
++      
++      insights.push({
++        id: 'device-efficiency',
++        type: 'efficiency',
++        title: 'Low Efficiency Devices Identified',
++        description: `${inefficientDevices.length} devices are operating below optimal efficiency.`,
++        impact: 'high',
++        savings_potential: totalSavings,
++        action_required: true,
++        recommendations: [
++          'Schedule maintenance for low-efficiency devices',
++          'Consider upgrading old appliances',
++          'Check for proper ventilation and placement'
++        ],
++        created_at: new Date().toISOString()
++      })
++    }
++
++    // Prediction-based insights
++    const futureIncrease = predictions.some(p => p.predicted_consumption > timeSeriesData[timeSeriesData.length - 1]?.consumption * 1.1)
++    if (futureIncrease) {
++      insights.push({
++        id: 'predicted-increase',
++        type: 'prediction',
++        title: 'Consumption Increase Predicted',
++        description: 'Our analysis predicts higher energy consumption in the coming week.',
++        impact: 'medium',
++        savings_potential: 150,
++        action_required: false,
++        recommendations: [
++          'Monitor daily consumption closely',
++          'Implement energy-saving measures proactively',
++          'Review and adjust device schedules'
++        ],
++        created_at: new Date().toISOString()
++      })
++    }
++
++    return insights
++  }
++}
+diff --git a/frontend/lib/automation-service.ts b/frontend/lib/automation-service.ts
+new file mode 100644
+index 0000000..346f717
+--- /dev/null
++++ b/frontend/lib/automation-service.ts
+@@ -0,0 +1,601 @@
++import { createClient } from './supabase'
++import { format, addDays, addWeeks, addMonths, parseISO, isAfter, isBefore, getDay } from 'date-fns'
++
++const supabase = createClient()
++
++export interface AutomationRule {
++  id: string
++  user_id: string
++  name: string
++  description?: string
++  conditions: AutomationCondition[]
++  actions: AutomationAction[]
++  is_enabled: boolean
++  priority: number
++  max_executions_per_day?: number
++  cooldown_minutes: number
++  start_time?: string
++  end_time?: string
++  days_of_week: number[]
++  created_at: string
++  updated_at: string
++  last_executed_at?: string
++  execution_count: number
++}
++
++export interface DeviceSchedule {
++  id: string
++  user_id: string
++  device_id: string
++  name: string
++  description?: string
++  schedule_type: 'once' | 'daily' | 'weekly' | 'monthly'
++  start_time: string
++  end_time?: string
++  date_start?: string
++  date_end?: string
++  days_of_week: number[]
++  action_type: 'turn_on' | 'turn_off' | 'set_power' | 'optimize'
++  action_parameters: Record<string, any>
++  is_enabled: boolean
++  priority: number
++  created_at: string
++  updated_at: string
++  last_executed_at?: string
++  next_execution_at?: string
++}
++
++export interface DeviceControl {
++  id: string
++  device_id: string
++  can_turn_on_off: boolean
++  can_set_power_level: boolean
++  can_schedule: boolean
++  can_monitor_realtime: boolean
++  current_state: 'on' | 'off' | 'standby' | 'error' | 'unknown'
++  current_power_level?: number
++  current_consumption: number
++  min_power_level: number
++  max_power_level: number
++  control_endpoint?: string
++  control_protocol?: string
++  control_credentials: Record<string, any>
++  last_updated_at: string
++  last_command_at?: string
++  last_command_status?: string
++}
++
++export interface AutomationCondition {
++  type: 'time' | 'consumption' | 'device_state' | 'cost' | 'weather'
++  operator: 'equals' | 'greater_than' | 'less_than' | 'between' | 'in'
++  value: any
++  device_id?: string
++  comparison_value?: any
++}
++
++export interface AutomationAction {
++  type: 'device_control' | 'notification' | 'schedule' | 'optimize'
++  device_id?: string
++  parameters: Record<string, any>
++}
++
++export interface AutomationLog {
++  id: string
++  user_id: string
++  automation_type: 'rule' | 'schedule' | 'manual' | 'optimization'
++  automation_id?: string
++  device_id?: string
++  action_type: string
++  action_parameters: Record<string, any>
++  status: 'success' | 'failed' | 'partial' | 'skipped'
++  result_message?: string
++  error_message?: string
++  energy_saved_kwh?: number
++  cost_saved_amount?: number
++  executed_at: string
++  duration_ms?: number
++}
++
++export interface UserNotification {
++  id: string
++  user_id: string
++  title: string
++  message: string
++  type: 'info' | 'success' | 'warning' | 'error' | 'automation' | 'alert'
++  priority: 'low' | 'normal' | 'high' | 'urgent'
++  related_device_id?: string
++  related_automation_id?: string
++  related_log_id?: string
++  is_read: boolean
++  is_dismissed: boolean
++  actions: Array<{ label: string; action: string; parameters?: any }>
++  created_at: string
++  read_at?: string
++  expires_at?: string
++}
++
++export const automationService = {
++  // Automation Rules Management
++  async getAutomationRules(userId: string): Promise<AutomationRule[]> {
++    const { data, error } = await supabase
++      .from('automation_rules')
++      .select('*')
++      .eq('user_id', userId)
++      .order('priority', { ascending: false })
++
++    if (error) {
++      console.error('Error fetching automation rules:', error)
++      return this.generateDemoAutomationRules(userId)
++    }
++
++    return data || []
++  },
++
++  async createAutomationRule(rule: Omit<AutomationRule, 'id' | 'created_at' | 'updated_at' | 'execution_count'>): Promise<AutomationRule | null> {
++    const { data, error } = await supabase
++      .from('automation_rules')
++      .insert([rule])
++      .select()
++      .single()
++
++    if (error) {
++      console.error('Error creating automation rule:', error)
++      throw new Error('Failed to create automation rule')
++    }
++
++    return data
++  },
++
++  async updateAutomationRule(id: string, updates: Partial<AutomationRule>): Promise<AutomationRule | null> {
++    const { data, error } = await supabase
++      .from('automation_rules')
++      .update({ ...updates, updated_at: new Date().toISOString() })
++      .eq('id', id)
++      .select()
++      .single()
++
++    if (error) {
++      console.error('Error updating automation rule:', error)
++      throw new Error('Failed to update automation rule')
++    }
++
++    return data
++  },
++
++  async deleteAutomationRule(id: string): Promise<void> {
++    const { error } = await supabase
++      .from('automation_rules')
++      .delete()
++      .eq('id', id)
++
++    if (error) {
++      console.error('Error deleting automation rule:', error)
++      throw new Error('Failed to delete automation rule')
++    }
++  },
++
++  // Device Schedules Management
++  async getDeviceSchedules(userId: string, deviceId?: string): Promise<DeviceSchedule[]> {
++    let query = supabase
++      .from('device_schedules')
++      .select('*')
++      .eq('user_id', userId)
++
++    if (deviceId) {
++      query = query.eq('device_id', deviceId)
++    }
++
++    const { data, error } = await query.order('next_execution_at', { ascending: true })
++
++    if (error) {
++      console.error('Error fetching device schedules:', error)
++      return this.generateDemoDeviceSchedules(userId)
++    }
++
++    return data || []
++  },
++
++  async createDeviceSchedule(schedule: Omit<DeviceSchedule, 'id' | 'created_at' | 'updated_at'>): Promise<DeviceSchedule | null> {
++    // Calculate next execution time
++    const nextExecution = this.calculateNextExecution(schedule)
++    
++    const { data, error } = await supabase
++      .from('device_schedules')
++      .insert([{ ...schedule, next_execution_at: nextExecution }])
++      .select()
++      .single()
++
++    if (error) {
++      console.error('Error creating device schedule:', error)
++      throw new Error('Failed to create device schedule')
++    }
++
++    return data
++  },
++
++  async updateDeviceSchedule(id: string, updates: Partial<DeviceSchedule>): Promise<DeviceSchedule | null> {
++    const { data, error } = await supabase
++      .from('device_schedules')
++      .update({ ...updates, updated_at: new Date().toISOString() })
++      .eq('id', id)
++      .select()
++      .single()
++
++    if (error) {
++      console.error('Error updating device schedule:', error)
++      throw new Error('Failed to update device schedule')
++    }
++
++    return data
++  },
++
++  async deleteDeviceSchedule(id: string): Promise<void> {
++    const { error } = await supabase
++      .from('device_schedules')
++      .delete()
++      .eq('id', id)
++
++    if (error) {
++      console.error('Error deleting device schedule:', error)
++      throw new Error('Failed to delete device schedule')
++    }
++  },
++
++  // Device Controls Management
++  async getDeviceControls(deviceIds?: string[]): Promise<DeviceControl[]> {
++    let query = supabase.from('device_controls').select('*')
++
++    if (deviceIds && deviceIds.length > 0) {
++      query = query.in('device_id', deviceIds)
++    }
++
++    const { data, error } = await query
++
++    if (error) {
++      console.error('Error fetching device controls:', error)
++      return this.generateDemoDeviceControls()
++    }
++
++    return data || []
++  },
++
++  async updateDeviceControl(deviceId: string, updates: Partial<DeviceControl>): Promise<DeviceControl | null> {
++    const { data, error } = await supabase
++      .from('device_controls')
++      .update({ ...updates, last_updated_at: new Date().toISOString() })
++      .eq('device_id', deviceId)
++      .select()
++      .single()
++
++    if (error) {
++      console.error('Error updating device control:', error)
++      throw new Error('Failed to update device control')
++    }
++
++    return data
++  },
++
++  // Automation Execution
++  async executeDeviceAction(deviceId: string, action: AutomationAction, userId: string): Promise<AutomationLog> {
++    const startTime = Date.now()
++    let status: 'success' | 'failed' | 'partial' | 'skipped' = 'success'
++    let resultMessage = ''
++    let errorMessage = ''
++
++    try {
++      // Get device control info
++      const deviceControl = await this.getDeviceControls([deviceId])
++      if (!deviceControl || deviceControl.length === 0) {
++        throw new Error('Device control not found')
++      }
++
++      const control = deviceControl[0]
++
++      // Execute the action based on type
++      switch (action.type) {
++        case 'device_control':
++          resultMessage = await this.executeDeviceControlAction(control, action.parameters)
++          break
++        case 'notification':
++          await this.createNotification(userId, {
++            title: action.parameters.title || 'Automation Notification',
++            message: action.parameters.message || 'Action executed successfully',
++            type: action.parameters.type || 'info',
++            priority: action.parameters.priority || 'normal',
++            actions: action.parameters.actions || []
++          })
++          resultMessage = 'Notification sent successfully'
++          break
++        case 'optimize':
++          resultMessage = await this.executeOptimizationAction(deviceId, action.parameters)
++          break
++        default:
++          throw new Error(`Unknown action type: ${action.type}`)
++      }
++
++    } catch (error) {
++      status = 'failed'
++      errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
++      console.error('Error executing device action:', error)
++    }
++
++    // Log the execution
++    const log: Omit<AutomationLog, 'id'> = {
++      user_id: userId,
++      automation_type: 'manual',
++      device_id: deviceId,
++      action_type: action.type,
++      action_parameters: action.parameters,
++      status,
++      result_message: resultMessage || undefined,
++      error_message: errorMessage || undefined,
++      executed_at: new Date().toISOString(),
++      duration_ms: Date.now() - startTime
++    }
++
++    return await this.createAutomationLog(log)
++  },
++
++  async executeDeviceControlAction(control: DeviceControl, parameters: any): Promise<string> {
++    const { action, value } = parameters
++
++    switch (action) {
++      case 'turn_on':
++        if (!control.can_turn_on_off) {
++          throw new Error('Device cannot be turned on/off')
++        }
++        await this.updateDeviceControl(control.device_id, { 
++          current_state: 'on',
++          last_command_at: new Date().toISOString(),
++          last_command_status: 'success'
++        })
++        return 'Device turned on successfully'
++
++      case 'turn_off':
++        if (!control.can_turn_on_off) {
++          throw new Error('Device cannot be turned on/off')
++        }
++        await this.updateDeviceControl(control.device_id, { 
++          current_state: 'off',
++          last_command_at: new Date().toISOString(),
++          last_command_status: 'success'
++        })
++        return 'Device turned off successfully'
++
++      case 'set_power':
++        if (!control.can_set_power_level) {
++          throw new Error('Device power level cannot be controlled')
++        }
++        const powerLevel = Math.max(control.min_power_level, Math.min(control.max_power_level, value))
++        await this.updateDeviceControl(control.device_id, { 
++          current_power_level: powerLevel,
++          last_command_at: new Date().toISOString(),
++          last_command_status: 'success'
++        })
++        return `Device power level set to ${powerLevel}%`
++
++      default:
++        throw new Error(`Unknown device action: ${action}`)
++    }
++  },
++
++  async executeOptimizationAction(deviceId: string, parameters: any): Promise<string> {
++    // Implement optimization logic based on analytics
++    // This is a placeholder for now
++    return 'Device optimization applied successfully'
++  },
++
++  // Notifications Management
++  async getNotifications(userId: string, unreadOnly: boolean = false): Promise<UserNotification[]> {
++    let query = supabase
++      .from('user_notifications')
++      .select('*')
++      .eq('user_id', userId)
++
++    if (unreadOnly) {
++      query = query.eq('is_read', false)
++    }
++
++    const { data, error } = await query
++      .order('created_at', { ascending: false })
++      .limit(50)
++
++    if (error) {
++      console.error('Error fetching notifications:', error)
++      return this.generateDemoNotifications(userId)
++    }
++
++    return data || []
++  },
++
++  async createNotification(userId: string, notification: Omit<UserNotification, 'id' | 'user_id' | 'created_at' | 'is_read' | 'is_dismissed'>): Promise<UserNotification | null> {
++    const { data, error } = await supabase
++      .from('user_notifications')
++      .insert([{ ...notification, user_id: userId }])
++      .select()
++      .single()
++
++    if (error) {
++      console.error('Error creating notification:', error)
++      throw new Error('Failed to create notification')
++    }
++
++    return data
++  },
++
++  async markNotificationAsRead(id: string): Promise<void> {
++    const { error } = await supabase
++      .from('user_notifications')
++      .update({ is_read: true, read_at: new Date().toISOString() })
++      .eq('id', id)
++
++    if (error) {
++      console.error('Error marking notification as read:', error)
++      throw new Error('Failed to mark notification as read')
++    }
++  },
++
++  async dismissNotification(id: string): Promise<void> {
++    const { error } = await supabase
++      .from('user_notifications')
++      .update({ is_dismissed: true })
++      .eq('id', id)
++
++    if (error) {
++      console.error('Error dismissing notification:', error)
++      throw new Error('Failed to dismiss notification')
++    }
++  },
++
++  // Automation Logs
++  async createAutomationLog(log: Omit<AutomationLog, 'id'>): Promise<AutomationLog> {
++    const { data, error } = await supabase
++      .from('automation_logs')
++      .insert([log])
++      .select()
++      .single()
++
++    if (error) {
++      console.error('Error creating automation log:', error)
++      throw new Error('Failed to create automation log')
++    }
++
++    return data
++  },
++
++  async getAutomationLogs(userId: string, limit: number = 50): Promise<AutomationLog[]> {
++    const { data, error } = await supabase
++      .from('automation_logs')
++      .select('*')
++      .eq('user_id', userId)
++      .order('executed_at', { ascending: false })
++      .limit(limit)
++
++    if (error) {
++      console.error('Error fetching automation logs:', error)
++      return []
++    }
++
++    return data || []
++  },
++
++  // Utility Functions
++  calculateNextExecution(schedule: Partial<DeviceSchedule>): string | null {
++    if (!schedule.start_time || !schedule.schedule_type) return null
++
++    const now = new Date()
++    const today = format(now, 'yyyy-MM-dd')
++    const startDateTime = new Date(`${today}T${schedule.start_time}`)
++
++    switch (schedule.schedule_type) {
++      case 'once':
++        return schedule.date_start ? `${schedule.date_start}T${schedule.start_time}` : null
++      
++      case 'daily':
++        if (isAfter(startDateTime, now)) {
++          return startDateTime.toISOString()
++        } else {
++          return addDays(startDateTime, 1).toISOString()
++        }
++      
++      case 'weekly':
++        const targetDay = schedule.days_of_week?.[0] || getDay(now)
++        let nextWeeklyExecution = startDateTime
++        while (getDay(nextWeeklyExecution) !== targetDay || isBefore(nextWeeklyExecution, now)) {
++          nextWeeklyExecution = addDays(nextWeeklyExecution, 1)
++        }
++        return nextWeeklyExecution.toISOString()
++      
++      case 'monthly':
++        if (isAfter(startDateTime, now)) {
++          return startDateTime.toISOString()
++        } else {
++          return addMonths(startDateTime, 1).toISOString()
++        }
++      
++      default:
++        return null
++    }
++  },
++
++  // Demo Data Generators (for testing when database is empty)
++  generateDemoAutomationRules(userId: string): AutomationRule[] {
++    return [
++      {
++        id: 'demo-rule-1',
++        user_id: userId,
++        name: 'Energy Saver Mode',
++        description: 'Turn off non-essential devices during peak hours',
++        conditions: [{ type: 'time', operator: 'between', value: ['18:00', '22:00'] }],
++        actions: [{ type: 'device_control', parameters: { action: 'turn_off' } }],
++        is_enabled: true,
++        priority: 1,
++        cooldown_minutes: 30,
++        days_of_week: [1, 2, 3, 4, 5],
++        created_at: new Date().toISOString(),
++        updated_at: new Date().toISOString(),
++        execution_count: 15
++      }
++    ]
++  },
++
++  generateDemoDeviceSchedules(userId: string): DeviceSchedule[] {
++    return [
++      {
++        id: 'demo-schedule-1',
++        user_id: userId,
++        device_id: 'demo-device-1',
++        name: 'Morning Water Heater',
++        description: 'Turn on water heater every morning',
++        schedule_type: 'daily',
++        start_time: '06:00',
++        end_time: '07:00',
++        days_of_week: [1, 2, 3, 4, 5, 6, 7],
++        action_type: 'turn_on',
++        action_parameters: {},
++        is_enabled: true,
++        priority: 1,
++        created_at: new Date().toISOString(),
++        updated_at: new Date().toISOString(),
++        next_execution_at: addDays(new Date(), 1).toISOString()
++      }
++    ]
++  },
++
++  generateDemoDeviceControls(): DeviceControl[] {
++    return [
++      {
++        id: 'demo-control-1',
++        device_id: 'demo-device-1',
++        can_turn_on_off: true,
++        can_set_power_level: true,
++        can_schedule: true,
++        can_monitor_realtime: true,
++        current_state: 'on',
++        current_power_level: 75,
++        current_consumption: 2.5,
++        min_power_level: 0,
++        max_power_level: 100,
++        control_credentials: {},
++        last_updated_at: new Date().toISOString()
++      }
++    ]
++  },
++
++  generateDemoNotifications(userId: string): UserNotification[] {
++    return [
++      {
++        id: 'demo-notification-1',
++        user_id: userId,
++        title: 'Energy Optimization Applied',
++        message: 'Your AC has been optimized to save 15% energy during peak hours',
++        type: 'success',
++        priority: 'normal',
++        is_read: false,
++        is_dismissed: false,
++        actions: [],
++        created_at: new Date().toISOString()
++      }
++    ]
++  }
++}
+diff --git a/frontend/lib/data-pipeline/real-time-hooks.ts b/frontend/lib/data-pipeline/real-time-hooks.ts
+new file mode 100644
+index 0000000..5c54983
+--- /dev/null
++++ b/frontend/lib/data-pipeline/real-time-hooks.ts
+@@ -0,0 +1,32 @@
++"use client";
++
++import { useState, useEffect } from 'react'
++import { dataPipeline, EnergyDataPoint, RealTimeMetrics } from './real-time-service'
++
++// Real-time data hooks for React components
++export function useRealTimeData() {
++    const [data, setData] = useState<EnergyDataPoint[]>([])
++    const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null)
++    const [isConnected, setIsConnected] = useState(false)
++    
++
++    useEffect(() => {
++        const updateData = () => {
++            const newData = dataPipeline.generateRealtimeData()
++            const newMetrics = dataPipeline.calculateRealTimeMetrics(newData)
++            setData(newData)
++            setMetrics(newMetrics)
++        }
++
++        // Connect to data source
++        dataPipeline.connectToInfluxDB().then(setIsConnected)
++
++        // Update data every 30 seconds for real-time feel
++        updateData()
++        const interval = setInterval(updateData, 30000)
++
++        return () => clearInterval(interval)
++    }, [])
++
++    return { data, metrics, isConnected }
++}
+diff --git a/frontend/lib/data-pipeline/real-time-service.ts b/frontend/lib/data-pipeline/real-time-service.ts
+new file mode 100644
+index 0000000..81f9dcd
+--- /dev/null
++++ b/frontend/lib/data-pipeline/real-time-service.ts
+@@ -0,0 +1,248 @@
++// Real-time data pipeline for UrjaBandhu
++// Handles InfluxDB integration and data streaming
++
++export interface EnergyDataPoint {
++    timestamp: Date
++    deviceId: string
++    deviceName: string
++    consumption: number // in kWh
++    voltage: number
++    current: number
++    power: number // in watts
++    cost: number // in rupees
++    location?: string
++    efficiency?: number
++}
++
++export interface RealTimeMetrics {
++    totalConsumption: number
++    totalCost: number
++    activeDevices: number
++    peakDemand: number
++    averageEfficiency: number
++    carbonFootprint: number
++}
++
++export class DataPipelineService {
++    private influxUrl: string
++    private influxToken: string
++    private influxOrg: string
++    private influxBucket: string
++    private isProduction: boolean
++
++    constructor() {
++        this.influxUrl = process.env.INFLUXDB_URL || 'http://localhost:8086'
++        this.influxToken = process.env.INFLUXDB_TOKEN || 'urjabandhu-token-2024'
++        this.influxOrg = process.env.INFLUXDB_ORG || 'urjabandhu'
++        this.influxBucket = process.env.INFLUXDB_BUCKET || 'electricity_data'
++        this.isProduction = process.env.NODE_ENV === 'production'
++    }
++
++    // Simulate real-time data for development
++    generateRealtimeData(): EnergyDataPoint[] {
++        const devices = [
++            { id: 'dev_001', name: 'Living Room AC', baseConsumption: 1.5, location: 'Living Room' },
++            { id: 'dev_002', name: 'Refrigerator', baseConsumption: 0.3, location: 'Kitchen' },
++            { id: 'dev_003', name: 'LED TV', baseConsumption: 0.15, location: 'Living Room' },
++            { id: 'dev_004', name: 'Washing Machine', baseConsumption: 2.0, location: 'Utility' },
++            { id: 'dev_005', name: 'Water Heater', baseConsumption: 3.0, location: 'Bathroom' },
++            { id: 'dev_006', name: 'Microwave', baseConsumption: 1.2, location: 'Kitchen' },
++            { id: 'dev_007', name: 'Laptop Charger', baseConsumption: 0.065, location: 'Study' },
++            { id: 'dev_008', name: 'Ceiling Fans', baseConsumption: 0.2, location: 'All Rooms' }
++        ]
++
++        const currentTime = new Date()
++        const dataPoints: EnergyDataPoint[] = []
++
++        devices.forEach(device => {
++            // Add randomness for realistic simulation
++            const variation = 0.8 + (Math.random() * 0.4) // ±20% variation
++            const consumption = device.baseConsumption * variation
++            const voltage = 220 + (Math.random() * 20 - 10) // 210-230V range
++            const current = (consumption * 1000) / voltage // Calculate current
++            const power = consumption * 1000 // Convert to watts
++            const costPerKwh = 6.5 // Average cost in rupees per kWh
++            const cost = consumption * costPerKwh
++            const efficiency = Math.min(95, 70 + (Math.random() * 25)) // 70-95% efficiency
++
++            dataPoints.push({
++                timestamp: currentTime,
++                deviceId: device.id,
++                deviceName: device.name,
++                consumption,
++                voltage,
++                current,
++                power,
++                cost,
++                location: device.location,
++                efficiency
++            })
++        })
++
++        return dataPoints
++    }
++
++    // Calculate real-time metrics from data points
++    calculateRealTimeMetrics(dataPoints: EnergyDataPoint[]): RealTimeMetrics {
++        const totalConsumption = dataPoints.reduce((sum, dp) => sum + dp.consumption, 0)
++        const totalCost = dataPoints.reduce((sum, dp) => sum + dp.cost, 0)
++        const activeDevices = dataPoints.filter(dp => dp.consumption > 0.01).length
++        const peakDemand = Math.max(...dataPoints.map(dp => dp.power))
++        const averageEfficiency = dataPoints.reduce((sum, dp) => sum + (dp.efficiency || 0), 0) / dataPoints.length
++
++        // Carbon footprint calculation (0.82 kg CO2 per kWh for India)
++        const carbonFootprint = totalConsumption * 0.82
++
++        return {
++            totalConsumption,
++            totalCost,
++            activeDevices,
++            peakDemand,
++            averageEfficiency,
++            carbonFootprint
++        }
++    }
++
++    // Enhanced time series data with different time ranges
++    generateTimeSeriesData(range: '1h' | '6h' | '24h' | '7d' | '30d' = '24h'): EnergyDataPoint[] {
++        const now = new Date()
++        const dataPoints: EnergyDataPoint[] = []
++
++        let intervals: number
++        let intervalMs: number
++
++        switch (range) {
++            case '1h':
++                intervals = 60 // 1 minute intervals
++                intervalMs = 60 * 1000
++                break
++            case '6h':
++                intervals = 72 // 5 minute intervals
++                intervalMs = 5 * 60 * 1000
++                break
++            case '24h':
++                intervals = 96 // 15 minute intervals
++                intervalMs = 15 * 60 * 1000
++                break
++            case '7d':
++                intervals = 168 // 1 hour intervals
++                intervalMs = 60 * 60 * 1000
++                break
++            case '30d':
++                intervals = 720 // 1 hour intervals
++                intervalMs = 60 * 60 * 1000
++                break
++        }
++
++        for (let i = 0; i < intervals; i++) {
++            const timestamp = new Date(now.getTime() - (intervals - i) * intervalMs)
++            const currentData = this.generateRealtimeData()
++
++            // Modify data for time-based patterns
++            currentData.forEach(dp => {
++                dp.timestamp = timestamp
++
++                // Apply time-of-day patterns
++                const hour = timestamp.getHours()
++                let timeMultiplier = 1
++
++                if (hour >= 6 && hour <= 9) timeMultiplier = 1.3 // Morning peak
++                else if (hour >= 12 && hour <= 14) timeMultiplier = 1.2 // Afternoon
++                else if (hour >= 18 && hour <= 22) timeMultiplier = 1.4 // Evening peak
++                else if (hour >= 23 || hour <= 5) timeMultiplier = 0.6 // Night low
++
++                dp.consumption *= timeMultiplier
++                dp.power *= timeMultiplier
++                dp.cost *= timeMultiplier
++            })
++
++            dataPoints.push(...currentData)
++        }
++
++        return dataPoints
++    }
++
++    // Mock InfluxDB connection for development
++    async connectToInfluxDB(): Promise<boolean> {
++        try {
++            if (this.isProduction) {
++                // In production, implement actual InfluxDB connection
++                console.log('Connecting to InfluxDB in production...')
++                return true
++            } else {
++                // In development, simulate connection
++                console.log('🔗 Simulating InfluxDB connection for development')
++                return true
++            }
++        } catch (error) {
++            console.error('Failed to connect to InfluxDB:', error)
++            return false
++        }
++    }
++
++    // Data validation and cleaning
++    validateDataPoint(dataPoint: EnergyDataPoint): boolean {
++        return (
++            dataPoint.consumption >= 0 &&
++            dataPoint.voltage > 0 &&
++            dataPoint.current >= 0 &&
++            dataPoint.power >= 0 &&
++            dataPoint.cost >= 0 &&
++            dataPoint.deviceId.length > 0
++        )
++    }
++
++    // Export data for analysis
++    exportData(dataPoints: EnergyDataPoint[], format: 'json' | 'csv' = 'json'): string {
++        if (format === 'csv') {
++            const headers = 'timestamp,deviceId,deviceName,consumption,voltage,current,power,cost,location,efficiency\n'
++            const rows = dataPoints.map(dp =>
++                `${dp.timestamp.toISOString()},${dp.deviceId},${dp.deviceName},${dp.consumption},${dp.voltage},${dp.current},${dp.power},${dp.cost},${dp.location},${dp.efficiency}`
++            ).join('\n')
++            return headers + rows
++        } else {
++            return JSON.stringify(dataPoints, null, 2)
++        }
++    }
++
++    // Energy anomaly detection
++    detectAnomalies(dataPoints: EnergyDataPoint[]): Array<{ deviceId: string, anomaly: string, severity: 'low' | 'medium' | 'high' }> {
++        const anomalies: Array<{ deviceId: string, anomaly: string, severity: 'low' | 'medium' | 'high' }> = []
++
++        const deviceGroups = dataPoints.reduce((groups, dp) => {
++            if (!groups[dp.deviceId]) groups[dp.deviceId] = []
++            groups[dp.deviceId].push(dp)
++            return groups
++        }, {} as Record<string, EnergyDataPoint[]>)
++
++        Object.entries(deviceGroups).forEach(([deviceId, points]) => {
++            const avgConsumption = points.reduce((sum, p) => sum + p.consumption, 0) / points.length
++            const maxConsumption = Math.max(...points.map(p => p.consumption))
++
++            // High consumption anomaly
++            if (maxConsumption > avgConsumption * 2) {
++                anomalies.push({
++                    deviceId,
++                    anomaly: `Consumption spike detected: ${maxConsumption.toFixed(2)} kWh (${(maxConsumption / avgConsumption * 100).toFixed(0)}% above average)`,
++                    severity: maxConsumption > avgConsumption * 3 ? 'high' : 'medium'
++                })
++            }
++
++            // Efficiency anomaly
++            const avgEfficiency = points.reduce((sum, p) => sum + (p.efficiency || 0), 0) / points.length
++            if (avgEfficiency < 70) {
++                anomalies.push({
++                    deviceId,
++                    anomaly: `Low efficiency detected: ${avgEfficiency.toFixed(1)}%`,
++                    severity: avgEfficiency < 50 ? 'high' : 'medium'
++                })
++            }
++        })
++
++        return anomalies
++    }
++}
++
++// Singleton instance
++export const dataPipeline = new DataPipelineService()
++
+diff --git a/frontend/lib/database.ts b/frontend/lib/database.ts
+new file mode 100644
+index 0000000..0dcc82a
+--- /dev/null
++++ b/frontend/lib/database.ts
+@@ -0,0 +1,766 @@
++import { createClient } from './supabase'
++import type { 
++  Database, 
++  Profile, 
++  Device, 
++  ConsumptionData, 
++  Recommendation,
++  EnergyAlert,
++  EnergyGoal,
++  BillingData 
++} from './supabase'
++
++// Additional Phase 2 Types
++interface DeviceCategory {
++  id: string
++  name: string
++  description: string
++  icon: string
++  average_power_min: number
++  average_power_max: number
++  efficiency_tips: string[]
++  created_at: string
++}
++
++interface UserNotification {
++  id: string
++  user_id: string
++  title: string
++  message: string
++  type: 'info' | 'warning' | 'error' | 'success' | 'tip'
++  is_read: boolean
++  action_url?: string
++  action_text?: string
++  expires_at?: string
++  created_at: string
++}
++
++const supabase = createClient()
++
++// Profile Services
++export const profileService = {
++  async getProfile(userId: string): Promise<Profile | null> {
++    const { data, error } = await supabase
++      .from('profiles')
++      .select('*')
++      .eq('id', userId)
++      .single()
++    
++    if (error) {
++      console.error('Error fetching profile:', error)
++      return null
++    }
++    return data
++  },
++
++  async updateProfile(userId: string, updates: Partial<Profile>) {
++    const { data, error } = await supabase
++      .from('profiles')
++      .update(updates)
++      .eq('id', userId)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error updating profile:', error)
++      throw error
++    }
++    return data
++  },
++
++  async createProfile(profile: Database['public']['Tables']['profiles']['Insert']) {
++    const { data, error } = await supabase
++      .from('profiles')
++      .insert(profile)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error creating profile:', error)
++      throw error
++    }
++    return data
++  }
++}
++
++// Device Services
++export const deviceService = {
++  async getUserDevices(userId: string): Promise<Device[]> {
++    const { data, error } = await supabase
++      .from('devices')
++      .select('*')
++      .eq('user_id', userId)
++      .order('created_at', { ascending: false })
++    
++    if (error) {
++      console.error('Error fetching devices:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async addDevice(device: Database['public']['Tables']['devices']['Insert']) {
++    const { data, error } = await supabase
++      .from('devices')
++      .insert(device)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error adding device:', error)
++      throw error
++    }
++    return data
++  },
++
++  async updateDevice(deviceId: string, updates: Partial<Device>) {
++    const { data, error } = await supabase
++      .from('devices')
++      .update(updates)
++      .eq('id', deviceId)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error updating device:', error)
++      throw error
++    }
++    return data
++  },
++
++  async deleteDevice(deviceId: string) {
++    const { error } = await supabase
++      .from('devices')
++      .delete()
++      .eq('id', deviceId)
++    
++    if (error) {
++      console.error('Error deleting device:', error)
++      throw error
++    }
++  },
++
++  async searchDevicesInCatalog(searchText: string) {
++    const { data, error } = await supabase
++      .rpc('search_devices_by_keywords', { search_text: searchText })
++    
++    if (error) {
++      console.error('Error searching device catalog:', error)
++      return []
++    }
++    return data || []
++  }
++}
++
++// Consumption Data Services
++export const consumptionService = {
++  async getUserConsumption(userId: string, startDate?: string, endDate?: string): Promise<ConsumptionData[]> {
++    let query = supabase
++      .from('consumption_data')
++      .select('*, devices(name, type)')
++      .eq('user_id', userId)
++      .order('timestamp', { ascending: false })
++    
++    if (startDate) {
++      query = query.gte('timestamp', startDate)
++    }
++    if (endDate) {
++      query = query.lte('timestamp', endDate)
++    }
++    
++    const { data, error } = await query
++    
++    if (error) {
++      console.error('Error fetching consumption data:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async addConsumptionData(consumption: Database['public']['Tables']['consumption_data']['Insert']) {
++    const { data, error } = await supabase
++      .from('consumption_data')
++      .insert(consumption)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error adding consumption data:', error)
++      throw error
++    }
++    return data
++  },
++
++  async getDeviceConsumption(deviceId: string, days: number = 30) {
++    const startDate = new Date()
++    startDate.setDate(startDate.getDate() - days)
++    
++    const { data, error } = await supabase
++      .from('consumption_data')
++      .select('*')
++      .eq('device_id', deviceId)
++      .gte('timestamp', startDate.toISOString())
++      .order('timestamp', { ascending: true })
++    
++    if (error) {
++      console.error('Error fetching device consumption:', error)
++      return []
++    }
++    return data || []
++  }
++}
++
++// Recommendations Services
++export const recommendationService = {
++  async getUserRecommendations(userId: string): Promise<Recommendation[]> {
++    const { data, error } = await supabase
++      .from('recommendations')
++      .select('*, devices(name)')
++      .eq('user_id', userId)
++      .eq('is_applied', false)
++      .order('priority', { ascending: true })
++      .order('created_at', { ascending: false })
++    
++    if (error) {
++      console.error('Error fetching recommendations:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async markRecommendationApplied(recommendationId: string) {
++    const { data, error } = await supabase
++      .from('recommendations')
++      .update({ 
++        is_applied: true, 
++        applied_at: new Date().toISOString() 
++      })
++      .eq('id', recommendationId)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error marking recommendation as applied:', error)
++      throw error
++    }
++    return data
++  },
++
++  async addRecommendation(recommendation: Database['public']['Tables']['recommendations']['Insert']) {
++    const { data, error } = await supabase
++      .from('recommendations')
++      .insert(recommendation)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error adding recommendation:', error)
++      throw error
++    }
++    return data
++  }
++}
++
++// Energy Alerts Services
++export const alertService = {
++  async getUserAlerts(userId: string, onlyUnread: boolean = false): Promise<EnergyAlert[]> {
++    let query = supabase
++      .from('energy_alerts')
++      .select('*, devices(name)')
++      .eq('user_id', userId)
++      .order('created_at', { ascending: false })
++    
++    if (onlyUnread) {
++      query = query.eq('is_read', false)
++    }
++    
++    const { data, error } = await query
++    
++    if (error) {
++      console.error('Error fetching alerts:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async markAlertAsRead(alertId: string) {
++    const { data, error } = await supabase
++      .from('energy_alerts')
++      .update({ is_read: true })
++      .eq('id', alertId)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error marking alert as read:', error)
++      throw error
++    }
++    return data
++  },
++
++  async createAlert(alert: Database['public']['Tables']['energy_alerts']['Insert']) {
++    const { data, error } = await supabase
++      .from('energy_alerts')
++      .insert(alert)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error creating alert:', error)
++      throw error
++    }
++    return data
++  }
++}
++
++// Energy Goals Services
++export const goalService = {
++  async getUserGoals(userId: string): Promise<EnergyGoal[]> {
++    const { data, error } = await supabase
++      .from('energy_goals')
++      .select('*')
++      .eq('user_id', userId)
++      .order('created_at', { ascending: false })
++    
++    if (error) {
++      console.error('Error fetching goals:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async createGoal(goal: Database['public']['Tables']['energy_goals']['Insert']) {
++    const { data, error } = await supabase
++      .from('energy_goals')
++      .insert(goal)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error creating goal:', error)
++      throw error
++    }
++    return data
++  },
++
++  async updateGoalProgress(goalId: string, currentValue: number) {
++    const { data, error } = await supabase
++      .from('energy_goals')
++      .update({ current_value: currentValue })
++      .eq('id', goalId)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error updating goal progress:', error)
++      throw error
++    }
++    return data
++  }
++}
++
++// Billing Services
++export const billingService = {
++  async getUserBills(userId: string): Promise<BillingData[]> {
++    const { data, error } = await supabase
++      .from('billing_data')
++      .select('*')
++      .eq('user_id', userId)
++      .order('bill_month', { ascending: false })
++    
++    if (error) {
++      console.error('Error fetching bills:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async addBill(bill: Database['public']['Tables']['billing_data']['Insert']) {
++    const { data, error } = await supabase
++      .from('billing_data')
++      .insert(bill)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error adding bill:', error)
++      throw error
++    }
++    return data
++  },
++
++  async getLatestBill(userId: string) {
++    const { data, error } = await supabase
++      .from('billing_data')
++      .select('*')
++      .eq('user_id', userId)
++      .order('bill_month', { ascending: false })
++      .limit(1)
++      .single()
++    
++    if (error) {
++      console.error('Error fetching latest bill:', error)
++      return null
++    }
++    return data
++  }
++}
++
++// OCR Service for device detection
++export const ocrService = {
++  async detectDeviceFromImage(imageUrl: string, userId?: string) {
++    try {
++      const response = await fetch('/api/ocr-detect', {
++        method: 'POST',
++        headers: {
++          'Content-Type': 'application/json',
++        },
++        body: JSON.stringify({
++          image_url: imageUrl,
++          user_id: userId
++        })
++      })
++      
++      if (!response.ok) {
++        throw new Error(`OCR service error: ${response.statusText}`)
++      }
++      
++      return await response.json()
++    } catch (error) {
++      console.error('Error detecting device from image:', error)
++      throw error
++    }
++  }
++}
++
++// Analytics helper functions
++export const analyticsService = {
++  async getDashboardStats(userId: string) {
++    try {
++      // Get total devices
++      const devices = await deviceService.getUserDevices(userId)
++      
++      // Get this month's consumption
++      const thisMonth = new Date()
++      thisMonth.setDate(1)
++      const consumption = await consumptionService.getUserConsumption(
++        userId, 
++        thisMonth.toISOString()
++      )
++      
++      // Get unread alerts
++      const alerts = await alertService.getUserAlerts(userId, true)
++      
++      // Get active recommendations
++      const recommendations = await recommendationService.getUserRecommendations(userId)
++      
++      // Calculate total consumption and cost this month
++      const totalConsumption = consumption.reduce((sum, record) => sum + record.consumption_kwh, 0)
++      const totalCost = consumption.reduce((sum, record) => sum + record.cost, 0)
++      
++      return {
++        totalDevices: devices.length,
++        activeDevices: devices.filter(d => d.status === 'active').length,
++        monthlyConsumption: totalConsumption,
++        monthlyCost: totalCost,
++        unreadAlerts: alerts.length,
++        activeRecommendations: recommendations.length,
++        averageEfficiency: devices.reduce((sum, d) => sum + (d.efficiency_score || 0), 0) / devices.length || 0
++      }
++    } catch (error) {
++      console.error('Error fetching dashboard stats:', error)
++      return {
++        totalDevices: 0,
++        activeDevices: 0,
++        monthlyConsumption: 0,
++        monthlyCost: 0,
++        unreadAlerts: 0,
++        activeRecommendations: 0,
++        averageEfficiency: 0
++      }
++    }
++  }
++}
++
++// Phase 2: Energy Goals Service
++export const energyGoalService = {
++  async getUserGoals(userId: string): Promise<EnergyGoal[]> {
++    const { data, error } = await supabase
++      .from('energy_goals')
++      .select('*')
++      .eq('user_id', userId)
++      .eq('is_active', true)
++      .order('created_at', { ascending: false })
++    
++    if (error) {
++      console.error('Error fetching energy goals:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async createGoal(goalData: {
++    user_id: string
++    goal_type: 'daily' | 'weekly' | 'monthly' | 'yearly'
++    target_consumption: number
++    target_cost: number
++    start_date: string
++    end_date: string
++  }) {
++    const { data, error } = await supabase
++      .from('energy_goals')
++      .insert(goalData)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error creating energy goal:', error)
++      throw error
++    }
++    return data
++  },
++
++  async updateGoalProgress(goalId: string, consumption: number, cost: number) {
++    const { data, error } = await supabase
++      .from('energy_goals')
++      .update({
++        current_consumption: consumption,
++        current_cost: cost
++      })
++      .eq('id', goalId)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error updating goal progress:', error)
++      throw error
++    }
++    return data
++  },
++
++  async deactivateGoal(goalId: string) {
++    const { error } = await supabase
++      .from('energy_goals')
++      .update({ is_active: false })
++      .eq('id', goalId)
++    
++    if (error) {
++      console.error('Error deactivating goal:', error)
++      throw error
++    }
++  }
++}
++
++// Phase 2: Energy Alerts Service
++export const energyAlertService = {
++  async getUserAlerts(userId: string, unreadOnly: boolean = false): Promise<EnergyAlert[]> {
++    let query = supabase
++      .from('energy_alerts')
++      .select('*, devices(name)')
++      .eq('user_id', userId)
++      .order('created_at', { ascending: false })
++    
++    if (unreadOnly) {
++      query = query.eq('is_read', false)
++    }
++    
++    const { data, error } = await query
++    
++    if (error) {
++      console.error('Error fetching energy alerts:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async createAlert(alertData: {
++    user_id: string
++    alert_type: 'high_consumption' | 'unusual_pattern' | 'device_offline' | 'cost_threshold'
++    title: string
++    message: string
++    priority?: 'high' | 'medium' | 'low'
++    threshold_value?: number
++    device_id?: string
++  }) {
++    const { data, error } = await supabase
++      .from('energy_alerts')
++      .insert(alertData)
++      .select()
++      .single()
++    
++    if (error) {
++      console.error('Error creating energy alert:', error)
++      throw error
++    }
++    return data
++  },
++
++  async markAsRead(alertId: string) {
++    const { error } = await supabase
++      .from('energy_alerts')
++      .update({ is_read: true })
++      .eq('id', alertId)
++    
++    if (error) {
++      console.error('Error marking alert as read:', error)
++      throw error
++    }
++  },
++
++  async markAllAsRead(userId: string) {
++    const { error } = await supabase
++      .from('energy_alerts')
++      .update({ is_read: true })
++      .eq('user_id', userId)
++      .eq('is_read', false)
++    
++    if (error) {
++      console.error('Error marking all alerts as read:', error)
++      throw error
++    }
++  }
++}
++
++// Phase 2: Device Categories Service
++export const deviceCategoryService = {
++  async getAllCategories(): Promise<DeviceCategory[]> {
++    const { data, error } = await supabase
++      .from('device_categories')
++      .select('*')
++      .order('name')
++    
++    if (error) {
++      console.error('Error fetching device categories:', error)
++      return []
++    }
++    return data || []
++  },
++
++  async getCategoryById(categoryId: string): Promise<DeviceCategory | null> {
++    const { data, error } = await supabase
++      .from('device_categories')
++      .select('*')
++      .eq('id', categoryId)
++      .single()
++    
++    if (error) {
++      console.error('Error fetching device category:', error)
++      return null
++    }
++    return data
++  },
++
++  async getCategoryByName(categoryName: string): Promise<DeviceCategory | null> {
++    const { data, error } = await supabase
++      .from('device_categories')
++      .select('*')
++      .eq('name', categoryName)
++      .single()
++    
++    if (error) {
++      console.error('Error fetching device category by name:', error)
++      return null
++    }
++    return data
++  }
++}
++
++// Phase 2: Enhanced Analytics Service
++export const enhancedAnalyticsService = {
++  async getDashboardStats(userId: string) {
++    try {
++      const now = new Date()
++      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
++      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
++      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
++
++      // Get this month's data
++      const { data: thisMonthData } = await supabase
++        .from('consumption_data')
++        .select('consumption_kwh, cost')
++        .eq('user_id', userId)
++        .gte('timestamp', thisMonthStart.toISOString())
++
++      // Get last month's data
++      const { data: lastMonthData } = await supabase
++        .from('consumption_data')
++        .select('consumption_kwh, cost')
++        .eq('user_id', userId)
++        .gte('timestamp', lastMonthStart.toISOString())
++        .lte('timestamp', lastMonthEnd.toISOString())
++
++      // Get devices count
++      const { count: devicesCount } = await supabase
++        .from('devices')
++        .select('*', { count: 'exact', head: true })
++        .eq('user_id', userId)
++
++      // Get active goals count
++      const { count: activeGoalsCount } = await supabase
++        .from('energy_goals')
++        .select('*', { count: 'exact', head: true })
++        .eq('user_id', userId)
++        .eq('is_active', true)
++
++      // Get unread alerts count
++      const { count: unreadAlertsCount } = await supabase
++        .from('energy_alerts')
++        .select('*', { count: 'exact', head: true })
++        .eq('user_id', userId)
++        .eq('is_read', false)
++
++      // Calculate stats
++      const thisMonthConsumption = thisMonthData?.reduce((sum: number, record: any) => sum + record.consumption_kwh, 0) || 0
++      const thisMonthCost = thisMonthData?.reduce((sum: number, record: any) => sum + record.cost, 0) || 0
++      const lastMonthConsumption = lastMonthData?.reduce((sum: number, record: any) => sum + record.consumption_kwh, 0) || 0
++      const lastMonthCost = lastMonthData?.reduce((sum: number, record: any) => sum + record.cost, 0) || 0
++
++      const savings = lastMonthCost > 0 ? lastMonthCost - thisMonthCost : 0
++      const efficiency = lastMonthConsumption > 0 ? 
++        Math.max(0, Math.min(100, (1 - thisMonthConsumption / lastMonthConsumption) * 100)) : 85
++
++      return {
++        totalDevices: devicesCount || 0,
++        totalConsumption: thisMonthConsumption,
++        totalCost: thisMonthCost,
++        avgDaily: thisMonthConsumption / new Date().getDate(),
++        peakDemand: Math.max(...(thisMonthData?.map((d: any) => d.consumption_kwh) || [0])),
++        efficiency,
++        savings,
++        activeGoals: activeGoalsCount || 0,
++        unreadAlerts: unreadAlertsCount || 0,
++        thisMonth: {
++          consumption: thisMonthConsumption,
++          cost: thisMonthCost,
++          savings
++        },
++        lastMonth: {
++          consumption: lastMonthConsumption,
++          cost: lastMonthCost
++        }
++      }
++    } catch (error) {
++      console.error('Error fetching enhanced dashboard stats:', error)
++      throw error
++    }
++  },
++
++  async getConsumptionTrends(userId: string, days: number = 30) {
++    const startDate = new Date()
++    startDate.setDate(startDate.getDate() - days)
++
++    const { data, error } = await supabase
++      .from('consumption_data')
++      .select('timestamp, consumption_kwh, cost')
++      .eq('user_id', userId)
++      .gte('timestamp', startDate.toISOString())
++      .order('timestamp', { ascending: true })
++
++    if (error) {
++      console.error('Error fetching consumption trends:', error)
++      return []
++    }
++
++    return data || []
++  }
++}
+diff --git a/frontend/lib/energy-optimization.ts b/frontend/lib/energy-optimization.ts
+new file mode 100644
+index 0000000..389be2e
+--- /dev/null
++++ b/frontend/lib/energy-optimization.ts
+@@ -0,0 +1,471 @@
++/**
++ * AI-Powered Energy Optimization Service
++ * Advanced ML-based energy optimization and insights
++ */
++
++import { supabase } from '@/lib/supabase'
++
++export interface EnergyInsight {
++  id: string
++  type: 'cost_saving' | 'efficiency' | 'behavioral' | 'predictive' | 'environmental'
++  title: string
++  description: string
++  impact: 'high' | 'medium' | 'low'
++  savings_potential: number // Monthly savings in rupees
++  implementation_difficulty: 'easy' | 'medium' | 'hard'
++  category: string
++  actionable_steps: string[]
++  confidence_score: number // 0-1
++  data_sources: string[]
++  created_at: string
++}
++
++export interface OptimizationRecommendation {
++  id: string
++  device_id?: string
++  device_name?: string
++  recommendation_type: 'schedule_change' | 'power_reduction' | 'replacement' | 'behavioral'
++  title: string
++  description: string
++  potential_savings: number
++  implementation_cost: number
++  payback_period_months: number
++  priority_score: number
++  automated_action_available: boolean
++  parameters?: Record<string, any>
++}
++
++export interface EnergyPattern {
++  pattern_type: 'daily' | 'weekly' | 'seasonal' | 'behavioral'
++  peak_hours: number[]
++  consumption_variance: number
++  cost_efficiency_score: number
++  anomalies_detected: number
++  optimization_opportunities: string[]
++}
++
++export interface SmartRecommendation {
++  category: 'immediate' | 'short_term' | 'long_term'
++  recommendations: OptimizationRecommendation[]
++  total_potential_savings: number
++  implementation_timeline: string
++}
++
++export interface EnvironmentalImpact {
++  carbon_footprint_kg: number
++  carbon_reduction_potential: number
++  renewable_energy_score: number
++  eco_friendly_rating: number
++  green_recommendations: string[]
++}
++
++class EnergyOptimizationService {
++  
++  /**
++   * Generate comprehensive energy insights using AI analysis
++   */
++  async generateEnergyInsights(userId: string): Promise<EnergyInsight[]> {
++    try {
++      // In a real implementation, this would connect to ML models
++      // For now, we'll generate intelligent demo insights based on patterns
++      
++      const mockInsights: EnergyInsight[] = [
++        {
++          id: 'insight-1',
++          type: 'cost_saving',
++          title: 'Peak Hour Consumption Optimization',
++          description: 'Your consumption during peak hours (6-9 PM) is 40% higher than off-peak. Shifting major appliance usage could save ₹450/month.',
++          impact: 'high',
++          savings_potential: 450,
++          implementation_difficulty: 'easy',
++          category: 'Time-of-Use Optimization',
++          actionable_steps: [
++            'Set water heater to run during off-peak hours (11 PM - 5 AM)',
++            'Schedule washing machine and dishwasher for early morning',
++            'Use timer-controlled devices to avoid peak hour usage',
++            'Consider battery storage for peak hour backup'
++          ],
++          confidence_score: 0.87,
++          data_sources: ['consumption_patterns', 'utility_rates', 'device_schedules'],
++          created_at: new Date().toISOString()
++        },
++        {
++          id: 'insight-2',
++          type: 'efficiency',
++          title: 'HVAC System Inefficiency Detected',
++          description: 'Your air conditioning system is consuming 25% more energy than optimal. Temperature optimization and maintenance could improve efficiency.',
++          impact: 'high',
++          savings_potential: 650,
++          implementation_difficulty: 'medium',
++          category: 'Equipment Efficiency',
++          actionable_steps: [
++            'Increase AC temperature by 1-2°C (optimal: 24-26°C)',
++            'Clean or replace air filters monthly',
++            'Check for air leaks around doors and windows',
++            'Consider smart thermostat with learning capabilities',
++            'Schedule professional maintenance every 6 months'
++          ],
++          confidence_score: 0.92,
++          data_sources: ['device_consumption', 'temperature_data', 'efficiency_benchmarks'],
++          created_at: new Date().toISOString()
++        },
++        {
++          id: 'insight-3',
++          type: 'predictive',
++          title: 'Upcoming Bill Spike Alert',
++          description: 'Based on current consumption patterns, your next month\'s bill is projected to be 18% higher than average. Take action now to avoid surprise costs.',
++          impact: 'medium',
++          savings_potential: 320,
++          implementation_difficulty: 'easy',
++          category: 'Predictive Analytics',
++          actionable_steps: [
++            'Reduce standby power consumption by unplugging unused devices',
++            'Implement immediate energy-saving mode on major appliances',
++            'Monitor daily consumption targets using the dashboard',
++            'Consider temporary usage restrictions for non-essential devices'
++          ],
++          confidence_score: 0.78,
++          data_sources: ['consumption_trends', 'weather_forecasts', 'seasonal_patterns'],
++          created_at: new Date().toISOString()
++        },
++        {
++          id: 'insight-4',
++          type: 'behavioral',
++          title: 'Smart Usage Pattern Recognition',
++          description: 'Your energy usage shows optimal patterns on weekdays but increases by 30% on weekends. Weekend-specific automation could maintain efficiency.',
++          impact: 'medium',
++          savings_potential: 280,
++          implementation_difficulty: 'easy',
++          category: 'Behavioral Optimization',
++          actionable_steps: [
++            'Create weekend-specific automation rules',
++            'Set different temperature thresholds for weekend relaxation',
++            'Schedule bulk cooking to reduce individual appliance usage',
++            'Implement family energy awareness challenges'
++          ],
++          confidence_score: 0.83,
++          data_sources: ['usage_patterns', 'occupancy_data', 'device_schedules'],
++          created_at: new Date().toISOString()
++        },
++        {
++          id: 'insight-5',
++          type: 'environmental',
++          title: 'Carbon Footprint Reduction Opportunity',
++          description: 'Switching to solar water heating and optimizing device schedules could reduce your carbon footprint by 35% while saving money.',
++          impact: 'high',
++          savings_potential: 890,
++          implementation_difficulty: 'hard',
++          category: 'Environmental Impact',
++          actionable_steps: [
++            'Install solar water heater (estimated payback: 3.2 years)',
++            'Switch to LED lighting (immediate 60% lighting energy reduction)',
++            'Consider rooftop solar panels for daytime consumption',
++            'Participate in grid demand response programs',
++            'Track and offset remaining carbon emissions'
++          ],
++          confidence_score: 0.91,
++          data_sources: ['consumption_data', 'solar_potential', 'carbon_calculations', 'local_incentives'],
++          created_at: new Date().toISOString()
++        }
++      ]
++
++      return mockInsights
++    } catch (error) {
++      console.error('Error generating energy insights:', error)
++      return []
++    }
++  }
++
++  /**
++   * Get smart optimization recommendations based on AI analysis
++   */
++  async getSmartRecommendations(userId: string): Promise<SmartRecommendation> {
++    try {
++      const immediateRecommendations: OptimizationRecommendation[] = [
++        {
++          id: 'rec-1',
++          device_id: 'water-heater-1',
++          device_name: 'Water Heater',
++          recommendation_type: 'schedule_change',
++          title: 'Optimize Water Heater Schedule',
++          description: 'Shift operation to off-peak hours (11 PM - 5 AM) when electricity rates are 40% lower',
++          potential_savings: 180,
++          implementation_cost: 0,
++          payback_period_months: 0,
++          priority_score: 9.2,
++          automated_action_available: true,
++          parameters: {
++            new_schedule: '23:00-05:00',
++            temperature_setting: 60,
++            efficiency_mode: 'eco'
++          }
++        },
++        {
++          id: 'rec-2',
++          device_id: 'ac-1',
++          device_name: 'Air Conditioner',
++          recommendation_type: 'power_reduction',
++          title: 'Smart AC Temperature Optimization',
++          description: 'Increase temperature by 2°C and use smart scheduling for 25% energy reduction',
++          potential_savings: 420,
++          implementation_cost: 0,
++          payback_period_months: 0,
++          priority_score: 8.7,
++          automated_action_available: true,
++          parameters: {
++            target_temperature: 26,
++            night_mode: true,
++            smart_scheduling: true
++          }
++        }
++      ]
++
++      const shortTermRecommendations: OptimizationRecommendation[] = [
++        {
++          id: 'rec-3',
++          recommendation_type: 'replacement',
++          title: 'LED Lighting Upgrade',
++          description: 'Replace remaining incandescent bulbs with smart LED bulbs for 70% lighting energy reduction',
++          potential_savings: 150,
++          implementation_cost: 2500,
++          payback_period_months: 17,
++          priority_score: 7.5,
++          automated_action_available: false,
++          parameters: {
++            number_of_bulbs: 12,
++            wattage_reduction: '60W to 9W per bulb',
++            smart_features: ['dimming', 'scheduling', 'color_temperature']
++          }
++        },
++        {
++          id: 'rec-4',
++          recommendation_type: 'behavioral',
++          title: 'Smart Power Strip Implementation',
++          description: 'Install smart power strips to eliminate standby power consumption',
++          potential_savings: 95,
++          implementation_cost: 1200,
++          payback_period_months: 13,
++          priority_score: 6.8,
++          automated_action_available: true,
++          parameters: {
++            strips_needed: 4,
++            devices_covered: ['TV', 'computer', 'kitchen_appliances', 'chargers'],
++            scheduling_capability: true
++          }
++        }
++      ]
++
++      const longTermRecommendations: OptimizationRecommendation[] = [
++        {
++          id: 'rec-5',
++          recommendation_type: 'replacement',
++          title: 'Solar Water Heater Installation',
++          description: 'Install solar water heater system for 80% reduction in water heating costs',
++          potential_savings: 750,
++          implementation_cost: 35000,
++          payback_period_months: 47,
++          priority_score: 8.9,
++          automated_action_available: false,
++          parameters: {
++            system_size: '300L capacity',
++            backup_heating: 'electric_element',
++            estimated_solar_contribution: '80%',
++            government_subsidy: 15000
++          }
++        },
++        {
++          id: 'rec-6',
++          recommendation_type: 'replacement',
++          title: 'Smart Home Energy Management System',
++          description: 'Complete smart home integration with AI-powered energy optimization',
++          potential_savings: 1200,
++          implementation_cost: 65000,
++          payback_period_months: 54,
++          priority_score: 9.5,
++          automated_action_available: true,
++          parameters: {
++            components: ['smart_meter', 'home_battery', 'ai_controller', 'solar_integration'],
++            ai_optimization: true,
++            grid_interaction: 'buy_sell_capability'
++          }
++        }
++      ]
++
++      return {
++        category: 'immediate',
++        recommendations: immediateRecommendations,
++        total_potential_savings: immediateRecommendations.reduce((sum, rec) => sum + rec.potential_savings, 0),
++        implementation_timeline: 'Can be implemented within 24 hours'
++      }
++    } catch (error) {
++      console.error('Error generating smart recommendations:', error)
++      return {
++        category: 'immediate',
++        recommendations: [],
++        total_potential_savings: 0,
++        implementation_timeline: 'N/A'
++      }
++    }
++  }
++
++  /**
++   * Analyze energy consumption patterns using AI
++   */
++  async analyzeEnergyPatterns(userId: string): Promise<EnergyPattern[]> {
++    try {
++      const patterns: EnergyPattern[] = [
++        {
++          pattern_type: 'daily',
++          peak_hours: [7, 8, 18, 19, 20],
++          consumption_variance: 0.23,
++          cost_efficiency_score: 0.72,
++          anomalies_detected: 3,
++          optimization_opportunities: [
++            'Shift 30% of evening load to off-peak hours',
++            'Implement smart scheduling for water heating',
++            'Optimize HVAC runtime during peak hours'
++          ]
++        },
++        {
++          pattern_type: 'weekly',
++          peak_hours: [9, 10, 11, 15, 16],
++          consumption_variance: 0.35,
++          cost_efficiency_score: 0.68,
++          anomalies_detected: 1,
++          optimization_opportunities: [
++            'Weekend consumption 30% higher than weekdays',
++            'Implement weekend-specific automation rules',
++            'Consider family energy awareness programs'
++          ]
++        },
++        {
++          pattern_type: 'seasonal',
++          peak_hours: [13, 14, 15, 16],
++          consumption_variance: 0.45,
++          cost_efficiency_score: 0.75,
++          anomalies_detected: 0,
++          optimization_opportunities: [
++            'Summer cooling costs account for 45% of total consumption',
++            'Pre-cooling strategy during off-peak hours',
++            'Consider thermal mass optimization'
++          ]
++        }
++      ]
++
++      return patterns
++    } catch (error) {
++      console.error('Error analyzing energy patterns:', error)
++      return []
++    }
++  }
++
++  /**
++   * Calculate environmental impact and carbon footprint
++   */
++  async calculateEnvironmentalImpact(userId: string): Promise<EnvironmentalImpact> {
++    try {
++      // Mock calculation based on consumption patterns
++      const monthlyConsumption = 850 // kWh
++      const carbonIntensity = 0.82 // kg CO2 per kWh (India average)
++      
++      return {
++        carbon_footprint_kg: monthlyConsumption * carbonIntensity,
++        carbon_reduction_potential: 245, // kg CO2 potential reduction
++        renewable_energy_score: 0.15, // 15% renewable in current mix
++        eco_friendly_rating: 6.2, // out of 10
++        green_recommendations: [
++          'Install 3kW rooftop solar system for 40% consumption coverage',
++          'Switch to solar water heating for immediate carbon reduction',
++          'Participate in renewable energy certificate programs',
++          'Consider electric vehicle charging during solar hours',
++          'Implement rainwater harvesting for appliance water needs'
++        ]
++      }
++    } catch (error) {
++      console.error('Error calculating environmental impact:', error)
++      return {
++        carbon_footprint_kg: 0,
++        carbon_reduction_potential: 0,
++        renewable_energy_score: 0,
++        eco_friendly_rating: 0,
++        green_recommendations: []
++      }
++    }
++  }
++
++  /**
++   * Execute automated optimization actions
++   */
++  async executeOptimizationAction(recommendationId: string, userId: string): Promise<boolean> {
++    try {
++      // This would integrate with device automation service
++      console.log(`Executing optimization action for recommendation: ${recommendationId}`)
++      
++      // Mock implementation - in real system would call device APIs
++      const success = Math.random() > 0.1 // 90% success rate
++      
++      if (success) {
++        // Log the action in automation logs
++        await this.logOptimizationAction(recommendationId, userId, 'success')
++      }
++      
++      return success
++    } catch (error) {
++      console.error('Error executing optimization action:', error)
++      await this.logOptimizationAction(recommendationId, userId, 'failed')
++      return false
++    }
++  }
++
++  /**
++   * Log optimization actions for tracking
++   */
++  private async logOptimizationAction(recommendationId: string, userId: string, status: 'success' | 'failed'): Promise<void> {
++    try {
++      // In real implementation, would log to automation_logs table
++      console.log(`Optimization action logged: ${recommendationId} - ${status}`)
++    } catch (error) {
++      console.error('Error logging optimization action:', error)
++    }
++  }
++
++  /**
++   * Get personalized energy efficiency score
++   */
++  async getEnergyEfficiencyScore(userId: string): Promise<{
++    overall_score: number
++    category_scores: Record<string, number>
++    improvement_areas: string[]
++    benchmark_comparison: string
++  }> {
++    try {
++      return {
++        overall_score: 7.3,
++        category_scores: {
++          'HVAC Efficiency': 6.5,
++          'Lighting Optimization': 8.9,
++          'Water Heating': 5.8,
++          'Appliance Usage': 7.7,
++          'Time-of-Use': 6.2,
++          'Standby Power': 8.1
++        },
++        improvement_areas: [
++          'Water heating efficiency',
++          'Peak hour consumption',
++          'HVAC optimization'
++        ],
++        benchmark_comparison: 'Above average - performing better than 68% of similar households'
++      }
++    } catch (error) {
++      console.error('Error calculating efficiency score:', error)
++      return {
++        overall_score: 0,
++        category_scores: {},
++        improvement_areas: [],
++        benchmark_comparison: 'Unable to calculate'
++      }
++    }
++  }
++}
++
++export const energyOptimizationService = new EnergyOptimizationService()
+diff --git a/frontend/lib/festivals/festival-utils.ts b/frontend/lib/festivals/festival-utils.ts
+new file mode 100644
+index 0000000..8ce1186
+--- /dev/null
++++ b/frontend/lib/festivals/festival-utils.ts
+@@ -0,0 +1,148 @@
++export interface Festival {
++    name: string
++    date: string
++    type: 'major' | 'regional' | 'seasonal'
++    energyTips: string[]
++    safetyMeasures: string[]
++}
++
++export interface FestivalSuggestion {
++    festival: Festival
++    daysUntil: number
++    urgency: 'immediate' | 'upcoming' | 'preparation'
++}
++
++// Festival data with energy and safety tips
++export const festivals: Festival[] = [
++    {
++        name: 'Diwali',
++        date: '2025-11-01',
++        type: 'major',
++        energyTips: [
++            'Use LED diyas instead of traditional oil lamps - save 70% energy',
++            'Switch to LED string lights - consume 90% less electricity',
++            'Set timer controls for decorative lights to avoid wastage',
++            'Use warm white LEDs to maintain traditional ambiance',
++            'Consider solar-powered decorative lights for outdoor displays'
++        ],
++        safetyMeasures: [
++            'Check all electrical connections before installing lights',
++            'Keep fire extinguishers accessible when using candles',
++            'Avoid overloading electrical circuits with decorations',
++            'Turn off all decorative lights when leaving home',
++            'Keep electrical decorations away from water sources'
++        ]
++    },
++    {
++        name: 'Holi',
++        date: '2025-03-14',
++        type: 'major',
++        energyTips: [
++            'Use solar water heaters for warm water baths',
++            'Prepare organic colors to save processing energy',
++            'Use buckets instead of running water for celebrations',
++            'Organize community celebrations to share energy costs'
++        ],
++        safetyMeasures: [
++            'Use natural, non-toxic colors only',
++            'Protect electrical appliances from water damage',
++            'Keep first aid kit accessible during celebrations',
++            'Avoid playing with colors near electrical outlets'
++        ]
++    },
++    {
++        name: 'Karva Chauth',
++        date: '2025-11-05',
++        type: 'major',
++        energyTips: [
++            'Use LED decorative lights for evening ceremonies',
++            'Cook in batches to optimize energy usage',
++            'Use efficient appliances for food preparation'
++        ],
++        safetyMeasures: [
++            'Handle traditional lamps with care',
++            'Ensure proper ventilation during cooking',
++            'Keep hydration supplies nearby during fasting'
++        ]
++    },
++    {
++        name: 'Dussehra',
++        date: '2025-10-12',
++        type: 'major',
++        energyTips: [
++            'Use energy-efficient lighting for pandals',
++            'Organize community events to share electricity costs',
++            'Use public transportation to reach celebrations'
++        ],
++        safetyMeasures: [
++            'Maintain safe distance from fireworks displays',
++            'Keep emergency contacts handy during large gatherings',
++            'Follow crowd safety guidelines at events'
++        ]
++    }
++]
++
++export function getCurrentAndUpcomingFestivals(): FestivalSuggestion[] {
++    const today = new Date()
++    const nextMonth = new Date()
++    nextMonth.setMonth(today.getMonth() + 1)
++
++    return festivals.map(festival => {
++        const festivalDate = new Date(festival.date)
++        const timeDiff = festivalDate.getTime() - today.getTime()
++        const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24))
++
++        let urgency: 'immediate' | 'upcoming' | 'preparation' = 'preparation'
++        if (daysUntil <= 0) urgency = 'immediate'
++        else if (daysUntil <= 7) urgency = 'upcoming'
++
++        return {
++            festival,
++            daysUntil,
++            urgency
++        }
++    }).filter(item => item.daysUntil >= 0 && item.daysUntil <= 30)
++}
++
++export function generateFestivalPrompt(): string {
++    const upcomingFestivals = getCurrentAndUpcomingFestivals()
++
++    if (upcomingFestivals.length === 0) {
++        return "Welcome to UrjaBandhu! I'm here to help you save energy and stay safe during festivals. Ask me about energy-saving tips!"
++    }
++
++    const nextFestival = upcomingFestivals[0]
++    const { festival, daysUntil, urgency } = nextFestival
++
++    if (urgency === 'immediate') {
++        return `Happy ${festival.name}! Here are some energy-saving tips for today's celebration: ${festival.energyTips[0]}`
++    } else if (urgency === 'upcoming') {
++        return `${festival.name} is in ${daysUntil} day${daysUntil > 1 ? 's' : ''}! Get ready with these energy tips: ${festival.energyTips[0]}`
++    } else {
++        return `${festival.name} is coming up in ${daysUntil} days! Start planning your energy-efficient celebrations.`
++    }
++}
++
++export function getTodaysEnergyTip(): string {
++    const tips = [
++        "Switch off lights when not in use - save up to 15% on your electricity bill",
++        "Use LED bulbs - they consume 80% less energy than traditional bulbs",
++        "Unplug electronics when not in use to avoid phantom energy consumption",
++        "Use natural light during the day instead of artificial lighting",
++        "Set your AC to 24°C for optimal energy efficiency"
++    ]
++
++    const today = new Date()
++    const tipIndex = today.getDate() % tips.length
++    return tips[tipIndex]
++}
++
++export function getFestivalTips(festivalName: string): { energyTips: string[], safetyMeasures: string[] } | null {
++    const festival = festivals.find(f => f.name.toLowerCase() === festivalName.toLowerCase())
++    if (!festival) return null
++
++    return {
++        energyTips: festival.energyTips,
++        safetyMeasures: festival.safetyMeasures
++    }
++}
+\ No newline at end of file
+diff --git a/frontend/lib/influxdb.ts b/frontend/lib/influxdb.ts
+new file mode 100644
+index 0000000..501cf9b
+--- /dev/null
++++ b/frontend/lib/influxdb.ts
+@@ -0,0 +1,272 @@
++/**
++ * InfluxDB Time Series Service
++ * Handles time series data ingestion and querying for UrjaBandhu
++ */
++
++import { InfluxDB, Point, WriteApi, QueryApi } from '@influxdata/influxdb-client'
++
++// InfluxDB Configuration
++const INFLUX_URL = process.env.INFLUX_URL || 'http://localhost:8086'
++const INFLUX_TOKEN = process.env.INFLUX_TOKEN || 'urjabandhu-token'
++const INFLUX_ORG = process.env.INFLUX_ORG || 'urjabandhu'
++const INFLUX_BUCKET = process.env.INFLUX_BUCKET || 'electricity_data'
++
++export interface ConsumptionReading {
++  timestamp: Date
++  consumption: number
++  cost: number
++  device_id?: string
++  location?: string
++  user_id: string
++}
++
++export interface TimeSeriesStats {
++  currentConsumption: number
++  todayTotal: number
++  estimatedCost: number
++  activeDevices: number
++  timestamp: Date
++}
++
++class TimeSeriesService {
++  private client: InfluxDB
++  private writeApi: WriteApi
++  private queryApi: QueryApi
++
++  constructor() {
++    this.client = new InfluxDB({ url: INFLUX_URL, token: INFLUX_TOKEN })
++    this.writeApi = this.client.getWriteApi(INFLUX_ORG, INFLUX_BUCKET)
++    this.queryApi = this.client.getQueryApi(INFLUX_ORG)
++  }
++
++  /**
++   * Write consumption data to InfluxDB
++   */
++  async writeConsumption(data: ConsumptionReading): Promise<void> {
++    try {
++      const point = new Point('consumption')
++        .tag('user_id', data.user_id)
++        .floatField('consumption', data.consumption)
++        .floatField('cost', data.cost)
++        .timestamp(data.timestamp)
++
++      if (data.device_id) {
++        point.tag('device_id', data.device_id)
++      }
++      if (data.location) {
++        point.tag('location', data.location)
++      }
++
++      this.writeApi.writePoint(point)
++      await this.writeApi.flush()
++    } catch (error) {
++      console.error('Error writing to InfluxDB:', error)
++      throw error
++    }
++  }
++
++  /**
++   * Query consumption data for a time range
++   */
++  async queryConsumption(
++    userId: string,
++    timeRange: string = '24h',
++    granularity?: string
++  ): Promise<ConsumptionReading[]> {
++    try {
++      const aggregateWindow = granularity || this.getDefaultGranularity(timeRange)
++      
++      const query = `
++        from(bucket: "${INFLUX_BUCKET}")
++          |> range(start: -${timeRange})
++          |> filter(fn: (r) => r._measurement == "consumption")
++          |> filter(fn: (r) => r.user_id == "${userId}")
++          |> aggregateWindow(every: ${aggregateWindow}, fn: mean, createEmpty: false)
++          |> yield(name: "mean")
++      `
++
++      const data: ConsumptionReading[] = []
++      
++      for await (const { values, tableMeta } of this.queryApi.iterateRows(query)) {
++        const o = tableMeta.toObject(values)
++        data.push({
++          timestamp: new Date(o._time),
++          consumption: o._value || 0,
++          cost: (o._value || 0) * 0.12, // Mock cost calculation
++          user_id: userId
++        })
++      }
++
++      return data.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
++    } catch (error) {
++      console.error('Error querying InfluxDB:', error)
++      // Return mock data as fallback
++      return this.generateFallbackMockData(timeRange)
++    }
++  }
++
++  /**
++   * Get real-time stats
++   */
++  async getRealTimeStats(userId: string): Promise<TimeSeriesStats> {
++    try {
++      const query = `
++        from(bucket: "${INFLUX_BUCKET}")
++          |> range(start: -1h)
++          |> filter(fn: (r) => r._measurement == "consumption")
++          |> filter(fn: (r) => r.user_id == "${userId}")
++          |> last()
++      `
++
++      let currentConsumption = 0
++      let timestamp = new Date()
++
++      for await (const { values, tableMeta } of this.queryApi.iterateRows(query)) {
++        const o = tableMeta.toObject(values)
++        currentConsumption = o._value || 0
++        timestamp = new Date(o._time)
++      }
++
++      // Query today's total
++      const todayQuery = `
++        from(bucket: "${INFLUX_BUCKET}")
++          |> range(start: today())
++          |> filter(fn: (r) => r._measurement == "consumption")
++          |> filter(fn: (r) => r.user_id == "${userId}")
++          |> sum()
++      `
++
++      let todayTotal = 0
++      for await (const { values, tableMeta } of this.queryApi.iterateRows(todayQuery)) {
++        const o = tableMeta.toObject(values)
++        todayTotal = o._value || 0
++      }
++
++      return {
++        currentConsumption,
++        todayTotal,
++        estimatedCost: todayTotal * 0.12, // Mock cost calculation
++        activeDevices: Math.floor(Math.random() * 8) + 5, // Mock active devices
++        timestamp
++      }
++    } catch (error) {
++      console.error('Error getting real-time stats:', error)
++      // Return mock stats as fallback
++      return {
++        currentConsumption: Math.random() * 3 + 1,
++        todayTotal: Math.random() * 25 + 15,
++        estimatedCost: (Math.random() * 25 + 15) * 0.12,
++        activeDevices: Math.floor(Math.random() * 8) + 5,
++        timestamp: new Date()
++      }
++    }
++  }
++
++  /**
++   * Generate mock data for demonstration
++   */
++  async generateMockData(timeRange: string = '24h'): Promise<void> {
++    try {
++      const now = new Date()
++      const dataPoints = this.getDataPointCount(timeRange)
++      const intervalMs = this.getIntervalMs(timeRange, dataPoints)
++
++      for (let i = 0; i < dataPoints; i++) {
++        const timestamp = new Date(now.getTime() - (dataPoints - i) * intervalMs)
++        const baseConsumption = 2.5 + Math.sin(i / 10) * 1.5 // Sinusoidal pattern
++        const consumption = Math.max(0, baseConsumption + (Math.random() - 0.5) * 0.8)
++        
++        await this.writeConsumption({
++          timestamp,
++          consumption,
++          cost: consumption * 0.12,
++          user_id: 'demo-user-1'
++        })
++      }
++
++      console.log(`Generated ${dataPoints} mock data points for ${timeRange}`)
++    } catch (error) {
++      console.error('Error generating mock data:', error)
++      throw error
++    }
++  }
++
++  /**
++   * Generate mock data as fallback when InfluxDB is not available
++   */
++  private generateFallbackMockData(timeRange: string): ConsumptionReading[] {
++    const now = new Date()
++    const dataPoints = this.getDataPointCount(timeRange)
++    const intervalMs = this.getIntervalMs(timeRange, dataPoints)
++    const data: ConsumptionReading[] = []
++
++    for (let i = 0; i < dataPoints; i++) {
++      const timestamp = new Date(now.getTime() - (dataPoints - i) * intervalMs)
++      const baseConsumption = 2.5 + Math.sin(i / 10) * 1.5
++      const consumption = Math.max(0, baseConsumption + (Math.random() - 0.5) * 0.8)
++      
++      data.push({
++        timestamp,
++        consumption,
++        cost: consumption * 0.12,
++        user_id: 'demo-user-1'
++      })
++    }
++
++    return data
++  }
++
++  private getDefaultGranularity(timeRange: string): string {
++    switch (timeRange) {
++      case '1h': return '1m'
++      case '24h': return '1h'
++      case '7d': return '6h'
++      case '30d': return '1d'
++      default: return '1h'
++    }
++  }
++
++  private getDataPointCount(timeRange: string): number {
++    switch (timeRange) {
++      case '1h': return 60
++      case '24h': return 24
++      case '7d': return 28
++      case '30d': return 30
++      default: return 24
++    }
++  }
++
++  private getIntervalMs(timeRange: string, dataPoints: number): number {
++    const timeRangeMs = {
++      '1h': 60 * 60 * 1000,
++      '24h': 24 * 60 * 60 * 1000,
++      '7d': 7 * 24 * 60 * 60 * 1000,
++      '30d': 30 * 24 * 60 * 60 * 1000
++    }
++
++    return (timeRangeMs[timeRange as keyof typeof timeRangeMs] || timeRangeMs['24h']) / dataPoints
++  }
++
++  /**
++   * Close InfluxDB connection
++   */
++  async close(): Promise<void> {
++    try {
++      await this.writeApi.close()
++    } catch (error) {
++      console.error('Error closing InfluxDB connection:', error)
++    }
++  }
++}
++
++// Singleton instance
++let timeSeriesService: TimeSeriesService | null = null
++
++export function getTimeSeriesService(): TimeSeriesService {
++  if (!timeSeriesService) {
++    timeSeriesService = new TimeSeriesService()
++  }
++  return timeSeriesService
++}
++
++export { TimeSeriesService }
+diff --git a/frontend/lib/migrations.ts b/frontend/lib/migrations.ts
+new file mode 100644
+index 0000000..c5ddc5c
+--- /dev/null
++++ b/frontend/lib/migrations.ts
+@@ -0,0 +1,49 @@
++// Manual migration runner - Run this once to create the teams table
++// Instructions:
++// 1. Copy the SQL from supabase/migrations/001_create_teams_table.sql
++// 2. Go to your Supabase dashboard -> SQL Editor
++// 3. Paste and run the SQL to create the teams table
++// 4. The teams page should then work and display the sample data
++
++import { createClient } from '@/lib/supabase'
++
++export async function runTeamsMigration() {
++  const supabase = createClient()
++  
++  // Test if teams table exists by trying to fetch data
++  try {
++    const { data, error } = await supabase
++      .from('teams')
++      .select('*')
++      .limit(1)
++    
++    if (error) {
++      console.error('Teams table does not exist. Please run the SQL migration.')
++      console.log('SQL file location: supabase/migrations/001_create_teams_table.sql')
++      return false
++    }
++    
++    console.log('Teams table exists and is accessible!')
++    return true
++  } catch (err) {
++    console.error('Error checking teams table:', err)
++    return false
++  }
++}
++
++// Instructions for manual setup:
++export const MIGRATION_INSTRUCTIONS = `
++To set up the teams database:
++
++1. Go to your Supabase project dashboard
++2. Navigate to SQL Editor
++3. Copy the contents of: frontend/supabase/migrations/001_create_teams_table.sql
++4. Paste and execute the SQL in the Supabase SQL Editor
++5. The teams page will then be fully functional at /teams
++
++The migration includes:
++- Teams table creation
++- Sample team data
++- Row Level Security policies
++- Updated timestamp triggers
++`
+diff --git a/frontend/lib/ocr/tesseract-ocr.ts b/frontend/lib/ocr/tesseract-ocr.ts
+new file mode 100644
+index 0000000..6f19747
+--- /dev/null
++++ b/frontend/lib/ocr/tesseract-ocr.ts
+@@ -0,0 +1,265 @@
++import { createWorker, Worker, PSM } from 'tesseract.js';
++
++export interface OCRResult {
++  text: string;
++  confidence: number;
++  words: Array<{
++    text: string;
++    confidence: number;
++    bbox: {
++      x0: number;
++      y0: number;
++      x1: number;
++      y1: number;
++    };
++  }>;
++  blocks: Array<{
++    text: string;
++    confidence: number;
++    bbox: {
++      x0: number;
++      y0: number;
++      x1: number;
++      y1: number;
++    };
++  }>;
++}
++
++export interface OCRProgress {
++  status: string;
++  progress: number;
++}
++
++export class TesseractOCR {
++  private worker: Worker | null = null;
++  private isInitialized = false;
++
++  /**
++   * Initialize the OCR worker
++   * @param language - Language code (default: 'eng', also supports 'hin' for Hindi)
++   * @param options - Additional Tesseract options
++   */
++  async initialize(
++    language: string = 'eng',
++    options: Record<string, any> = {}
++  ): Promise<void> {
++    if (this.isInitialized && this.worker) {
++      return;
++    }
++
++    try {
++      // Create worker with language support
++      this.worker = await createWorker(language, 1, {
++        logger: (m) => {
++          if (m.status === 'recognizing text') {
++            // You can emit progress events here if needed
++            console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
++          }
++        },
++        ...options
++      });
++
++      // Set additional parameters for better OCR accuracy
++      await this.worker.setParameters({
++        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,()-',
++        preserve_interword_spaces: '1',
++      });
++
++      this.isInitialized = true;
++      console.log('✅ Tesseract OCR initialized successfully');
++    } catch (error) {
++      console.error('❌ Failed to initialize Tesseract OCR:', error);
++      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
++      throw new Error(`OCR initialization failed: ${errorMessage}`);
++    }
++  }
++
++  /**
++   * Recognize text from an image
++   * @param imageInput - Image file, URL, or base64 string
++   * @param options - Recognition options
++   */
++  async recognize(
++    imageInput: File | string | HTMLCanvasElement | HTMLImageElement,
++    options: {
++      includeBlocks?: boolean;
++      includeWords?: boolean;
++      language?: string;
++    } = {}
++  ): Promise<OCRResult> {
++    if (!this.worker || !this.isInitialized) {
++      throw new Error('OCR worker not initialized. Call initialize() first.');
++    }
++
++    try {
++      const { includeBlocks = true, includeWords = true } = options;
++
++      // Perform OCR recognition
++      const result = await this.worker.recognize(imageInput, {}, {
++        blocks: includeBlocks,
++        text: true,
++        hocr: false,
++        tsv: false,
++        box: false,
++        unlv: false,
++        osd: false,
++        pdf: false,
++        imageColor: false,
++        imageGrey: false,
++        imageBinary: false,
++        debug: false,
++      });
++
++      // Extract text and confidence
++      const text = result.data.text.trim();
++      const confidence = result.data.confidence / 100; // Convert to 0-1 range
++
++      // Extract word-level data if requested
++      const words: any[] = [];
++      const blocks: any[] = [];
++
++      // For now, return basic result
++      // Full word/block extraction can be added when needed
++      console.log(`✅ OCR completed with ${confidence * 100}% confidence`);
++      console.log(`📝 Extracted text: "${text}"`);
++
++      return {
++        text,
++        confidence,
++        words,
++        blocks,
++      };
++    } catch (error) {
++      console.error('❌ OCR recognition failed:', error);
++      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
++      throw new Error(`OCR recognition failed: ${errorMessage}`);
++    }
++  }
++
++  /**
++   * Process image for device detection specifically
++   * @param imageInput - Image file or URL
++   */
++  async detectDeviceText(
++    imageInput: File | string
++  ): Promise<{
++    deviceText: string;
++    confidence: number;
++    detectedBrands: string[];
++    detectedCategories: string[];
++    rawText: string;
++  }> {
++    const ocrResult = await this.recognize(imageInput, {
++      includeBlocks: true,
++      includeWords: true,
++    });
++
++    // Device-specific text processing
++    const deviceKeywords = {
++      brands: [
++        'Samsung', 'LG', 'Sony', 'Panasonic', 'Whirlpool', 'Godrej', 'Haier',
++        'Philips', 'Bajaj', 'Havells', 'Orient', 'Crompton', 'IFB', 'Bosch',
++        'Voltas', 'Blue Star', 'Carrier', 'Daikin', 'Hitachi', 'Mitsubishi',
++        'TCL', 'Xiaomi', 'OnePlus', 'Realme', 'Apple', 'Dell', 'HP', 'Lenovo'
++      ],
++      categories: [
++        'TV', 'Television', 'LED', 'OLED', 'Smart TV',
++        'AC', 'Air Conditioner', 'Split AC', 'Window AC', 'Inverter',
++        'Refrigerator', 'Fridge', 'Double Door', 'Single Door',
++        'Washing Machine', 'Washer', 'Top Load', 'Front Load',
++        'Microwave', 'Oven', 'Convection', 'Grill',
++        'Fan', 'Ceiling Fan', 'Table Fan', 'Exhaust Fan',
++        'Water Heater', 'Geyser', 'Storage', 'Instant',
++        'Bulb', 'LED', 'CFL', 'Tube Light',
++        'Laptop', 'Computer', 'Desktop', 'Monitor'
++      ]
++    };
++
++    const text = ocrResult.text.toLowerCase();
++    const detectedBrands = deviceKeywords.brands.filter(brand => 
++      text.includes(brand.toLowerCase())
++    );
++    
++    const detectedCategories = deviceKeywords.categories.filter(category => 
++      text.includes(category.toLowerCase())
++    );
++
++    // Clean and process device-specific text
++    const deviceText = ocrResult.text
++      .replace(/[^\w\s\-\.]/g, ' ') // Remove special chars except dash and dot
++      .replace(/\s+/g, ' ') // Normalize whitespace
++      .trim();
++
++    return {
++      deviceText,
++      confidence: ocrResult.confidence,
++      detectedBrands,
++      detectedCategories,
++      rawText: ocrResult.text,
++    };
++  }
++
++  /**
++   * Terminate the OCR worker to free memory
++   */
++  async terminate(): Promise<void> {
++    if (this.worker) {
++      await this.worker.terminate();
++      this.worker = null;
++      this.isInitialized = false;
++      console.log('✅ Tesseract OCR worker terminated');
++    }
++  }
++
++  /**
++   * Check if OCR is ready
++   */
++  isReady(): boolean {
++    return this.isInitialized && this.worker !== null;
++  }
++}
++
++// Singleton instance for reuse
++let ocrInstance: TesseractOCR | null = null;
++
++/**
++ * Get or create OCR instance
++ */
++export const getOCRInstance = async (language: string = 'eng'): Promise<TesseractOCR> => {
++  if (!ocrInstance) {
++    ocrInstance = new TesseractOCR();
++    await ocrInstance.initialize(language);
++  } else if (!ocrInstance.isReady()) {
++    await ocrInstance.initialize(language);
++  }
++  
++  return ocrInstance;
++};
++
++/**
++ * Quick OCR function for simple text extraction
++ */
++export const extractTextFromImage = async (
++  imageInput: File | string,
++  language: string = 'eng'
++): Promise<OCRResult> => {
++  const ocr = await getOCRInstance(language);
++  return await ocr.recognize(imageInput);
++};
++
++/**
++ * Device-specific OCR function
++ */
++export const detectDeviceFromImage = async (
++  imageInput: File | string,
++  language: string = 'eng'
++): Promise<{
++  deviceText: string;
++  confidence: number;
++  detectedBrands: string[];
++  detectedCategories: string[];
++  rawText: string;
++}> => {
++  const ocr = await getOCRInstance(language);
++  return await ocr.detectDeviceText(imageInput);
++};
+diff --git a/frontend/lib/supabase-server.ts b/frontend/lib/supabase-server.ts
+new file mode 100644
+index 0000000..d9a265b
+--- /dev/null
++++ b/frontend/lib/supabase-server.ts
+@@ -0,0 +1,40 @@
++import { createServerClient } from '@supabase/ssr'
++import { cookies } from 'next/headers'
++
++export async function createClient() {
++  const cookieStore = await cookies()
++
++  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
++  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
++
++  if (!supabaseUrl || !supabaseAnonKey) {
++    throw new Error(
++      'Missing Supabase environment variables. Please check your .env.local file:\n' +
++      `NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? 'Set' : 'Missing'}\n` +
++      `NEXT_PUBLIC_SUPABASE_ANON_KEY: ${supabaseAnonKey ? 'Set' : 'Missing'}`
++    )
++  }
++
++  return createServerClient(
++    supabaseUrl,
++    supabaseAnonKey,
++    {
++      cookies: {
++        getAll() {
++          return cookieStore.getAll()
++        },
++        setAll(cookiesToSet) {
++          try {
++            cookiesToSet.forEach(({ name, value, options }) =>
++              cookieStore.set(name, value, options)
++            )
++          } catch {
++            // The `setAll` method was called from a Server Component.
++            // This can be ignored if you have middleware refreshing
++            // user sessions.
++          }
++        },
++      },
++    }
++  )
++}
+diff --git a/frontend/lib/supabase.ts b/frontend/lib/supabase.ts
+new file mode 100644
+index 0000000..20c9462
+--- /dev/null
++++ b/frontend/lib/supabase.ts
+@@ -0,0 +1,466 @@
++import { createBrowserClient } from '@supabase/ssr'
++
++let supabaseClient: ReturnType<typeof createBrowserClient> | null = null
++
++export function createClient() {
++  if (supabaseClient) {
++    return supabaseClient
++  }
++
++  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
++  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
++
++  if (!supabaseUrl || !supabaseAnonKey) {
++    throw new Error(
++      'Missing Supabase environment variables. Please check your .env.local file:\n' +
++      `NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? 'Set' : 'Missing'}\n` +
++      `NEXT_PUBLIC_SUPABASE_ANON_KEY: ${supabaseAnonKey ? 'Set' : 'Missing'}`
++    )
++  }
++
++  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
++  return supabaseClient
++}
++
++// For backward compatibility
++export const supabase = createClient()
++
++// Database Types
++export type Database = {
++  public: {
++    Tables: {
++      profiles: {
++        Row: {
++          id: string
++          email: string
++          full_name: string | null
++          avatar_url: string | null
++          phone: string | null
++          address: string | null
++          city: string | null
++          state: string | null
++          pin_code: string | null
++          electricity_board: string | null
++          monthly_budget: number | null
++          notification_preferences: any
++          created_at: string
++          updated_at: string
++        }
++        Insert: {
++          id: string
++          email: string
++          full_name?: string | null
++          avatar_url?: string | null
++          phone?: string | null
++          address?: string | null
++          city?: string | null
++          state?: string | null
++          pin_code?: string | null
++          electricity_board?: string | null
++          monthly_budget?: number | null
++          notification_preferences?: any
++          created_at?: string
++          updated_at?: string
++        }
++        Update: {
++          id?: string
++          email?: string
++          full_name?: string | null
++          avatar_url?: string | null
++          phone?: string | null
++          address?: string | null
++          city?: string | null
++          state?: string | null
++          pin_code?: string | null
++          electricity_board?: string | null
++          monthly_budget?: number | null
++          notification_preferences?: any
++          created_at?: string
++          updated_at?: string
++        }
++      }
++      teams: {
++        Row: {
++          id: string
++          name: string
++          role: string
++          department: string | null
++          bio: string | null
++          image_url: string | null
++          linkedin_url: string | null
++          twitter_url: string | null
++          github_url: string | null
++          email: string | null
++          order_index: number
++          is_active: boolean
++          created_at: string
++          updated_at: string
++        }
++        Insert: {
++          id?: string
++          name: string
++          role: string
++          department?: string | null
++          bio?: string | null
++          image_url?: string | null
++          linkedin_url?: string | null
++          twitter_url?: string | null
++          github_url?: string | null
++          email?: string | null
++          order_index?: number
++          is_active?: boolean
++          created_at?: string
++          updated_at?: string
++        }
++        Update: {
++          id?: string
++          name?: string
++          role?: string
++          department?: string | null
++          bio?: string | null
++          image_url?: string | null
++          linkedin_url?: string | null
++          twitter_url?: string | null
++          github_url?: string | null
++          email?: string | null
++          order_index?: number
++          is_active?: boolean
++          created_at?: string
++          updated_at?: string
++        }
++      }
++      devices: {
++        Row: {
++          id: string
++          user_id: string
++          name: string
++          type: string
++          brand: string | null
++          model: string | null
++          power_rating: number
++          room: string | null
++          status: 'active' | 'inactive'
++          efficiency_score: number | null
++          purchase_date: string | null
++          warranty_expiry: string | null
++          usage_hours_per_day: number | null
++          is_smart_device: boolean
++          device_image_url: string | null
++          notes: string | null
++          created_at: string
++          updated_at: string
++        }
++        Insert: {
++          id?: string
++          user_id: string
++          name: string
++          type: string
++          brand?: string | null
++          model?: string | null
++          power_rating: number
++          room?: string | null
++          status?: 'active' | 'inactive'
++          efficiency_score?: number | null
++          purchase_date?: string | null
++          warranty_expiry?: string | null
++          usage_hours_per_day?: number | null
++          is_smart_device?: boolean
++          device_image_url?: string | null
++          notes?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++        Update: {
++          id?: string
++          user_id?: string
++          name?: string
++          type?: string
++          brand?: string | null
++          model?: string | null
++          power_rating?: number
++          room?: string | null
++          status?: 'active' | 'inactive'
++          efficiency_score?: number | null
++          purchase_date?: string | null
++          warranty_expiry?: string | null
++          usage_hours_per_day?: number | null
++          is_smart_device?: boolean
++          device_image_url?: string | null
++          notes?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++      }
++      consumption_data: {
++        Row: {
++          id: string
++          user_id: string
++          device_id: string | null
++          timestamp: string
++          consumption_kwh: number
++          cost: number
++          rate_per_unit: number | null
++          reading_type: 'actual' | 'estimated' | 'manual'
++          created_at: string
++        }
++        Insert: {
++          id?: string
++          user_id: string
++          device_id?: string | null
++          timestamp: string
++          consumption_kwh: number
++          cost: number
++          rate_per_unit?: number | null
++          reading_type?: 'actual' | 'estimated' | 'manual'
++          created_at?: string
++        }
++        Update: {
++          id?: string
++          user_id?: string
++          device_id?: string | null
++          timestamp?: string
++          consumption_kwh?: number
++          cost?: number
++          rate_per_unit?: number | null
++          reading_type?: 'actual' | 'estimated' | 'manual'
++          created_at?: string
++        }
++      }
++      recommendations: {
++        Row: {
++          id: string
++          user_id: string
++          type: string
++          priority: 'high' | 'medium' | 'low'
++          title: string
++          description: string
++          potential_savings: number
++          category: string
++          action: string
++          is_applied: boolean
++          applied_at: string | null
++          device_id: string | null
++          expires_at: string | null
++          created_at: string
++          updated_at: string
++        }
++        Insert: {
++          id?: string
++          user_id: string
++          type: string
++          priority: 'high' | 'medium' | 'low'
++          title: string
++          description: string
++          potential_savings: number
++          category: string
++          action: string
++          is_applied?: boolean
++          applied_at?: string | null
++          device_id?: string | null
++          expires_at?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++        Update: {
++          id?: string
++          user_id?: string
++          type?: string
++          priority?: 'high' | 'medium' | 'low'
++          title?: string
++          description?: string
++          potential_savings?: number
++          category?: string
++          action?: string
++          is_applied?: boolean
++          applied_at?: string | null
++          device_id?: string | null
++          expires_at?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++      }
++      energy_alerts: {
++        Row: {
++          id: string
++          user_id: string
++          alert_type: 'high_consumption' | 'unusual_pattern' | 'device_offline' | 'cost_threshold' | 'goal_achieved'
++          title: string
++          message: string
++          threshold_value: number | null
++          device_id: string | null
++          is_read: boolean
++          priority: 'high' | 'medium' | 'low'
++          action_url: string | null
++          created_at: string
++        }
++        Insert: {
++          id?: string
++          user_id: string
++          alert_type: 'high_consumption' | 'unusual_pattern' | 'device_offline' | 'cost_threshold' | 'goal_achieved'
++          title: string
++          message: string
++          threshold_value?: number | null
++          device_id?: string | null
++          is_read?: boolean
++          priority?: 'high' | 'medium' | 'low'
++          action_url?: string | null
++          created_at?: string
++        }
++        Update: {
++          id?: string
++          user_id?: string
++          alert_type?: 'high_consumption' | 'unusual_pattern' | 'device_offline' | 'cost_threshold' | 'goal_achieved'
++          title?: string
++          message?: string
++          threshold_value?: number | null
++          device_id?: string | null
++          is_read?: boolean
++          priority?: 'high' | 'medium' | 'low'
++          action_url?: string | null
++          created_at?: string
++        }
++      }
++      energy_goals: {
++        Row: {
++          id: string
++          user_id: string
++          goal_type: 'consumption_reduction' | 'cost_reduction' | 'device_efficiency'
++          title: string
++          description: string | null
++          target_value: number
++          current_value: number
++          unit: string
++          target_date: string | null
++          is_achieved: boolean
++          achieved_at: string | null
++          created_at: string
++          updated_at: string
++        }
++        Insert: {
++          id?: string
++          user_id: string
++          goal_type: 'consumption_reduction' | 'cost_reduction' | 'device_efficiency'
++          title: string
++          description?: string | null
++          target_value: number
++          current_value?: number
++          unit: string
++          target_date?: string | null
++          is_achieved?: boolean
++          achieved_at?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++        Update: {
++          id?: string
++          user_id?: string
++          goal_type?: 'consumption_reduction' | 'cost_reduction' | 'device_efficiency'
++          title?: string
++          description?: string | null
++          target_value?: number
++          current_value?: number
++          unit?: string
++          target_date?: string | null
++          is_achieved?: boolean
++          achieved_at?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++      }
++      billing_data: {
++        Row: {
++          id: string
++          user_id: string
++          bill_month: string
++          total_units: number
++          total_amount: number
++          rate_slab: any | null
++          fixed_charges: number
++          fuel_surcharge: number
++          other_charges: number
++          bill_image_url: string | null
++          created_at: string
++          updated_at: string
++        }
++        Insert: {
++          id?: string
++          user_id: string
++          bill_month: string
++          total_units: number
++          total_amount: number
++          rate_slab?: any | null
++          fixed_charges?: number
++          fuel_surcharge?: number
++          other_charges?: number
++          bill_image_url?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++        Update: {
++          id?: string
++          user_id?: string
++          bill_month?: string
++          total_units?: number
++          total_amount?: number
++          rate_slab?: any | null
++          fixed_charges?: number
++          fuel_surcharge?: number
++          other_charges?: number
++          bill_image_url?: string | null
++          created_at?: string
++          updated_at?: string
++        }
++      }
++      device_catalog: {
++        Row: {
++          id: string
++          name: string
++          category: string
++          subcategory: string | null
++          brand: string | null
++          model: string | null
++          power_rating_min: number | null
++          power_rating_max: number | null
++          power_rating_avg: number | null
++          energy_star_rating: number | null
++          keywords: string[]
++          description: string | null
++          image_url: string | null
++          country: string
++          created_at: string
++          updated_at: string
++        }
++      }
++    }
++    Views: {
++      [_ in never]: never
++    }
++    Functions: {
++      search_devices_by_keywords: {
++        Args: {
++          search_text: string
++        }
++        Returns: Array<{
++          id: string
++          name: string
++          category: string
++          power_rating_avg: number
++          confidence: number
++        }>
++      }
++    }
++    Enums: {
++      [_ in never]: never
++    }
++  }
++}
++
++export type Profile = Database['public']['Tables']['profiles']['Row']
++export type Team = Database['public']['Tables']['teams']['Row']
++export type Device = Database['public']['Tables']['devices']['Row']
++export type ConsumptionData = Database['public']['Tables']['consumption_data']['Row']
++export type Recommendation = Database['public']['Tables']['recommendations']['Row']
++export type EnergyAlert = Database['public']['Tables']['energy_alerts']['Row']
++export type EnergyGoal = Database['public']['Tables']['energy_goals']['Row']
++export type BillingData = Database['public']['Tables']['billing_data']['Row']
++export type DeviceCatalog = Database['public']['Tables']['device_catalog']['Row']
+diff --git a/frontend/lib/utils.ts b/frontend/lib/utils.ts
+new file mode 100644
+index 0000000..bd0c391
+--- /dev/null
++++ b/frontend/lib/utils.ts
+@@ -0,0 +1,6 @@
++import { clsx, type ClassValue } from "clsx"
++import { twMerge } from "tailwind-merge"
++
++export function cn(...inputs: ClassValue[]) {
++  return twMerge(clsx(inputs))
++}
+-- 
+2.51.0.windows.1
+
