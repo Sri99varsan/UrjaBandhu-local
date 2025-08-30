@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Dashboard', href: '/dashboard' },
+  { name: 'AI Chatbot', href: '/ai-chatbot' },
   { name: 'Devices', href: '/devices' },
   { name: 'Analytics', href: '/analytics' },
   { name: 'Advanced Analytics', href: '/analytics-advanced' },

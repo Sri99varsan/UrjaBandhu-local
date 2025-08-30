@@ -27,8 +27,8 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 const navigation = [
-  { name: 'AI Assistant', href: '/dashboard', icon: Bot, badge: 'Chat' },
-  { name: 'Dashboard', href: '/dashboard-full', icon: Home },
+  { name: 'AI Assistant', href: '/ai-chatbot', icon: Bot, badge: 'Chat' },
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Devices', href: '/devices', icon: Zap },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Advanced Analytics', href: '/analytics-advanced', icon: BarChart3, badge: 'Pro' },

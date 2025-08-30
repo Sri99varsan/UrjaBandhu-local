@@ -128,7 +128,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
   }, [animationPhase, analysisSteps.length])
 
   const navigateToFullDashboard = () => {
-    router.push('/dashboard-full')
+    router.push('/dashboard')
   }
 
   // Sync speech transcript with input message
