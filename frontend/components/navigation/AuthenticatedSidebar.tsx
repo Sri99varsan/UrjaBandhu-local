@@ -89,7 +89,14 @@ export default function AuthenticatedSidebar() {
           <div className="absolute bottom-20 right-10 w-24 h-24 bg-emerald-400/10 rounded-full blur-[30px] animate-pulse [animation-delay:2s]" />
         </div>
         
-        <div className="relative flex grow flex-col gap-y-5 overflow-y-auto sidebar-scroll bg-black/90 backdrop-blur-md border-r border-white/10 px-6 pb-4">
+        <div 
+          className="relative flex grow flex-col gap-y-5 overflow-y-auto sidebar-scroll custom-scrollbar bg-black/90 backdrop-blur-md border-r border-white/10 px-6 pb-4" 
+          data-sidebar-scroll="true"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(34, 197, 94, 0.8) rgba(255, 255, 255, 0.1)'
+          }}
+        >
           {/* Logo */}
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
@@ -231,7 +238,14 @@ export default function AuthenticatedSidebar() {
               </div>
 
               {/* Mobile sidebar content */}
-              <div className="flex grow flex-col gap-y-5 overflow-y-auto sidebar-scroll bg-black/95 backdrop-blur-md border-r border-white/10 px-6 pb-4">
+              <div 
+                className="flex grow flex-col gap-y-5 overflow-y-auto sidebar-scroll custom-scrollbar bg-black/95 backdrop-blur-md border-r border-white/10 px-6 pb-4" 
+                data-sidebar-scroll="true"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(34, 197, 94, 0.8) rgba(255, 255, 255, 0.1)'
+                }}
+              >
                 {/* Mobile Logo */}
                 <div className="flex h-16 shrink-0 items-center">
                   <Link href="/dashboard" className="flex items-center gap-2">
