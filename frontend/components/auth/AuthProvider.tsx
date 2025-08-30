@@ -54,7 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (!mounted) return
       
-      console.log('Auth state change:', event, session?.user?.email || 'no user')
+      // Clear, detailed logging for debugging
+      console.log('🔄 Auth Event:', event)
+      console.log('👤 User Email:', session?.user?.email || 'No user')
+      console.log('🎫 Session ID:', session?.access_token ? 'Present' : 'None')
       
       setSession(session)
       setUser(session?.user ?? null)
@@ -62,16 +65,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Create or update user profile for sign in events
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('User signed in, creating/updating profile')
+        console.log('✅ User signed in, creating/updating profile')
         try {
           await createOrUpdateProfile(session.user)
-          console.log('Profile setup completed successfully')
+          console.log('✅ Profile setup completed successfully')
         } catch (profileError) {
-          console.error('Profile creation failed:', profileError)
+          console.error('❌ Profile creation failed:', profileError)
           // For OAuth users, we should still allow them to continue
           // but log the error for debugging
           if (session.user.app_metadata?.provider === 'google') {
-            console.warn('OAuth user profile creation failed, but allowing auth to continue')
+            console.warn('⚠️ OAuth user profile creation failed, but allowing auth to continue')
           }
         }
       }
