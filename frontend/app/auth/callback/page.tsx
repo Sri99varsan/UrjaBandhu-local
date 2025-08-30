@@ -13,136 +13,165 @@ function AuthCallbackContent() {
   const [status, setStatus] = useState('Processing authentication...')
   const [showConsumerSetup, setShowConsumerSetup] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [callbackProcessed, setCallbackProcessed] = useState(false)
 
   useEffect(() => {
+    // Prevent multiple executions
+    if (callbackProcessed) return
+
     const handleAuthCallback = async () => {
       try {
-        setStatus('Processing authentication...')
+        setCallbackProcessed(true)
+        setStatus('Completing sign in...')
         
-        // Check if this is a setup request or if we have an OAuth code
-        const setupParam = searchParams.get('setup')
         const code = searchParams.get('code')
         const errorParam = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
 
-        // Check for OAuth errors first
+        // Handle OAuth errors immediately
         if (errorParam) {
           console.error('OAuth error:', errorParam, errorDescription)
-          setError(errorDescription || errorParam)
-          setStatus('Authentication failed')
-          setTimeout(() => {
-            router.push('/auth?error=oauth_error')
-          }, 2000)
+          setError(errorDescription || 'Authentication failed')
+          setTimeout(() => router.push('/auth?error=oauth_error'), 1000)
           return
         }
 
-        // If we have a code, exchange it for a session first
+        // Handle successful OAuth callback
         if (code) {
-          setStatus('Completing sign in...')
-          console.log('OAuth code received, exchanging for session...')
+          console.log('Processing OAuth code...')
+          
+          // Set a maximum timeout for the entire process
+          const overallTimeout = setTimeout(() => {
+            console.log('Overall process timeout - redirecting anyway')
+            window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+          }, 5000) // 5 second max
           
           try {
-            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+            // Exchange code for session with timeout
+            const exchangePromise = supabase.auth.exchangeCodeForSession(code)
+            const exchangeTimeout = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Exchange timeout')), 3000)
+            )
+            
+            const { data, error: exchangeError } = await Promise.race([
+              exchangePromise, 
+              exchangeTimeout
+            ]) as any
             
             if (exchangeError) {
-              console.error('Error exchanging code for session:', exchangeError)
-              setError('Failed to complete authentication')
-              setStatus('Authentication failed')
-              router.push('/auth?error=session_error')
+              console.error('Session exchange failed:', exchangeError)
+              clearTimeout(overallTimeout)
+              // Don't show error, just redirect to try again
+              window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
               return
             }
 
             if (data.session && data.user) {
-              console.log('OAuth successful for user:', data.user.email)
-              setStatus('Setting up your account...')
+              console.log('Authentication successful for:', data.user.email)
+              clearTimeout(overallTimeout)
               
-              // Trigger a custom event to refresh AuthProvider immediately
-              window.dispatchEvent(new CustomEvent('auth-session-refresh'))
+              // Store user ID
+              setCurrentUserId(data.user.id)
               
-              // Quick check for existing connections
-              const { data: connections } = await supabase
-                .from('consumer_connections')
-                .select('id')
-                .eq('user_id', data.user.id)
-                .limit(1)
-                .single()
-              
-              if (!connections) {
-                // New user - show setup modal
-                console.log('New user detected, showing setup modal')
-                setCurrentUserId(data.user.id)
+              // Quick connection check with very short timeout
+              try {
+                const connectionCheck = supabase
+                  .from('consumer_connections')
+                  .select('id')
+                  .eq('user_id', data.user.id)
+                  .limit(1)
+                  .single()
+                
+                const quickTimeout = new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Quick timeout')), 1000)
+                )
+                
+                const { data: connections } = await Promise.race([
+                  connectionCheck, 
+                  quickTimeout
+                ])
+                
+                if (!connections) {
+                  // New user - show setup modal
+                  console.log('New user - showing setup')
+                  setShowConsumerSetup(true)
+                  setIsLoading(false)
+                  return
+                } else {
+                  // Existing user - redirect immediately
+                  console.log('Existing user - redirecting')
+                  window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+                  return
+                }
+              } catch (dbError) {
+                // Database check failed - assume new user and show setup
+                console.log('DB check failed - showing setup for safety')
                 setShowConsumerSetup(true)
                 setIsLoading(false)
-              } else {
-                // Existing user - redirect immediately
-                console.log('Existing user detected, redirecting to AI chatbot')
-                window.location.href = '/ai-chatbot'
+                return
               }
-              return
             }
           } catch (error) {
-            console.error('OAuth processing error:', error)
-            setError('Authentication failed')
-            router.push('/auth?error=oauth_failed')
+            console.error('OAuth exchange error:', error)
+            clearTimeout(overallTimeout)
+            // Don't show error, just redirect
+            window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
             return
           }
         }
 
-        // If no code but we have a setup param, check existing session
-        setStatus('Verifying session...')
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-        
-        if (sessionError || !sessionData.session) {
-          console.log('No valid session found, redirecting to auth')
-          router.push('/auth')
-          return
-        }
+        // No code - check existing session quickly
+        try {
+          const sessionCheck = supabase.auth.getSession()
+          const sessionTimeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Session timeout')), 2000)
+          )
+          
+          const { data: sessionData, error: sessionError } = await Promise.race([
+            sessionCheck,
+            sessionTimeout
+          ]) as any
+          
+          if (sessionError || !sessionData.session) {
+            console.log('No session found - redirecting to auth')
+            router.push('/auth')
+            return
+          }
 
-        console.log('Session found for user:', sessionData.session.user.email)
-        
-        // Quick check for existing connections
-        const { data: connections } = await supabase
-          .from('consumer_connections')
-          .select('id')
-          .eq('user_id', sessionData.session.user.id)
-          .limit(1)
-          .single()
-        
-        // Show setup modal if no connections or setup requested
-        if (!connections || setupParam === 'true') {
-          console.log('Showing setup modal for user')
-          setCurrentUserId(sessionData.session.user.id)
-          setShowConsumerSetup(true)
-          setIsLoading(false)
-        } else {
-          console.log('Existing user detected, redirecting to AI chatbot')
-          window.location.href = '/ai-chatbot'
+          // Has session - redirect to chatbot immediately
+          console.log('Existing session found - redirecting')
+          window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
+          
+        } catch (error) {
+          console.log('Session check failed - redirecting to auth')
+          router.push('/auth')
         }
 
       } catch (error) {
-        console.error('Auth callback error:', error)
-        setError('Authentication failed')
-        router.push('/auth?error=callback_failed')
+        console.error('Callback error:', error)
+        // Don't show error to user, just redirect
+        window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
       } finally {
         if (!showConsumerSetup) {
-          setIsLoading(false)
+          setTimeout(() => setIsLoading(false), 500)
         }
       }
     }
 
+    // Start immediately
     handleAuthCallback()
-  }, [router, searchParams])
+  }, [router, searchParams, callbackProcessed])
 
   const handleConsumerSetupComplete = () => {
     setShowConsumerSetup(false)
-    // Immediate redirect without delay
-    window.location.href = '/ai-chatbot'
+    // Immediate redirect to production URL
+    window.location.href = 'https://urjabandhu.vercel.app/ai-chatbot/'
   }
 
   const handleConsumerSetupSkip = () => {
     setShowConsumerSetup(false)
-    // Immediate redirect without delay
-    window.location.href = '/dashboard'
+    // Redirect to dashboard
+    window.location.href = 'https://urjabandhu.vercel.app/dashboard/'
   }
 
   if (error) {
