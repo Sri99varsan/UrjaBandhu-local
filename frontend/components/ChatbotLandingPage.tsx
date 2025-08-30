@@ -9,6 +9,7 @@ import { useSpeechServices } from '@/hooks/useSpeechServices'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import { getCurrentAndUpcomingFestivals, generateFestivalPrompt, getTodaysEnergyTip } from '@/lib/festivals/festival-utils'
 import { 
   Zap, 
   BarChart3, 
@@ -24,7 +25,9 @@ import {
   CheckCircle,
   Volume2,
   VolumeX,
-  Square
+  Square,
+  Calendar,
+  Gift
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -50,6 +53,8 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
   const [inputMessage, setInputMessage] = useState('')
   const [chatMessages, setChatMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'bot'}>>([])
   const [isProcessingMessage, setIsProcessingMessage] = useState(false)
+  const [festivalSuggestions, setFestivalSuggestions] = useState<ReturnType<typeof getCurrentAndUpcomingFestivals>>([])
+  const [hasShownFestivalPrompt, setHasShownFestivalPrompt] = useState(false)
   
   // Enhanced speech services
   const speechServices = useSpeechServices()
@@ -85,6 +90,12 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
   const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
+    // Load festival suggestions when component mounts
+    const suggestions = getCurrentAndUpcomingFestivals()
+    setFestivalSuggestions(suggestions)
+  }, [])
+
+  useEffect(() => {
     // If there's an initial query, skip entrance and go directly to analyzing
     if (initialQuery) {
       setAnimationPhase('analyzing')
@@ -98,6 +109,27 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
 
     return () => clearTimeout(timer1)
   }, [initialQuery])
+
+  // Auto-show festival prompt when chat becomes available
+  useEffect(() => {
+    if (showChat && !hasShownFestivalPrompt && festivalSuggestions.length > 0) {
+      const nearestFestival = festivalSuggestions[0]
+      
+      // Show festival prompt only if festival is within 7 days
+      if (nearestFestival.daysUntil <= 7 && nearestFestival.daysUntil >= -1) {
+        setTimeout(() => {
+          const festivalPrompt = generateFestivalPrompt(nearestFestival)
+          const botMessage = {
+            id: Date.now().toString(),
+            text: festivalPrompt,
+            sender: 'bot' as const
+          }
+          setChatMessages(prev => [...prev, botMessage])
+          setHasShownFestivalPrompt(true)
+        }, 1500) // Delay to let user see the interface first
+      }
+    }
+  }, [showChat, hasShownFestivalPrompt, festivalSuggestions])
 
   useEffect(() => {
     if (animationPhase === 'analyzing') {
@@ -583,7 +615,38 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Button 
                         variant="outline" 
+                        size="sm"
+                        onClick={() => setInputMessage('How can I save energy during festivals?')}
+                        className="bg-gray-800/50 border-white/20 hover:bg-gray-700 text-white"
+                      >
+                        <Gift className="h-4 w-4 mr-1" />
+                        Festival Tips
+                      </Button>
+                    </motion.div>
+                    {festivalSuggestions.length > 0 && festivalSuggestions[0].daysUntil <= 7 && (
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setInputMessage(`Give me energy tips for ${festivalSuggestions[0].festival.name}`)}
+                          className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-400/30 hover:from-purple-600/30 hover:to-pink-600/30 text-white"
+                        >
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {festivalSuggestions[0].festival.name} Tips
+                          {festivalSuggestions[0].daysUntil <= 0 && (
+                            <Badge className="ml-1 bg-green-500 text-black text-xs">Today!</Badge>
+                          )}
+                          {festivalSuggestions[0].daysUntil === 1 && (
+                            <Badge className="ml-1 bg-yellow-500 text-black text-xs">Tomorrow!</Badge>
+                          )}
+                        </Button>
+                      </motion.div>
+                    )}
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button 
+                        variant="outline" 
                         size="sm" 
+                        onClick={() => setInputMessage('Show me energy saving tips')}
                         className="bg-gray-800/50 border-white/20 hover:bg-gray-700 text-white"
                       >
                         Show savings tips
@@ -593,6 +656,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
                       <Button 
                         variant="outline" 
                         size="sm" 
+                        onClick={() => setInputMessage('Device breakdown analysis')}
                         className="bg-gray-800/50 border-white/20 hover:bg-gray-700 text-white"
                       >
                         Device breakdown

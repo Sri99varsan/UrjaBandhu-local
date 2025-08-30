@@ -1,10 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentAndUpcomingFestivals, generateFestivalPrompt, getTodaysEnergyTip } from '@/lib/festivals/festival-utils'
 
 // Smart mockup response generator
 function generateSmartMockupResponse(message: string): string {
+  // Check for festival-related queries
+  if (message.includes('festival') || message.includes('diwali') || message.includes('holi') || message.includes('christmas') || message.includes('ganesh') || message.includes('durga')) {
+    const festivalSuggestions = getCurrentAndUpcomingFestivals()
+    
+    if (festivalSuggestions.length > 0) {
+      const nearestFestival = festivalSuggestions[0]
+      return generateFestivalPrompt(nearestFestival)
+    } else {
+      return `🎉 **Festival Energy Tips**
+
+I can help you celebrate festivals in an energy-efficient way! Here are some general festival energy-saving tips:
+
+• **🪔 LED Decorations**: Use LED lights and diyas instead of traditional bulbs - save 70-90% energy
+• **⏰ Smart Timers**: Install timers for decorative lights to avoid wastage
+• **❄️ Efficient Cooling**: Use fans with AC during celebrations to maintain comfort efficiently
+• **🔥 Safety First**: Always check electrical connections before festival setups
+
+**Popular Festival Tips Available:**
+• Diwali energy-efficient lighting
+• Christmas decoration savings
+• Holi water-safe electrical tips
+• Wedding celebration energy optimization
+
+Which festival would you like specific energy-saving advice for? 🌟`
+    }
+  }
+
   // Greetings and welcome
   if (message.includes('hello') || message.includes('hi') || message.includes('hey') || message.includes('namaste')) {
-    return "🙏 Namaste! I'm UrjaBandhu, your personal energy advisor. I'm here to help you save money on your electricity bills and reduce your carbon footprint. How can I assist you with your energy concerns today?";
+    // Check if there are any current festivals to mention
+    const festivalSuggestions = getCurrentAndUpcomingFestivals()
+    const todaysEnergyTip = getTodaysEnergyTip()
+    
+    let greeting = "🙏 Namaste! I'm UrjaBandhu, your personal energy advisor. I'm here to help you save money on your electricity bills and reduce your carbon footprint."
+    
+    // Add festival greeting if there's an upcoming festival
+    if (festivalSuggestions.length > 0) {
+      const nearestFestival = festivalSuggestions[0]
+      if (nearestFestival.daysUntil <= 7) {
+        if (nearestFestival.daysUntil <= 0) {
+          greeting += `\n\n🎉 **Happy ${nearestFestival.festival.name}!** I have special energy-saving tips for your celebration today.`
+        } else {
+          greeting += `\n\n🎊 **${nearestFestival.festival.name} is coming up in ${nearestFestival.daysUntil} days!** I can share energy-efficient celebration tips.`
+        }
+      }
+    }
+    
+    // Add today's special energy tip if available
+    if (todaysEnergyTip) {
+      greeting += `\n\n${todaysEnergyTip}`
+    }
+    
+    greeting += "\n\nHow can I assist you with your energy concerns today?"
+    
+    return greeting
   }
 
   // Bill analysis
