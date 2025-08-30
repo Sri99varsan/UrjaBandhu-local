@@ -13,26 +13,67 @@ export function InspiredHomepage() {
   const [isFocused, setIsFocused] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [typedText, setTypedText] = useState('')
+  const [currentLanguageIndex, setCurrentLanguageIndex] = useState(0)
+  const [isTyping, setIsTyping] = useState(true)
   const router = useRouter()
 
-  const fullText = "UrjaBandhu"
+  // UrjaBandhu in different Indian languages
+  const languageTexts = [
+    { text: "UrjaBandhu", language: "English" },
+    { text: "ऊर्जाबंधु", language: "Hindi" },
+    { text: "ఊర్జాబంధు", language: "Telugu" },
+    { text: "ऊर्जाबांधव", language: "Marathi" },
+    { text: "শক্তিবন্ধু", language: "Bengali" },
+    { text: "ऊर्जाबन्धु", language: "Nepali" },
+    { text: "ਊਰਜਾਬੰਧੂ", language: "Punjabi" },
+    { text: "ऊर्जामित्र", language: "Sanskrit" }
+  ]
 
   useEffect(() => {
-    // Ensure component is fully mounted and ready
     setIsLoaded(true)
     
-    // Typing effect
-    let index = 0
-    const timer = setInterval(() => {
-      if (index < fullText.length) {
-        setTypedText(fullText.slice(0, index + 1))
-        index++
+    let typingTimer: NodeJS.Timeout
+    let languageTimer: NodeJS.Timeout
+    let currentIndex = 0
+    let charIndex = 0
+    
+    const typeText = () => {
+      const currentText = languageTexts[currentIndex].text
+      
+      if (charIndex < currentText.length) {
+        setTypedText(currentText.slice(0, charIndex + 1))
+        charIndex++
+        typingTimer = setTimeout(typeText, 120)
       } else {
-        clearInterval(timer)
+        // Wait before erasing
+        languageTimer = setTimeout(() => {
+          eraseText()
+        }, 2000)
       }
-    }, 150) // Adjust speed here
-
-    return () => clearInterval(timer)
+    }
+    
+    const eraseText = () => {
+      const currentText = languageTexts[currentIndex].text
+      
+      if (charIndex > 0) {
+        setTypedText(currentText.slice(0, charIndex - 1))
+        charIndex--
+        typingTimer = setTimeout(eraseText, 80)
+      } else {
+        // Move to next language
+        currentIndex = (currentIndex + 1) % languageTexts.length
+        setCurrentLanguageIndex(currentIndex)
+        setTimeout(typeText, 500)
+      }
+    }
+    
+    // Start typing
+    setTimeout(typeText, 1000)
+    
+    return () => {
+      clearTimeout(typingTimer)
+      clearTimeout(languageTimer)
+    }
   }, [])
 
   const handleSearch = () => {
@@ -106,6 +147,12 @@ export function InspiredHomepage() {
         <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/20 rounded-full blur-[100px] animate-pulse" />
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/15 rounded-full blur-[80px] animate-pulse [animation-delay:2s]" />
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/10 rounded-full blur-[120px] animate-pulse [animation-delay:4s]" />
+        
+        {/* Floating particles */}
+        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:1s] opacity-70" />
+        <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-emerald-300 rounded-full animate-bounce [animation-delay:3s] opacity-60" />
+        <div className="absolute top-1/2 left-3/4 w-1.5 h-1.5 bg-green-500 rounded-full animate-bounce [animation-delay:2s] opacity-80" />
+        <div className="absolute top-1/6 right-1/3 w-1 h-1 bg-green-300 rounded-full animate-bounce [animation-delay:4s] opacity-50" />
       </div>
 
       {/* Main Content */}
@@ -118,17 +165,67 @@ export function InspiredHomepage() {
         >
           {/* Dynamic UrjaBandhu Text */}
           <motion.div 
-            className="mb-8"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-12"
+            initial={{ opacity: 0, scale: 0.8, y: -30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ 
+              duration: 0.8, 
+              delay: 0.2,
+              type: "spring",
+              bounce: 0.4
+            }}
           >
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center">
-              <span className="bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 bg-clip-text text-transparent">
-                {typedText}
-              </span>
-              <span className="animate-pulse text-green-400">|</span>
-            </h2>
+            <div className="relative">
+              {/* Background glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-emerald-500/20 to-green-600/20 blur-3xl rounded-full scale-150 animate-pulse" />
+              
+              {/* Main text */}
+              <motion.h2 
+                className="relative text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-center tracking-tight"
+                animate={{ 
+                  textShadow: [
+                    "0 0 20px rgba(34, 197, 94, 0.5)",
+                    "0 0 40px rgba(34, 197, 94, 0.8)",
+                    "0 0 20px rgba(34, 197, 94, 0.5)"
+                  ]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-2xl">
+                  {typedText}
+                </span>
+                <motion.span 
+                  className="text-green-400 ml-1"
+                  animate={{ 
+                    opacity: [1, 0, 1],
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{ 
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  |
+                </motion.span>
+              </motion.h2>
+              
+              {/* Language indicator */}
+              <motion.div
+                className="mt-4 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+              >
+                <span className="text-sm md:text-base text-gray-400 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
+                  {languageTexts[currentLanguageIndex]?.language}
+                </span>
+              </motion.div>
+            </div>
           </motion.div>
 
           {/* Main Heading */}
