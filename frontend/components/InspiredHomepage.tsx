@@ -107,7 +107,7 @@ export function InspiredHomepage() {
 
           {/* Quick Suggestions */}
           <motion.div 
-            className="flex flex-wrap items-center justify-center gap-3"
+            className="flex flex-wrap items-center justify-center gap-3 mb-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
@@ -126,6 +126,32 @@ export function InspiredHomepage() {
                 {suggestion}
               </button>
             ))}
+          </motion.div>
+
+          {/* Quick Navigation Buttons - More Prominent */}
+          <motion.div 
+            className="flex flex-wrap items-center justify-center gap-4 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <Link href="/about">
+              <Button className="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/30 text-blue-300 hover:text-blue-200 px-6 py-3 rounded-xl backdrop-blur-md transition-all duration-300 shadow-lg shadow-blue-500/10">
+                About Us
+              </Button>
+            </Link>
+            
+            <Link href="/features">
+              <Button className="bg-purple-600/20 hover:bg-purple-600/30 border border-purple-400/30 text-purple-300 hover:text-purple-200 px-6 py-3 rounded-xl backdrop-blur-md transition-all duration-300 shadow-lg shadow-purple-500/10">
+                Features
+              </Button>
+            </Link>
+            
+            <Link href="/ai-chatbot">
+              <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-green-500/25">
+                Get Started
+              </Button>
+            </Link>
           </motion.div>
         </motion.div>
       </div>
