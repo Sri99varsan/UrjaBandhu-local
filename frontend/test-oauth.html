@@ -52,7 +52,7 @@
         <div class="test-step">
             <h2>✅ Step 1: Check if app is running</h2>
             <div id="app-status" class="status info">
-                Checking if Next.js app is running on http://localhost:3001...
+                Checking if Next.js app is running on http://localhost:3000...
             </div>
             <button onclick="checkAppStatus()">Test App Connection</button>
         </div>
@@ -121,10 +121,10 @@
         async function checkAppStatus() {
             const statusEl = document.getElementById('app-status');
             try {
-                const response = await fetch('http://localhost:3001');
+                const response = await fetch('http://localhost:3000');
                 if (response.ok) {
                     statusEl.className = 'status success';
-                    statusEl.innerHTML = '✅ App is running successfully on http://localhost:3001';
+                    statusEl.innerHTML = '✅ App is running successfully on http://localhost:3000';
                 } else {
                     statusEl.className = 'status error';
                     statusEl.innerHTML = '❌ App responded with error: ' + response.status;
@@ -141,7 +141,7 @@
             statusEl.innerHTML = '🔄 Opening auth page in new tab...';
             
             // Open auth page in new tab
-            window.open('http://localhost:3001/auth', '_blank');
+            window.open('http://localhost:3000/auth', '_blank');
             
             setTimeout(() => {
                 statusEl.innerHTML = '📋 Test the Google OAuth button in the opened tab. Check browser console for any errors.';

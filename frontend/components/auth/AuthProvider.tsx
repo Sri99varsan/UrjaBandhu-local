@@ -207,8 +207,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    // Use the production URL for OAuth redirects
-    const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://urjabandhu.vercel.app'
+    // Use current origin for development, fallback to env var or production
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : null
+    const redirectUrl = currentOrigin || process.env.NEXT_PUBLIC_APP_URL || 'https://urjabandhu.vercel.app'
+    
+    console.log('OAuth redirect URL:', `${redirectUrl}/auth/callback`)
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

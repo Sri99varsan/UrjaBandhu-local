@@ -49,10 +49,13 @@ export default function OAuthTestPage() {
   const testGoogleOAuth = async () => {
     try {
       setLoading(true)
+      // Use current origin instead of hardcoded URL
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://urjabandhu.vercel.app'}/auth/callback`,
+          redirectTo: `${currentOrigin}/auth/callback`,
         },
       })
 
