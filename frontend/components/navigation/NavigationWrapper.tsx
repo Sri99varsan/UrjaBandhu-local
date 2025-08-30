@@ -29,11 +29,15 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
     return () => clearTimeout(timer)
   }, [loading])
 
-  // Don't show any navigation on auth pages, homepage, features, or about pages
-  const isAuthPage = pathname?.startsWith('/auth')
-  const isHomePage = pathname === '/'
-  const isFeaturesPage = pathname === '/features'
-  const isAboutPage = pathname === '/about'
+  // ABSOLUTELY NO NAVIGATION FOR HOMEPAGE, FEATURES AND ABOUT - REGARDLESS OF USER STATE
+  if (pathname === '/' || pathname === '/features' || pathname === '/about') {
+    return <>{children}</>
+  }
+  
+  // AUTH PAGES: Return children only  
+  if (pathname?.startsWith('/auth')) {
+    return <>{children}</>
+  }
   
   if (loading && showLoading) {
     return (
@@ -42,7 +46,7 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
           <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
         </div>
         
         <div className="relative z-10">
@@ -50,11 +54,6 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
         </div>
       </div>
     )
-  }
-
-  if (isAuthPage || isHomePage || isFeaturesPage || isAboutPage) {
-    // Auth pages, homepage, features, and about pages get no navigation wrapper
-    return <>{children}</>
   }
 
   if (user) {

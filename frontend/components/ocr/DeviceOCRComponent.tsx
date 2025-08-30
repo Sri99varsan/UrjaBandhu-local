@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { Upload, Camera, FileImage, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { detectDeviceFromImage, OCRResult } from '@/lib/ocr/tesseract-ocr';
 import toast from 'react-hot-toast';
@@ -31,6 +32,46 @@ export default function DeviceOCRComponent({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+
+  // Progress bar component with predefined width classes
+  const ProgressBar = ({ value, max = 100 }: { value: number; max?: number }) => {
+    const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+    const roundedPercentage = Math.round(percentage);
+    
+    // Map percentage to tailwind width classes
+    let widthClass = 'w-0';
+    if (percentage >= 95) widthClass = 'w-full';
+    else if (percentage >= 90) widthClass = 'w-11/12';
+    else if (percentage >= 83) widthClass = 'w-5/6';
+    else if (percentage >= 75) widthClass = 'w-3/4';
+    else if (percentage >= 66) widthClass = 'w-2/3';
+    else if (percentage >= 60) widthClass = 'w-3/5';
+    else if (percentage >= 50) widthClass = 'w-1/2';
+    else if (percentage >= 40) widthClass = 'w-2/5';
+    else if (percentage >= 33) widthClass = 'w-1/3';
+    else if (percentage >= 25) widthClass = 'w-1/4';
+    else if (percentage >= 16) widthClass = 'w-1/6';
+    else if (percentage >= 8) widthClass = 'w-1/12';
+    else if (percentage > 0) widthClass = 'w-1';
+    
+    const ariaAttributes = {
+      'aria-valuenow': roundedPercentage,
+      'aria-valuemin': 0,
+      'aria-valuemax': 100,
+      'aria-label': `Confidence level: ${roundedPercentage} percent`
+    };
+    
+    return (
+      <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
+        <div 
+          className={`bg-green-600 h-2 rounded-full transition-all duration-300 ${widthClass}`}
+          role="progressbar"
+          {...ariaAttributes}
+          title={`Confidence: ${roundedPercentage}%`}
+        />
+      </div>
+    );
+  };
 
   // Handle file selection
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,10 +266,13 @@ export default function DeviceOCRComponent({
         >
           {imagePreview ? (
             <div className="space-y-4">
-              <img
+              <Image
                 src={imagePreview}
                 alt="Selected image"
+                width={400}
+                height={256}
                 className="max-w-full max-h-64 mx-auto rounded-lg shadow-lg"
+                unoptimized={true}
               />
               <div className="flex justify-center space-x-2">
                 <button
@@ -284,50 +328,45 @@ export default function DeviceOCRComponent({
                 accept="image/*"
                 onChange={handleFileSelect}
                 className="hidden"
+                aria-label="Select image file for OCR analysis"
+                title="Select image file for OCR analysis"
               />
             </div>
           )}
         </div>
       )}
 
-      {/* Results Section */}
-      {ocrResult && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 space-y-4">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Detection Results
-            </h4>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Detected Text
-              </label>
-              <p className="text-sm bg-white dark:bg-gray-700 p-3 rounded border">
-                {ocrResult.deviceText || 'No text detected'}
-              </p>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Confidence
-              </label>
+          {/* Results Section */}
+          {ocrResult && (
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 space-y-4">
               <div className="flex items-center space-x-2">
-                <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                  <div
-                    className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${ocrResult.confidence * 100}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium">
-                  {Math.round(ocrResult.confidence * 100)}%
-                </span>
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Detection Results
+                </h4>
               </div>
-            </div>
-            
-            {ocrResult.detectedBrands.length > 0 && (
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Detected Text
+                  </label>
+                  <p className="text-sm bg-white dark:bg-gray-700 p-3 rounded border">
+                    {ocrResult.deviceText || 'No text detected'}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Confidence
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <ProgressBar value={ocrResult.confidence * 100} />
+                    <span className="text-sm font-medium">
+                      {Math.round(ocrResult.confidence * 100)}%
+                    </span>
+                  </div>
+                </div>            {ocrResult.detectedBrands.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Detected Brands

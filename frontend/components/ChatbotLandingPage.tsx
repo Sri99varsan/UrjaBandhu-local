@@ -137,7 +137,7 @@ export default function ChatbotLandingPage({ initialQuery }: { initialQuery?: st
       setInputMessage(speechServices.transcript)
       speechServices.clearTranscript()
     }
-  }, [speechServices.transcript, speechServices.clearTranscript])
+  }, [speechServices])
 
   // Handle text input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

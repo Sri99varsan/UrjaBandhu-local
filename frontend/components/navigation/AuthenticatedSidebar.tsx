@@ -66,7 +66,7 @@ export default function AuthenticatedSidebar() {
         <div className="absolute inset-0 bg-black">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
           <div className="absolute top-10 left-10 w-32 h-32 bg-green-500/10 rounded-full blur-[40px] animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-24 h-24 bg-emerald-400/10 rounded-full blur-[30px] animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-20 right-10 w-24 h-24 bg-emerald-400/10 rounded-full blur-[30px] animate-pulse [animation-delay:2s]" />
         </div>
         
         <div className="relative flex grow flex-col gap-y-5 overflow-y-auto bg-black/90 backdrop-blur-md border-r border-white/10 px-6 pb-4">

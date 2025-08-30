@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { 
   User, 
   Bell, 
@@ -78,21 +78,38 @@ export default function SettingsPage() {
     is_active: true
   })
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth')
-      return
-    }
-
-    if (user) {
-      fetchProfile()
-      loadConnections()
-    }
-  }, [user, loading, router])
-
-  const fetchProfile = async () => {
+  const createDefaultProfile = useCallback(async (profile: UserProfile) => {
     try {
-      setLoadingData(true)
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          avatar_url: user?.user_metadata?.avatar_url || null,
+          notification_preferences: profile.notification_preferences,
+          theme: profile.theme,
+          language: profile.language,
+          timezone: profile.timezone,
+          energy_rate: profile.energy_rate,
+          currency: profile.currency,
+          updated_at: new Date().toISOString()
+        })
+
+      if (error) {
+        console.error('Error creating default profile:', error)
+        // If the table structure doesn't match, we'll just use the frontend state
+        console.log('Using in-memory profile until database schema is updated')
+      } else {
+        console.log('Default profile created successfully')
+      }
+    } catch (error) {
+      console.error('Error in createDefaultProfile:', error)
+    }
+  }, [user])
+
+  const fetchProfile = useCallback(async () => {
+    try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -175,40 +192,8 @@ export default function SettingsPage() {
         currency: 'INR'
       }
       setProfile(defaultProfile)
-    } finally {
-      setLoadingData(false)
     }
-  }
-
-  const createDefaultProfile = async (profile: UserProfile) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.full_name,
-          avatar_url: user?.user_metadata?.avatar_url || null,
-          notification_preferences: profile.notification_preferences,
-          theme: profile.theme,
-          language: profile.language,
-          timezone: profile.timezone,
-          energy_rate: profile.energy_rate,
-          currency: profile.currency,
-          updated_at: new Date().toISOString()
-        })
-
-      if (error) {
-        console.error('Error creating default profile:', error)
-        // If the table structure doesn't match, we'll just use the frontend state
-        console.log('Using in-memory profile until database schema is updated')
-      } else {
-        console.log('Default profile created successfully')
-      }
-    } catch (error) {
-      console.error('Error in createDefaultProfile:', error)
-    }
-  }
+  }, [user, createDefaultProfile])
 
   const saveProfile = async () => {
     if (!profile || !user) return
@@ -260,7 +245,7 @@ export default function SettingsPage() {
   }
 
   // Consumer connections functions
-  const loadConnections = async () => {
+  const loadConnections = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('consumer_connections')
@@ -268,13 +253,52 @@ export default function SettingsPage() {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error loading connections:', error)
+        // If table doesn't exist, just set empty connections
+        setConnections([])
+        return
+      }
       setConnections(data || [])
     } catch (error) {
       console.error('Error loading connections:', error)
       toast.error('Failed to load consumer connections')
+      // Set empty connections on error
+      setConnections([])
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    console.log('Settings page useEffect triggered:', { loading, user: !!user })
+    
+    if (!loading && !user) {
+      console.log('No user found, redirecting to auth')
+      router.push('/auth')
+      return
+    }
+
+    if (user) {
+      console.log('User found, loading settings data for user:', user.id)
+      const loadData = async () => {
+        try {
+          setLoadingData(true)
+          console.log('Starting to load profile and connections...')
+          await Promise.all([
+            fetchProfile(),
+            loadConnections()
+          ])
+          console.log('Successfully loaded profile and connections')
+        } catch (error) {
+          console.error('Error loading settings data:', error)
+        } finally {
+          console.log('Setting loadingData to false')
+          setLoadingData(false)
+        }
+      }
+      
+      loadData()
+    }
+  }, [user, loading, router, fetchProfile, loadConnections])
 
   const saveConnection = async () => {
     if (!formData.consumer_id || !formData.electricity_board) {
@@ -377,14 +401,17 @@ export default function SettingsPage() {
     setShowAddForm(true)
   }
 
+  console.log('Render check:', { loading, loadingData, profile: !!profile })
+  
   if (loading || loadingData) {
+    console.log('Showing loading spinner because:', { loading, loadingData })
     return (
       <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
         {/* Background effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
           <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
         </div>
         
         <div className="relative z-10 flex items-center space-x-3">
@@ -396,6 +423,7 @@ export default function SettingsPage() {
   }
 
   if (!profile) {
+    console.log('No profile found, showing error message')
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -425,7 +453,7 @@ export default function SettingsPage() {
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
         <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse [animation-delay:2s]" />
       </div>
 
       <div className="relative z-10 p-6">
@@ -478,6 +506,8 @@ export default function SettingsPage() {
                             value={profile.full_name}
                             onChange={(e) => updateProfile({ full_name: e.target.value })}
                             className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            aria-label="Full Name"
+                            title="Enter your full name"
                           />
                         </div>
                         <div>
@@ -487,6 +517,8 @@ export default function SettingsPage() {
                             value={profile.email}
                             disabled
                             className="mt-1 block w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-2 text-gray-400 cursor-not-allowed"
+                            aria-label="Email address"
+                            title="Email address (cannot be changed)"
                           />
                           <p className="mt-1 text-xs text-gray-500">Email cannot be changed here</p>
                         </div>
@@ -522,6 +554,8 @@ export default function SettingsPage() {
                                   <button
                                     onClick={() => startEditing(connection)}
                                     className="text-gray-400 hover:text-green-400 p-1"
+                                    title="Edit connection"
+                                    aria-label="Edit connection"
                                   >
                                     <Edit3 className="h-4 w-4" />
                                   </button>
@@ -529,7 +563,8 @@ export default function SettingsPage() {
                                     <button
                                       onClick={() => setPrimaryConnection(connection.id!)}
                                       className="text-gray-400 hover:text-green-400 p-1"
-                                      title="Set as primary"
+                                      title="Set as primary connection"
+                                      aria-label="Set as primary connection"
                                     >
                                       <Star className="h-4 w-4" />
                                     </button>
@@ -537,6 +572,8 @@ export default function SettingsPage() {
                                   <button
                                     onClick={() => deleteConnection(connection.id!)}
                                     className="text-gray-400 hover:text-red-400 p-1"
+                                    title="Delete connection"
+                                    aria-label="Delete connection"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -604,6 +641,8 @@ export default function SettingsPage() {
                               value={formData.electricity_board}
                               onChange={(e) => setFormData(prev => ({ ...prev, electricity_board: e.target.value }))}
                               className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                              title="Select electricity board"
+                              aria-label="Select electricity board"
                             >
                               <option value="" className="bg-gray-800">Select Board</option>
                               <option value="MSEB (Maharashtra State Electricity Board)" className="bg-gray-800">MSEB (Maharashtra)</option>
@@ -621,6 +660,8 @@ export default function SettingsPage() {
                               value={formData.connection_type}
                               onChange={(e) => setFormData(prev => ({ ...prev, connection_type: e.target.value as any }))}
                               className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                              title="Select connection type"
+                              aria-label="Select connection type"
                             >
                               <option value="domestic" className="bg-gray-800">Domestic</option>
                               <option value="commercial" className="bg-gray-800">Commercial</option>
@@ -708,6 +749,8 @@ export default function SettingsPage() {
                             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black ${
                               value ? 'bg-green-600' : 'bg-white/20'
                             }`}
+                            title={`Toggle ${key.replace(/_/g, ' ')} - currently ${value ? 'enabled' : 'disabled'}`}
+                            aria-label={`Toggle ${key.replace(/_/g, ' ')} - currently ${value ? 'enabled' : 'disabled'}`}
                           >
                             <span
                               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -732,6 +775,8 @@ export default function SettingsPage() {
                           value={profile.theme}
                           onChange={(e) => updateProfile({ theme: e.target.value as 'light' | 'dark' | 'system' })}
                           className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          title="Select theme preference"
+                          aria-label="Select theme preference"
                         >
                           <option value="light">Light</option>
                           <option value="dark">Dark</option>
@@ -744,6 +789,8 @@ export default function SettingsPage() {
                           value={profile.language}
                           onChange={(e) => updateProfile({ language: e.target.value })}
                           className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          title="Select language preference"
+                          aria-label="Select language preference"
                         >
                           <option value="en" className="bg-gray-800 text-white">English</option>
                           <option value="hi" className="bg-gray-800 text-white">हिंदी (Hindi)</option>
@@ -761,6 +808,9 @@ export default function SettingsPage() {
                           value={profile.timezone}
                           onChange={(e) => updateProfile({ timezone: e.target.value })}
                           className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          title="Enter your timezone"
+                          aria-label="Enter your timezone"
+                          placeholder="e.g., Asia/Kolkata"
                         />
                       </div>
                     </div>
@@ -781,6 +831,9 @@ export default function SettingsPage() {
                             value={profile.energy_rate}
                             onChange={(e) => updateProfile({ energy_rate: parseFloat(e.target.value) || 0 })}
                             className="block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            title="Enter energy rate per kWh"
+                            aria-label="Enter energy rate per kWh"
+                            placeholder="e.g., 8.50"
                           />
                           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                             <span className="text-gray-400 sm:text-sm">₹</span>
@@ -794,6 +847,8 @@ export default function SettingsPage() {
                           value={profile.currency}
                           onChange={(e) => updateProfile({ currency: e.target.value })}
                           className="mt-1 block w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          title="Select currency preference"
+                          aria-label="Select currency preference"
                         >
                           <option value="INR" className="bg-gray-800 text-white">Indian Rupee (₹)</option>
                           <option value="USD" className="bg-gray-800 text-white">US Dollar ($)</option>

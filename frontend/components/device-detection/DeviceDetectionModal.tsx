@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { Camera, Upload, X, Zap, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { supabase } from '@/lib/supabase'
@@ -171,6 +172,8 @@ export default function DeviceDetectionModal({
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
+              aria-label="Close device detection modal"
+              title="Close device detection modal"
             >
               <X className="h-6 w-6" />
             </button>
@@ -215,18 +218,21 @@ export default function DeviceDetectionModal({
                   if (file) handleFileUpload(file)
                 }}
                 className="hidden"
+                aria-label="Upload image file for device detection"
+                title="Upload image file for device detection"
               />
               
               <input
                 ref={cameraInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) handleFileUpload(file)
                 }}
                 className="hidden"
+                aria-label="Take photo for device detection"
+                title="Take photo for device detection"
               />
 
               {isUploading && (
@@ -242,10 +248,13 @@ export default function DeviceDetectionModal({
           {uploadedImage && (
             <div className="space-y-4">
               <div className="relative">
-                <img
+                <Image
                   src={uploadedImage}
                   alt="Uploaded device"
+                  width={400}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg"
+                  unoptimized={true}
                 />
                 {isDetecting && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
