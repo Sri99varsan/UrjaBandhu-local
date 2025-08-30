@@ -156,16 +156,16 @@ export function InspiredHomepage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-6 pt-6">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-6 pt-6 overflow-hidden">
         <motion.div 
-          className="text-center max-w-4xl mx-auto"
+          className="text-center max-w-7xl mx-auto w-full"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           {/* Dynamic UrjaBandhu Text */}
           <motion.div 
-            className="mb-12"
+            className="mb-12 px-4"
             initial={{ opacity: 0, scale: 0.8, y: -30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ 
@@ -175,13 +175,14 @@ export function InspiredHomepage() {
               bounce: 0.4
             }}
           >
-            <div className="relative">
+            <div className="relative overflow-visible">
               {/* Background glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-emerald-500/20 to-green-600/20 blur-3xl rounded-full scale-150 animate-pulse" />
               
               {/* Main text */}
               <motion.h2 
-                className="relative text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-center tracking-tight"
+                className="relative text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black text-center tracking-tight leading-none whitespace-nowrap"
+                style={{ minHeight: '1.2em' }}
                 animate={{ 
                   textShadow: [
                     "0 0 20px rgba(34, 197, 94, 0.5)",
@@ -213,18 +214,6 @@ export function InspiredHomepage() {
                   |
                 </motion.span>
               </motion.h2>
-              
-              {/* Language indicator */}
-              <motion.div
-                className="mt-4 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-              >
-                <span className="text-sm md:text-base text-gray-400 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
-                  {languageTexts[currentLanguageIndex]?.language}
-                </span>
-              </motion.div>
             </div>
           </motion.div>
 
