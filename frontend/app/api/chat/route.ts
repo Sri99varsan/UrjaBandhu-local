@@ -6,7 +6,7 @@ function generateSmartMockupResponse(message: string): string {
   // Check for festival-related queries
   if (message.includes('festival') || message.includes('diwali') || message.includes('holi') || message.includes('christmas') || message.includes('ganesh') || message.includes('durga')) {
     const festivalSuggestions = getCurrentAndUpcomingFestivals()
-    
+
     if (festivalSuggestions.length > 0) {
       const nearestFestival = festivalSuggestions[0]
       return generateFestivalPrompt(nearestFestival)
@@ -35,9 +35,9 @@ Which festival would you like specific energy-saving advice for? 🌟`
     // Check if there are any current festivals to mention
     const festivalSuggestions = getCurrentAndUpcomingFestivals()
     const todaysEnergyTip = getTodaysEnergyTip()
-    
+
     let greeting = "🙏 Namaste! I'm UrjaBandhu, your personal energy advisor. I'm here to help you save money on your electricity bills and reduce your carbon footprint."
-    
+
     // Add festival greeting if there's an upcoming festival
     if (festivalSuggestions.length > 0) {
       const nearestFestival = festivalSuggestions[0]
@@ -49,14 +49,14 @@ Which festival would you like specific energy-saving advice for? 🌟`
         }
       }
     }
-    
+
     // Add today's special energy tip if available
     if (todaysEnergyTip) {
       greeting += `\n\n${todaysEnergyTip}`
     }
-    
+
     greeting += "\n\nHow can I assist you with your energy concerns today?"
-    
+
     return greeting
   }
 
