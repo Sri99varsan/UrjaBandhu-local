@@ -7,71 +7,85 @@ import { supabase } from '@/lib/supabase'
 function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [status, setStatus] = useState('Initializing...')
-  const [debugInfo, setDebugInfo] = useState<any>({})
+  const [status, setStatus] = useState('Processing authentication...')
 
   useEffect(() => {
     let mounted = true
 
-    const handleCallback = async () => {
+    const handleAuthCallback = async () => {
       try {
-        const code = searchParams.get('code')
+        // Get current session - Supabase may have already handled the OAuth callback
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        console.log('Callback - checking session:', { 
+          hasSession: !!session, 
+          user: session?.user?.email,
+          error: sessionError 
+        })
+
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          setStatus(`Session error: ${sessionError.message}`)
+          setTimeout(() => router.push('/auth'), 3000)
+          return
+        }
+
+        if (session?.user) {
+          setStatus(`Welcome ${session.user.email}! Redirecting...`)
+          console.log('User authenticated successfully:', session.user.email)
+          
+          // Wait a bit for auth state to propagate, then redirect
+          setTimeout(() => {
+            if (mounted) {
+              router.push('/ai-chatbot')
+            }
+          }, 1500)
+          return
+        }
+
+        // If no session, check for auth hash fragments (PKCE flow)
+        if (typeof window !== 'undefined' && window.location.hash) {
+          console.log('Found auth hash, processing...')
+          setStatus('Processing OAuth response...')
+          
+          // Supabase client will automatically handle the hash
+          // Just wait a moment and check session again
+          setTimeout(async () => {
+            const { data: { session: retrySession } } = await supabase.auth.getSession()
+            if (retrySession?.user) {
+              setStatus(`Welcome ${retrySession.user.email}! Redirecting...`)
+              setTimeout(() => router.push('/ai-chatbot'), 1000)
+            } else {
+              setStatus('Authentication failed - no session found')
+              setTimeout(() => router.push('/auth'), 3000)
+            }
+          }, 2000)
+          return
+        }
+
+        // Check URL parameters for error
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
-
-        console.log('Callback params:', { code: !!code, error, errorDescription })
-        setDebugInfo({ code: !!code, error, errorDescription })
-
+        
         if (error) {
           setStatus(`OAuth Error: ${error} - ${errorDescription}`)
+          console.error('OAuth error:', error, errorDescription)
           setTimeout(() => router.push('/auth'), 3000)
           return
         }
 
-        if (!code) {
-          setStatus('No authorization code found')
-          setTimeout(() => router.push('/auth'), 3000)
-          return
-        }
-
-        setStatus('Exchanging code for session...')
-        
-        // Exchange code for session
-        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-        
-        console.log('Exchange result:', { data: !!data, error: exchangeError })
-        
-        if (exchangeError) {
-          setStatus(`Session exchange failed: ${exchangeError.message}`)
-          console.error('Exchange error details:', exchangeError)
-          setTimeout(() => router.push('/auth'), 3000)
-          return
-        }
-
-        if (!data?.user) {
-          setStatus('No user in session data')
-          setTimeout(() => router.push('/auth'), 3000)
-          return
-        }
-
-        setStatus(`User authenticated: ${data.user.email}`)
-        console.log('User authenticated successfully:', data.user.email)
-        
-        // Give a moment for the auth state to update, then redirect
-        setTimeout(() => {
-          if (mounted) {
-            router.push('/ai-chatbot')
-          }
-        }, 1500)
+        // No session, no hash, no error - redirect to auth
+        setStatus('No authentication data found')
+        setTimeout(() => router.push('/auth'), 2000)
 
       } catch (err) {
-        console.error('Callback error:', err)
-        setStatus(`Unexpected error: ${err}`)
+        console.error('Auth callback error:', err)
+        setStatus(`Error: ${err}`)
         setTimeout(() => router.push('/auth'), 3000)
       }
     }
 
-    handleCallback()
+    handleAuthCallback()
 
     return () => { mounted = false }
   }, [router, searchParams])
@@ -85,13 +99,8 @@ function AuthCallbackContent() {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
-        <h3 className="text-sm font-medium text-gray-900 mb-2">Processing Authentication</h3>
-        <p className="text-sm text-gray-500 mb-4">{status}</p>
-        {debugInfo && (
-          <div className="text-xs text-left bg-gray-100 p-2 rounded">
-            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-          </div>
-        )}
+        <h3 className="text-sm font-medium text-gray-900 mb-2">Authentication</h3>
+        <p className="text-sm text-gray-500">{status}</p>
       </div>
     </div>
   )
