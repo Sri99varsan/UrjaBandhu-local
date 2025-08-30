@@ -16,7 +16,8 @@ import {
   Database,
   Bot,
   User,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { useState } from 'react'
@@ -29,6 +30,7 @@ import { cn } from '@/lib/utils'
 const navigation = [
   { name: 'AI Assistant', href: '/ai-chatbot', icon: Bot, badge: 'Chat' },
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Real-Time Monitor', href: '/real-time-monitoring', icon: Activity, badge: 'Live' },
   { name: 'Devices', href: '/devices', icon: Zap },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Advanced Analytics', href: '/analytics-advanced', icon: BarChart3, badge: 'Pro' },
