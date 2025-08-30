@@ -54,16 +54,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (!mounted) return
       
-      console.log('Auth state change:', event, session?.user?.email)
+      console.log('Auth state change:', event, session?.user?.email || 'no user')
       
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
 
-      // Create or update user profile
+      // Create or update user profile for sign in events
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('User signed in, creating/updating profile')
-        await createOrUpdateProfile(session.user)
+        try {
+          await createOrUpdateProfile(session.user)
+          console.log('Profile setup completed successfully')
+        } catch (profileError) {
+          console.error('Profile creation failed:', profileError)
+          // For OAuth users, we should still allow them to continue
+          // but log the error for debugging
+          if (session.user.app_metadata?.provider === 'google') {
+            console.warn('OAuth user profile creation failed, but allowing auth to continue')
+          }
+        }
       }
       
       // Handle sign out
@@ -76,9 +86,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Handle token refresh
       if (event === 'TOKEN_REFRESHED' && session) {
-        console.log('Token refreshed')
+        console.log('Token refreshed for user:', session.user?.email)
         setSession(session)
         setUser(session.user)
+      }
+
+      // Handle initial session load
+      if (event === 'INITIAL_SESSION' && session) {
+        console.log('Initial session loaded for user:', session.user?.email)
+        setSession(session)
+        setUser(session.user)
+        setLoading(false)
       }
     })
 
@@ -105,36 +123,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const createOrUpdateProfile = async (user: User) => {
     try {
+      console.log('Creating/updating profile for user:', user.id, user.email)
+      
+      // First, check if profile already exists
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking existing profile:', fetchError)
+      }
+
+      const profileData = {
+        id: user.id,
+        email: user.email!,
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        notification_preferences: {
+          email_alerts: true,
+          push_notifications: true,
+          energy_tips: true,
+          weekly_reports: true
+        },
+        theme: 'system',
+        language: 'en',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
+        energy_rate: 8.00,
+        currency: 'INR',
+        updated_at: new Date().toISOString(),
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email!,
-          full_name: user.user_metadata?.full_name || null,
-          avatar_url: user.user_metadata?.avatar_url || null,
-          notification_preferences: {
-            email_alerts: true,
-            push_notifications: true,
-            energy_tips: true,
-            weekly_reports: true
-          },
-          theme: 'system',
-          language: 'en',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
-          energy_rate: 8.00,
-          currency: 'INR',
-          updated_at: new Date().toISOString(),
+        .upsert(profileData, {
+          onConflict: 'id',
+          ignoreDuplicates: false
         })
 
       if (error) {
         console.error('Error creating/updating profile:', error)
-        // Don't throw here, as auth should still work even if profile creation fails
+        // Try a direct insert for new users
+        if (error.code === 'PGRST204' || !existingProfile) {
+          console.log('Attempting direct profile insert...')
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert(profileData)
+          
+          if (insertError && insertError.code !== '23505') { // Ignore duplicate key errors
+            console.error('Error inserting profile:', insertError)
+            throw insertError
+          } else if (!insertError) {
+            console.log('Profile inserted successfully via direct insert')
+          }
+        } else {
+          throw error
+        }
       } else {
         console.log('Profile created/updated successfully for user:', user.id)
       }
     } catch (error) {
       console.error('Error in createOrUpdateProfile:', error)
-      // Don't throw here, as auth should still work even if profile creation fails
+      // For critical OAuth flow, we should handle this more gracefully
+      // but still allow auth to continue for existing users
+      throw error
     }
   }
 
@@ -210,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Detect environment
     const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
     
-    // Use current origin for development, production URL for production
+    // Use current origin for redirect URL
     let redirectUrl: string
     
     if (typeof window !== 'undefined') {
@@ -234,12 +287,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             access_type: 'offline',
             prompt: 'consent',
           },
+          skipBrowserRedirect: false,
         },
       })
 
       if (error) {
         console.error('OAuth initiation error:', error)
-        throw error
+        throw new Error(`OAuth initialization failed: ${error.message}`)
       }
       
       console.log('OAuth initiated successfully')

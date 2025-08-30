@@ -157,14 +157,16 @@ function AuthCallbackContent() {
                 
                 if (!connections) {
                   // New user - show setup modal
-                  console.log('New user - showing setup')
+                  console.log('New user detected - no consumer connections found')
+                  setStatus('Welcome! Setting up your account...')
                   setShowConsumerSetup(true)
                   setIsLoading(false)
                   return
                 } else {
                   // Existing user - redirect immediately
-                  console.log('Existing user - redirecting to chatbot')
+                  console.log('Existing user found - redirecting to dashboard')
                   const baseUrl = window.location.origin
+                  setStatus('Redirecting to your dashboard...')
                   // Add a delay to ensure session is set (longer in production)
                   setTimeout(() => {
                     window.location.href = `${baseUrl}/ai-chatbot`
@@ -173,11 +175,13 @@ function AuthCallbackContent() {
                 }
               } catch (dbError) {
                 // Database check failed - handle based on environment
-                console.log('DB check failed:', dbError)
+                console.error('Consumer connections check failed:', dbError)
+                console.log('User ID:', data.user.id)
+                console.log('Error details:', JSON.stringify(dbError))
                 
                 if (isProduction) {
                   // In production, assume new user and show setup after longer wait
-                  console.log('Production DB check failed - showing setup after delay')
+                  console.log('Production DB check failed - assuming new user, showing setup after delay')
                   setStatus('Setting up new account...')
                   setTimeout(() => {
                     setShowConsumerSetup(true)
@@ -186,6 +190,7 @@ function AuthCallbackContent() {
                 } else {
                   // In development, show setup immediately
                   console.log('Development DB check failed - showing setup immediately')
+                  setStatus('Setting up your account...')
                   setShowConsumerSetup(true)
                   setIsLoading(false)
                 }
@@ -208,6 +213,9 @@ function AuthCallbackContent() {
 
         // No code - check existing session quickly
         try {
+          console.log('No OAuth code found - checking for existing session')
+          setStatus('Checking authentication status...')
+          
           const sessionCheck = supabase.auth.getSession()
           const sessionTimeout = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Session timeout')), 3000)
@@ -219,19 +227,46 @@ function AuthCallbackContent() {
           ]) as any
           
           if (sessionError || !sessionData.session) {
-            console.log('No session found - redirecting to auth')
-            router.push('/auth')
+            console.log('No session found - redirecting to auth page')
+            setError('No authentication session found. Please sign in again.')
+            setTimeout(() => router.push('/auth'), 2000)
             return
           }
 
-          // Has session - redirect to chatbot immediately
-          console.log('Existing session found - redirecting')
-          const baseUrl = window.location.origin
-          window.location.href = `${baseUrl}/ai-chatbot`
+          // Has session - check if user needs setup or can go to dashboard
+          console.log('Existing session found for user:', sessionData.session.user?.email)
+          setCurrentUserId(sessionData.session.user.id)
+          
+          try {
+            const { data: connections } = await supabase
+              .from('consumer_connections')
+              .select('id')
+              .eq('user_id', sessionData.session.user.id)
+              .limit(1)
+              .single()
+            
+            if (!connections) {
+              console.log('Existing user but no connections - showing setup')
+              setShowConsumerSetup(true)
+              setIsLoading(false)
+            } else {
+              console.log('Existing user with connections - redirecting to dashboard')
+              const baseUrl = window.location.origin
+              setStatus('Redirecting to your dashboard...')
+              setTimeout(() => {
+                window.location.href = `${baseUrl}/ai-chatbot`
+              }, 1000)
+            }
+          } catch (dbError) {
+            console.log('Database check failed for existing session - showing setup')
+            setShowConsumerSetup(true)
+            setIsLoading(false)
+          }
           
         } catch (error) {
-          console.log('Session check failed - redirecting to auth')
-          router.push('/auth')
+          console.error('Session check failed:', error)
+          setError('Failed to verify authentication. Please sign in again.')
+          setTimeout(() => router.push('/auth'), 2000)
         }
 
       } catch (error) {
