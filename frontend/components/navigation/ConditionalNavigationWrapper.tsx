@@ -10,8 +10,8 @@ interface ConditionalNavigationWrapperProps {
 export default function ConditionalNavigationWrapper({ children }: ConditionalNavigationWrapperProps) {
   const pathname = usePathname()
   
-  // For homepage, features, about, auth, and setup pages, render children directly without any navigation
-  if (pathname === '/' || pathname === '/features' || pathname === '/about' || pathname === '/setup' || pathname?.startsWith('/auth')) {
+  // For homepage, features, about, auth, setup, and signout pages, render children directly without any navigation
+  if (pathname === '/' || pathname === '/features' || pathname === '/about' || pathname === '/setup' || pathname === '/signout' || pathname?.startsWith('/auth')) {
     return <>{children}</>
   }
   

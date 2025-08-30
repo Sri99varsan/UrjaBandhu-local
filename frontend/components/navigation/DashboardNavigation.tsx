@@ -37,18 +37,18 @@ export default function DashboardNavigation() {
       setIsMobileMenuOpen(false)
       
       await signOut()
-      console.log('DashboardNavigation: signOut completed, redirecting to /')
+      console.log('DashboardNavigation: signOut completed, redirecting to /signout')
       
-      // Force a hard redirect to ensure clean state
+      // Force a hard redirect to signout page
       setTimeout(() => {
-        window.location.href = '/'
+        window.location.href = '/signout'
       }, 100)
       
     } catch (error) {
       console.error('DashboardNavigation: signOut error:', error)
       // Even if sign out fails, redirect anyway for security
       setTimeout(() => {
-        window.location.href = '/'
+        window.location.href = '/signout'
       }, 100)
     } finally {
       setIsSigningOut(false)

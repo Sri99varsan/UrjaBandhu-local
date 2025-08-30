@@ -29,8 +29,8 @@ export default function NavigationWrapper({ children }: NavigationWrapperProps) 
     return () => clearTimeout(timer)
   }, [loading])
 
-  // ABSOLUTELY NO NAVIGATION FOR HOMEPAGE, FEATURES AND ABOUT - REGARDLESS OF USER STATE
-  if (pathname === '/' || pathname === '/features' || pathname === '/about') {
+  // ABSOLUTELY NO NAVIGATION FOR HOMEPAGE, FEATURES, ABOUT AND SIGNOUT - REGARDLESS OF USER STATE
+  if (pathname === '/' || pathname === '/features' || pathname === '/about' || pathname === '/signout') {
     return <>{children}</>
   }
   
