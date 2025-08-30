@@ -207,20 +207,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    // Use current origin for development, fallback to env var or production
-    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : null
-    const redirectUrl = currentOrigin || process.env.NEXT_PUBLIC_APP_URL || 'https://urjabandhu.vercel.app'
+    // Detect environment
+    const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
     
+    // Use current origin for development, production URL for production
+    let redirectUrl: string
+    
+    if (typeof window !== 'undefined') {
+      redirectUrl = window.location.origin
+    } else if (isProduction) {
+      // Fallback to production URLs
+      redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://urjabandhu.vercel.app'
+    } else {
+      redirectUrl = 'http://localhost:3000'
+    }
+    
+    console.log('OAuth Environment:', isProduction ? 'Production' : 'Development')
     console.log('OAuth redirect URL:', `${redirectUrl}/auth/callback`)
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${redirectUrl}/auth/callback`,
-      },
-    })
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${redirectUrl}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
 
-    if (error) {
+      if (error) {
+        console.error('OAuth initiation error:', error)
+        throw error
+      }
+      
+      console.log('OAuth initiated successfully')
+    } catch (error) {
+      console.error('SignInWithGoogle failed:', error)
       throw error
     }
   }

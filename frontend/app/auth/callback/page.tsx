@@ -43,29 +43,84 @@ function AuthCallbackContent() {
           console.log('Processing OAuth code...')
           setStatus('Exchanging authorization code...')
           
+          // Add production environment detection
+          const isProduction = process.env.NODE_ENV === 'production' || window.location.hostname !== 'localhost'
+          console.log('Environment detected:', isProduction ? 'Production' : 'Development')
+          
           // Set a maximum timeout for the entire process
           const overallTimeout = setTimeout(() => {
             console.log('Overall process timeout - redirecting anyway')
             // Use environment-based URL
             const baseUrl = window.location.origin
             window.location.href = `${baseUrl}/ai-chatbot`
-          }, 8000) // Increased to 8 seconds
+          }, isProduction ? 15000 : 8000) // Longer timeout for production
           
           try {
-            // Exchange code for session with timeout
-            const exchangePromise = supabase.auth.exchangeCodeForSession(code)
-            const exchangeTimeout = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Exchange timeout')), 5000) // Increased timeout
-            )
+            // Add retry logic for production
+            let retryCount = 0
+            const maxRetries = isProduction ? 3 : 1
+            let exchangeData = null
+            let exchangeError = null
             
-            const { data, error: exchangeError } = await Promise.race([
-              exchangePromise, 
-              exchangeTimeout
-            ]) as any
+            while (retryCount < maxRetries && !exchangeData) {
+              if (retryCount > 0) {
+                console.log(`Retry attempt ${retryCount} for session exchange...`)
+                setStatus(`Retrying authentication... (${retryCount}/${maxRetries})`)
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)) // Progressive delay
+              }
+              
+              try {
+                // Exchange code for session with timeout
+                const exchangePromise = supabase.auth.exchangeCodeForSession(code)
+                const exchangeTimeout = new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Exchange timeout')), isProduction ? 10000 : 5000)
+                )
+                
+                const result = await Promise.race([
+                  exchangePromise, 
+                  exchangeTimeout
+                ]) as any
+                
+                exchangeData = result.data
+                exchangeError = result.error
+                
+                if (exchangeError) {
+                  console.error(`Exchange attempt ${retryCount + 1} failed:`, exchangeError)
+                  retryCount++
+                } else {
+                  break
+                }
+              } catch (error) {
+                console.error(`Exchange attempt ${retryCount + 1} threw error:`, error)
+                exchangeError = error
+                retryCount++
+              }
+            }
             
-            if (exchangeError) {
-              console.error('Session exchange failed:', exchangeError)
+            const { data, error: finalExchangeError } = { data: exchangeData, error: exchangeError }
+            
+            if (finalExchangeError) {
+              console.error('All session exchange attempts failed:', finalExchangeError)
               clearTimeout(overallTimeout)
+              
+              // In production, try direct redirect with session check
+              if (isProduction) {
+                console.log('Production fallback: Checking for existing session...')
+                setStatus('Checking authentication status...')
+                
+                try {
+                  const { data: sessionData } = await supabase.auth.getSession()
+                  if (sessionData.session) {
+                    console.log('Found existing session in production fallback')
+                    const baseUrl = window.location.origin
+                    window.location.href = `${baseUrl}/ai-chatbot`
+                    return
+                  }
+                } catch (sessionError) {
+                  console.error('Session check also failed:', sessionError)
+                }
+              }
+              
               setError('Failed to complete authentication')
               setTimeout(() => router.push('/auth?error=exchange_failed'), 2000)
               return
@@ -79,10 +134,10 @@ function AuthCallbackContent() {
               // Store user ID
               setCurrentUserId(data.user.id)
               
-              // Give the session time to propagate
-              await new Promise(resolve => setTimeout(resolve, 500))
+              // Give the session time to propagate (longer in production)
+              await new Promise(resolve => setTimeout(resolve, isProduction ? 1500 : 500))
               
-              // Quick connection check with very short timeout
+              // Quick connection check with production-aware timeout
               try {
                 const connectionCheck = supabase
                   .from('consumer_connections')
@@ -92,13 +147,13 @@ function AuthCallbackContent() {
                   .single()
                 
                 const quickTimeout = new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Quick timeout')), 2000) // Increased timeout
+                  setTimeout(() => reject(new Error('DB timeout')), isProduction ? 5000 : 2000)
                 )
                 
                 const { data: connections } = await Promise.race([
                   connectionCheck, 
                   quickTimeout
-                ])
+                ]) as any
                 
                 if (!connections) {
                   // New user - show setup modal
@@ -110,17 +165,30 @@ function AuthCallbackContent() {
                   // Existing user - redirect immediately
                   console.log('Existing user - redirecting to chatbot')
                   const baseUrl = window.location.origin
-                  // Add a small delay to ensure session is set
+                  // Add a delay to ensure session is set (longer in production)
                   setTimeout(() => {
                     window.location.href = `${baseUrl}/ai-chatbot`
-                  }, 1000)
+                  }, isProduction ? 2000 : 1000)
                   return
                 }
               } catch (dbError) {
-                // Database check failed - assume new user and show setup
-                console.log('DB check failed - showing setup for safety')
-                setShowConsumerSetup(true)
-                setIsLoading(false)
+                // Database check failed - handle based on environment
+                console.log('DB check failed:', dbError)
+                
+                if (isProduction) {
+                  // In production, assume new user and show setup after longer wait
+                  console.log('Production DB check failed - showing setup after delay')
+                  setStatus('Setting up new account...')
+                  setTimeout(() => {
+                    setShowConsumerSetup(true)
+                    setIsLoading(false)
+                  }, 2000)
+                } else {
+                  // In development, show setup immediately
+                  console.log('Development DB check failed - showing setup immediately')
+                  setShowConsumerSetup(true)
+                  setIsLoading(false)
+                }
                 return
               }
             } else {

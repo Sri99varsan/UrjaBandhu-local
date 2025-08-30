@@ -11,6 +11,12 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Supabase environment variables missing:', {
+      url: !!supabaseUrl,
+      key: !!supabaseAnonKey,
+      nodeEnv: process.env.NODE_ENV
+    })
+    
     throw new Error(
       'Missing Supabase environment variables. Please check your .env.local file:\n' +
       `NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? 'Set' : 'Missing'}\n` +
@@ -18,7 +24,39 @@ export function createClient() {
     )
   }
 
-  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  // Production configuration improvements
+  const isProduction = process.env.NODE_ENV === 'production'
+  
+  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      // Production-optimized settings
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      // Longer timeout for production networks
+      storageKey: isProduction ? 'urjabandhu-auth' : 'sb-auth-token',
+    },
+    // Add retry logic for production
+    global: {
+      fetch: (url, options = {}) => {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), isProduction ? 15000 : 10000)
+        
+        return fetch(url, {
+          ...options,
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId))
+      },
+    },
+  })
+  
+  console.log('Supabase client created:', {
+    environment: isProduction ? 'production' : 'development',
+    url: supabaseUrl,
+    hasKey: !!supabaseAnonKey
+  })
+  
   return supabaseClient
 }
 
