@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase  const handleConsumerSetupSkip = () => {
-    setShowConsumerSetup(false)
-    setTimeout(() => {
-      window.location.href = '/ai-chatbot'
-    }, 500)
-  }ort ConsumerSetupModal from '@/components/auth/ConsumerSetupModal'
+import { supabase } from '@/lib/supabase'
+import ConsumerSetupModal from '@/components/auth/ConsumerSetupModal'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
