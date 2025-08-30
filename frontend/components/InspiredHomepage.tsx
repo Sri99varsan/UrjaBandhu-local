@@ -43,12 +43,12 @@ export function InspiredHomepage() {
       if (charIndex < currentText.length) {
         setTypedText(currentText.slice(0, charIndex + 1))
         charIndex++
-        typingTimer = setTimeout(typeText, 120)
+        typingTimer = setTimeout(typeText, 200) // Slower typing: 120ms -> 200ms
       } else {
-        // Wait before erasing
+        // Wait before erasing - longer display time
         languageTimer = setTimeout(() => {
           eraseText()
-        }, 2000)
+        }, 3500) // Longer display: 2000ms -> 3500ms
       }
     }
     
@@ -58,12 +58,12 @@ export function InspiredHomepage() {
       if (charIndex > 0) {
         setTypedText(currentText.slice(0, charIndex - 1))
         charIndex--
-        typingTimer = setTimeout(eraseText, 80)
+        typingTimer = setTimeout(eraseText, 120) // Slower erasing: 80ms -> 120ms
       } else {
         // Move to next language
         currentIndex = (currentIndex + 1) % languageTexts.length
         setCurrentLanguageIndex(currentIndex)
-        setTimeout(typeText, 500)
+        setTimeout(typeText, 800) // Longer pause between languages: 500ms -> 800ms
       }
     }
     
@@ -156,7 +156,7 @@ export function InspiredHomepage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-6 pt-6 overflow-hidden">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-4 py-12 overflow-visible">
         <motion.div 
           className="text-center max-w-7xl mx-auto w-full"
           initial={{ opacity: 0, y: 20 }}
@@ -165,7 +165,7 @@ export function InspiredHomepage() {
         >
           {/* Dynamic UrjaBandhu Text */}
           <motion.div 
-            className="mb-12 px-4"
+            className="mb-16 py-8"
             initial={{ opacity: 0, scale: 0.8, y: -30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ 
@@ -175,23 +175,23 @@ export function InspiredHomepage() {
               bounce: 0.4
             }}
           >
-            <div className="relative overflow-visible">
-              {/* Background glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-emerald-500/20 to-green-600/20 blur-3xl rounded-full scale-150 animate-pulse" />
+            <div className="relative overflow-visible min-h-[200px]">
+              {/* Enhanced Background glow effect */}
+              <div className="absolute inset-0 -inset-y-16 -inset-x-8 bg-gradient-to-r from-green-400/15 via-emerald-500/25 to-green-600/15 blur-[60px] rounded-full animate-pulse" />
+              <div className="absolute inset-0 -inset-y-8 -inset-x-4 bg-gradient-to-r from-green-500/10 via-emerald-400/20 to-green-500/10 blur-[40px] rounded-full animate-pulse [animation-delay:1s]" />
               
               {/* Main text */}
               <motion.h2 
-                className="relative text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black text-center tracking-tight leading-none whitespace-nowrap"
-                style={{ minHeight: '1.2em' }}
+                className="relative text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-black text-center tracking-tight leading-[1.1] py-4 min-h-[1.5em] overflow-visible"
                 animate={{ 
                   textShadow: [
-                    "0 0 20px rgba(34, 197, 94, 0.5)",
-                    "0 0 40px rgba(34, 197, 94, 0.8)",
-                    "0 0 20px rgba(34, 197, 94, 0.5)"
+                    "0 0 30px rgba(34, 197, 94, 0.4)",
+                    "0 0 60px rgba(34, 197, 94, 0.7)",
+                    "0 0 30px rgba(34, 197, 94, 0.4)"
                   ]
                 }}
                 transition={{ 
-                  duration: 2,
+                  duration: 3,
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
@@ -200,13 +200,13 @@ export function InspiredHomepage() {
                   {typedText}
                 </span>
                 <motion.span 
-                  className="text-green-400 ml-1"
+                  className="text-green-400 ml-2"
                   animate={{ 
                     opacity: [1, 0, 1],
                     scale: [1, 1.2, 1]
                   }}
                   transition={{ 
-                    duration: 1,
+                    duration: 1.2,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
@@ -243,12 +243,12 @@ export function InspiredHomepage() {
                 isFocused ? 'border-green-500/50 shadow-green-500/20' : 'border-white/20'
               }`}
             >
-              {/* Glow effect */}
+              {/* Enhanced Glow effect - properly aligned */}
               {isFocused && (
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl -z-10" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-lg" />
               )}
               
-              <div className="flex items-center gap-4 px-6 py-4">
+              <div className="relative flex items-center gap-4 px-6 py-4 bg-white/5 rounded-xl backdrop-blur-sm">
                 <Search className={`h-5 w-5 transition-colors ${isFocused ? 'text-green-400' : 'text-gray-400'}`} />
                 <Input
                   type="text"
