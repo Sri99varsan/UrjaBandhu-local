@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import NavigationWrapper from './NavigationWrapper'
 
 interface ConditionalNavigationWrapperProps {
   children: React.ReactNode
@@ -9,12 +10,15 @@ interface ConditionalNavigationWrapperProps {
 export default function ConditionalNavigationWrapper({ children }: ConditionalNavigationWrapperProps) {
   const pathname = usePathname()
   
-  // For homepage and most pages, render children directly without any navigation since we removed OAuth
-  // Only specific authenticated pages would need navigation (but we're bypassing auth)
-  if (pathname === '/' || pathname === '/ai-chatbot' || pathname === '/features' || pathname === '/about' || pathname === '/setup' || pathname === '/signout' || pathname?.startsWith('/auth')) {
+  // Pages that should have no navigation (homepage, auth, about, features)
+  if (pathname === '/' || pathname === '/features' || pathname === '/about' || pathname === '/signout' || pathname?.startsWith('/auth')) {
     return <>{children}</>
   }
   
-  // For other pages, still render without navigation for now since we removed auth
-  return <>{children}</>
+  // All other pages get full navigation with sidebar
+  return (
+    <NavigationWrapper>
+      {children}
+    </NavigationWrapper>
+  )
 }

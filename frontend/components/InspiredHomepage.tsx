@@ -16,11 +16,11 @@ export function InspiredHomepage() {
 
   const handleSearch = () => {
     if (query.trim()) {
-      // Store the query in localStorage to pass to chatbot after login
+      // Store the query in localStorage to pass to chatbot
       if (typeof window !== 'undefined') {
         localStorage.setItem('pendingQuery', query.trim())
       }
-      router.push('/auth?redirect=ai-chatbot&hasQuery=true')
+      router.push('/ai-chatbot')
     }
   }
 
