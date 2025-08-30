@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
+import { theme } from '@/lib/theme'
 import {
   LineChart,
   Line,

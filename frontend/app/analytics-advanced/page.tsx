@@ -36,6 +36,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { advancedAnalyticsService, TimeSeriesData, ConsumptionPrediction, UsagePattern, DeviceAnalytics, EnergyInsight } from '@/lib/analytics-advanced'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
+import { theme } from '@/lib/theme'
 
 export default function AdvancedAnalyticsPage() {
   const { user } = useAuth()
@@ -139,12 +140,12 @@ export default function AdvancedAnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black relative overflow-hidden">
+      <div className={theme.background.base}>
         {/* Background effects */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-          <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
+          <div className={theme.background.grid} />
+          <div className={theme.background.orbs.topLeft} />
+          <div className={theme.background.orbs.bottomRight} />
         </div>
         
         <div className="relative z-10 flex items-center justify-center min-h-screen">
@@ -158,20 +159,20 @@ export default function AdvancedAnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className={theme.background.base}>
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
+        <div className={theme.background.grid} />
+        <div className={theme.background.orbs.topLeft} />
+        <div className={theme.background.orbs.bottomRight} />
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Advanced Analytics</h1>
-            <p className="text-gray-300 mt-2">
+            <h1 className={`text-3xl font-bold ${theme.text.primary}`}>Advanced Analytics</h1>
+            <p className={`${theme.text.secondary} mt-2`}>
               Comprehensive insights, predictions, and optimization recommendations
             </p>
           </div>
@@ -179,7 +180,7 @@ export default function AdvancedAnalyticsPage() {
             <select 
               value={timeRange} 
               onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d' | '1y')}
-              className="px-4 py-2 border border-white/10 rounded-lg bg-gray-800/50 text-white backdrop-blur-sm"
+              className={`px-4 py-2 ${theme.inputs.default}`}
               title="Select time range for analytics"
               aria-label="Select time range for analytics"
             >
@@ -190,7 +191,7 @@ export default function AdvancedAnalyticsPage() {
             </select>
             <button 
               onClick={loadAdvancedAnalytics} 
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold rounded-lg shadow-lg shadow-green-500/25 transition-all duration-200"
+              className={`flex items-center gap-2 px-4 py-2 ${theme.buttons.primary}`}
             >
               <RefreshCw className="h-4 w-4" />
               Refresh
@@ -200,56 +201,56 @@ export default function AdvancedAnalyticsPage() {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gray-800/30 backdrop-blur-xl p-6 rounded-xl border border-white/20 hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300 shadow-2xl hover:shadow-green-500/10">
+          <div className={`${theme.cards.glass} ${theme.cards.interactive} hover:shadow-green-500/10 p-6`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-300">Total Consumption</p>
-                <p className="text-2xl font-bold text-white">
+                <p className={`text-sm font-medium ${theme.text.secondary}`}>Total Consumption</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>
                   {timeSeriesData.reduce((sum, d) => sum + d.consumption, 0).toFixed(1)} kWh
                 </p>
               </div>
               <Zap className="h-8 w-8 text-green-400" />
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className={`text-xs ${theme.text.muted} mt-2`}>
               {timeRange === '7d' ? 'Last 7 days' : timeRange === '30d' ? 'Last 30 days' : timeRange === '90d' ? 'Last 90 days' : 'Last year'}
             </p>
           </div>
 
-          <div className="bg-gray-800/30 backdrop-blur-xl p-6 rounded-xl border border-white/20 hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300 shadow-2xl hover:shadow-green-500/10">
+          <div className={`${theme.cards.glass} ${theme.cards.interactive} hover:shadow-green-500/10 p-6`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-300">Average Daily</p>
-                <p className="text-2xl font-bold text-white">
+                <p className={`text-sm font-medium ${theme.text.secondary}`}>Average Daily</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>
                   {timeSeriesData.length > 0 ? (timeSeriesData.reduce((sum, d) => sum + d.consumption, 0) / timeSeriesData.length).toFixed(1) : '0'} kWh
                 </p>
               </div>
               <BarChart3 className="h-8 w-8 text-green-400" />
             </div>
-            <p className="text-xs text-gray-400 mt-2">Per day average</p>
+            <p className={`text-xs ${theme.text.muted} mt-2`}>Per day average</p>
           </div>
 
-          <div className="bg-gray-800/30 backdrop-blur-xl p-6 rounded-xl border border-white/20 hover:bg-gray-800/40 hover:border-red-500/40 transition-all duration-300 shadow-2xl hover:shadow-red-400/10">
+          <div className={`${theme.cards.glass} ${theme.cards.interactive} hover:shadow-red-400/10 p-6`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-300">Peak Demand</p>
-                <p className="text-2xl font-bold text-white">
+                <p className={`text-sm font-medium ${theme.text.secondary}`}>Peak Demand</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>
                   {Math.max(...timeSeriesData.map(d => d.peak_demand), 0).toFixed(1)} kW
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-red-400" />
             </div>
-            <p className="text-xs text-gray-400 mt-2">Maximum recorded</p>
+            <p className={`text-xs ${theme.text.muted} mt-2`}>Maximum recorded</p>
           </div>
 
-          <div className="bg-gray-800/30 backdrop-blur-xl p-6 rounded-xl border border-white/20 hover:bg-gray-800/40 hover:border-yellow-500/40 transition-all duration-300 shadow-2xl hover:shadow-yellow-400/10">
+          <div className={`${theme.cards.glass} ${theme.cards.interactive} hover:shadow-yellow-400/10 p-6`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-300">Active Insights</p>
-                <p className="text-2xl font-bold text-white">{insights.length}</p>
+                <p className={`text-sm font-medium ${theme.text.secondary}`}>Active Insights</p>
+                <p className={`text-2xl font-bold ${theme.text.primary}`}>{insights.length}</p>
               </div>
               <Lightbulb className="h-8 w-8 text-yellow-400" />
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className={`text-xs ${theme.text.muted} mt-2`}>
               {insights.filter(i => i.action_required).length} require action
             </p>
           </div>
@@ -257,13 +258,13 @@ export default function AdvancedAnalyticsPage() {
 
         {/* Insights Section */}
         {insights.length > 0 && (
-          <div className="bg-gray-800/30 backdrop-blur-xl rounded-xl border border-white/20 shadow-2xl hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300">
+          <div className={`${theme.cards.glass} ${theme.cards.interactive}`}>
             <div className="p-6 border-b border-white/20 bg-gray-700/20 backdrop-blur-sm rounded-t-xl">
               <div className="flex items-center gap-2">
                 <Lightbulb className="h-6 w-6 text-yellow-400" />
-                <h2 className="text-xl font-semibold text-white">AI-Powered Insights</h2>
+                <h2 className={`text-xl font-semibold ${theme.text.primary}`}>AI-Powered Insights</h2>
               </div>
-              <p className="text-gray-300 mt-1">
+              <p className={`${theme.text.secondary} mt-1`}>
                 Intelligent recommendations based on your energy usage patterns
               </p>
             </div>
@@ -274,20 +275,20 @@ export default function AdvancedAnalyticsPage() {
                     <div className="flex items-start gap-3 flex-1">
                       {getInsightIcon(insight.type)}
                       <div className="flex-1">
-                        <h3 className="font-medium text-white">{insight.title}</h3>
-                        <p className="text-sm mt-1 text-gray-300">{insight.description}</p>
+                        <h3 className={`font-medium ${theme.text.primary}`}>{insight.title}</h3>
+                        <p className={`text-sm mt-1 ${theme.text.secondary}`}>{insight.description}</p>
                         <div className="mt-3 flex items-center gap-4">
                           <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-600/50 backdrop-blur-sm text-gray-200 rounded-full">
                             {insight.type}
                           </span>
-                          <span className="text-sm font-medium text-green-400">
+                          <span className={`text-sm font-medium ${theme.text.accent}`}>
                             ₹{insight.savings_potential.toFixed(0)} potential savings
                           </span>
                         </div>
                         {insight.recommendations.length > 0 && (
                           <div className="mt-3">
-                            <p className="text-sm font-medium mb-2 text-white">Recommendations:</p>
-                            <ul className="text-sm space-y-1 text-gray-300">
+                            <p className={`text-sm font-medium mb-2 ${theme.text.primary}`}>Recommendations:</p>
+                            <ul className={`text-sm space-y-1 ${theme.text.secondary}`}>
                               {insight.recommendations.map((rec, index) => (
                                 <li key={index} className="flex items-start gap-2">
                                   <span className="text-green-400 mt-1">•</span>
@@ -312,7 +313,7 @@ export default function AdvancedAnalyticsPage() {
         )}
 
         {/* Analytics Tabs */}
-        <div className="bg-gray-800/30 backdrop-blur-xl rounded-xl border border-white/20 shadow-2xl hover:bg-gray-800/40 hover:border-green-500/40 transition-all duration-300">
+        <div className={`${theme.cards.glass} ${theme.cards.interactive}`}>
           <div className="border-b border-white/20 bg-gray-700/20 backdrop-blur-sm rounded-t-xl">
             <nav className="flex space-x-8 px-6" aria-label="Tabs">
               {[
@@ -327,7 +328,7 @@ export default function AdvancedAnalyticsPage() {
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                     activeTab === tab.id
                       ? 'border-green-400 text-green-400'
-                      : 'border-transparent text-gray-400 hover:text-white hover:border-white/30'
+                      : `border-transparent ${theme.text.muted} hover:text-white hover:border-white/30`
                   }`}
                 >
                   {tab.name}
@@ -342,7 +343,7 @@ export default function AdvancedAnalyticsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Consumption Trends */}
                   <div className="bg-gray-700/20 backdrop-blur-xl p-4 rounded-xl border border-white/10 hover:bg-gray-700/30 transition-all duration-200 shadow-lg">
-                    <h3 className="text-lg font-medium text-white mb-4">Consumption Trends</h3>
+                    <h3 className={`text-lg font-medium ${theme.text.primary} mb-4`}>Consumption Trends</h3>
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
@@ -375,7 +376,7 @@ export default function AdvancedAnalyticsPage() {
 
                   {/* Cost Analysis */}
                   <div className="bg-gray-700/20 backdrop-blur-xl p-4 rounded-xl border border-white/10 hover:bg-gray-700/30 transition-all duration-200 shadow-lg">
-                    <h3 className="text-lg font-medium text-white mb-4">Cost Analysis</h3>
+                    <h3 className={`text-lg font-medium ${theme.text.primary} mb-4`}>Cost Analysis</h3>
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData}>
