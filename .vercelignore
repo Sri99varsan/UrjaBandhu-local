@@ -1,0 +1,9 @@
+﻿backend/
+ml-models/
+sql/
+docs/
+scripts/
+config/
+.git/
+.vscode/
+supabase/
