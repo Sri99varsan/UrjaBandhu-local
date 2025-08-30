@@ -1,18 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Search, BarChart3, Brain, Settings } from 'lucide-react'
-import { Logo } from '@/components/ui/Logo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export function InspiredHomepage() {
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [typedText, setTypedText] = useState('')
   const router = useRouter()
+
+  const fullText = "UrjaBandhu"
+
+  useEffect(() => {
+    // Ensure component is fully mounted and ready
+    setIsLoaded(true)
+    
+    // Typing effect
+    let index = 0
+    const timer = setInterval(() => {
+      if (index < fullText.length) {
+        setTypedText(fullText.slice(0, index + 1))
+        index++
+      } else {
+        clearInterval(timer)
+      }
+    }, 150) // Adjust speed here
+
+    return () => clearInterval(timer)
+  }, [])
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -30,8 +51,52 @@ export function InspiredHomepage() {
     }
   }
 
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Top Navigation Header */}
+      <motion.nav 
+        className="relative z-50 p-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="flex items-center justify-end max-w-7xl mx-auto">
+          {/* Navigation Buttons */}
+          <motion.div 
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Link href="/about">
+              <Button className="bg-white/5 hover:bg-white/10 border border-white/20 text-gray-300 hover:text-white px-4 py-2 rounded-lg backdrop-blur-md transition-all duration-300 text-sm hover:border-white/30">
+                About
+              </Button>
+            </Link>
+            
+            <Link href="/features">
+              <Button className="bg-white/5 hover:bg-white/10 border border-white/20 text-gray-300 hover:text-white px-4 py-2 rounded-lg backdrop-blur-md transition-all duration-300 text-sm hover:border-white/30">
+                Features
+              </Button>
+            </Link>
+            
+            <Link href="/ai-chatbot">
+              <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black px-6 py-2 rounded-lg font-semibold transition-all duration-300 text-sm">
+                Get Started
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
+      </motion.nav>
+
       {/* Animated Background */}
       <div className="absolute inset-0">
         {/* Grid Pattern */}
@@ -44,13 +109,28 @@ export function InspiredHomepage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-screen px-6">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-6 pt-6">
         <motion.div 
           className="text-center max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
+          {/* Dynamic UrjaBandhu Text */}
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center">
+              <span className="bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 bg-clip-text text-transparent">
+                {typedText}
+              </span>
+              <span className="animate-pulse text-green-400">|</span>
+            </h2>
+          </motion.div>
+
           {/* Main Heading */}
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
             Smarter energy{' '}
@@ -126,32 +206,6 @@ export function InspiredHomepage() {
                 {suggestion}
               </button>
             ))}
-          </motion.div>
-
-          {/* Quick Navigation Buttons - More Prominent */}
-          <motion.div 
-            className="flex flex-wrap items-center justify-center gap-4 mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-          >
-            <Link href="/about">
-              <Button className="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/30 text-blue-300 hover:text-blue-200 px-6 py-3 rounded-xl backdrop-blur-md transition-all duration-300 shadow-lg shadow-blue-500/10">
-                About Us
-              </Button>
-            </Link>
-            
-            <Link href="/features">
-              <Button className="bg-purple-600/20 hover:bg-purple-600/30 border border-purple-400/30 text-purple-300 hover:text-purple-200 px-6 py-3 rounded-xl backdrop-blur-md transition-all duration-300 shadow-lg shadow-purple-500/10">
-                Features
-              </Button>
-            </Link>
-            
-            <Link href="/ai-chatbot">
-              <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-green-500/25">
-                Get Started
-              </Button>
-            </Link>
           </motion.div>
         </motion.div>
       </div>
