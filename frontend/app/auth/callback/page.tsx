@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import ConsumerSetupModal from '@/components/auth/ConsumerSetupModal'
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
@@ -19,8 +19,9 @@ export default function AuthCallbackPage() {
       try {
         setStatus('Processing authentication...')
         
-        // Check if this is a setup request
+        // Check if this is a setup request or if we have an OAuth code
         const setupParam = searchParams.get('setup')
+        const code = searchParams.get('code')
         const errorParam = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
 
@@ -35,7 +36,63 @@ export default function AuthCallbackPage() {
           return
         }
 
-        // Get current session (should be set by route.ts)
+        // If we have a code, exchange it for a session first
+        if (code) {
+          setStatus('Exchanging code for session...')
+          console.log('OAuth code received, exchanging for session...')
+          
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (exchangeError) {
+            console.error('Error exchanging code for session:', exchangeError)
+            setError('Failed to complete authentication')
+            setStatus('Session exchange failed')
+            setTimeout(() => {
+              router.push('/auth?error=session_error')
+            }, 2000)
+            return
+          }
+
+          if (data.session && data.user) {
+            console.log('OAuth successful for user:', data.user.email)
+            setStatus('Authentication successful! Checking setup...')
+            
+            // Check if user has any consumer connections
+            const { data: connections, error: connectionsError } = await supabase
+              .from('consumer_connections')
+              .select('id')
+              .eq('user_id', data.user.id)
+              .limit(1)
+            
+            if (connectionsError) {
+              console.error('Error checking connections:', connectionsError)
+              // If there's an error, show setup for safety
+              setStatus('Account setup required...')
+              setCurrentUserId(data.user.id)
+              setShowConsumerSetup(true)
+              setIsLoading(false)
+              return
+            }
+            
+            // If no connections found, show setup modal
+            if (!connections || connections.length === 0) {
+              console.log('New user detected, showing setup modal')
+              setStatus('Welcome! Let\'s set up your account...')
+              setCurrentUserId(data.user.id)
+              setShowConsumerSetup(true)
+              setIsLoading(false)
+            } else {
+              console.log('Existing user detected, redirecting to AI chatbot')
+              setStatus('Redirecting to AI chatbot...')
+              setTimeout(() => {
+                window.location.href = '/ai-chatbot'
+              }, 1500)
+            }
+            return
+          }
+        }
+
+        // If no code but we have a setup param, check existing session
         setStatus('Checking authentication...')
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
         
@@ -193,5 +250,25 @@ export default function AuthCallbackPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+          <div className="absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse" />
+          <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
+        </div>
+        <div className="relative z-10 flex items-center space-x-3">
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-lg font-medium text-white">Loading...</span>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   )
 }
