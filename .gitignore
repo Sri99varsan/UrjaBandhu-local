@@ -1,3 +1,10 @@
+# ================================================================
+# UrjaBandhu Project .gitignore
+# ================================================================
+# This file specifies which files should be ignored by Git.
+# IMPORTANT: Package files and configuration files are NOT ignored!
+# ================================================================
+
 # Environment Variables
 .env
 .env.local
@@ -31,6 +38,19 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Keep important package files (DO NOT IGNORE)
+!package.json
+!package-lock.json
+!yarn.lock
+!pnpm-lock.yaml
+!requirements.txt
+!pyproject.toml
+!poetry.lock
+!Pipfile
+!Pipfile.lock
+!composer.json
+!composer.lock
 
 # IDEs
 .vscode/
@@ -71,11 +91,28 @@ lerna-debug.log*
 models/
 checkpoints/
 
-# Data files
-data/
-datasets/
+# Data files (keep small config files, ignore large datasets)
+data/large/
+datasets/large/
 *.csv
-*.json
+# Keep small config JSONs but ignore large data files
+!*config*.json
+!*settings*.json
+!*.config.js
+!*.config.ts
+!next.config.js
+!next.config.ts
+!tailwind.config.js
+!tailwind.config.ts
+!tsconfig.json
+!jsconfig.json
+!eslint.config.js
+!.eslintrc.json
+!.prettierrc.json
+!vite.config.js
+!vite.config.ts
+!nuxt.config.js
+!nuxt.config.ts
 *.parquet
 
 # Cache
@@ -102,3 +139,48 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# ================================================================
+# EXPLICITLY KEEP THESE IMPORTANT FILES (DO NOT IGNORE)
+# ================================================================
+# Package management files
+!package.json
+!package-lock.json
+!yarn.lock
+!pnpm-lock.yaml
+
+# Configuration files
+!*.config.js
+!*.config.ts
+!*.config.json
+!next.config.js
+!next.config.ts
+!tailwind.config.js
+!tailwind.config.ts
+!tsconfig.json
+!jsconfig.json
+!eslint.config.js
+!.eslintrc.json
+!.prettierrc.json
+!vite.config.js
+!vite.config.ts
+!nuxt.config.js
+!nuxt.config.ts
+
+# Docker and deployment files
+!Dockerfile
+!docker-compose.yml
+!netlify.toml
+!vercel.json
+
+# Python package files
+!requirements.txt
+!pyproject.toml
+!poetry.lock
+!Pipfile
+!Pipfile.lock
+
+# Documentation and project files
+!README.md
+!*.md
+!LICENSE
