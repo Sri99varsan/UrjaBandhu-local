@@ -152,6 +152,41 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
+/* Custom Scrollbar for Modals and Dropdowns */
+.modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 197, 94, 0.5) rgba(0, 0, 0, 0.1);
+}
+
+.modal-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.modal-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.7) 0%, rgba(16, 185, 129, 0.5) 100%);
+  border-radius: 2px;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.7) 100%);
+}
+
+/* Hide scrollbar while maintaining functionality */
+.scroll-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 @layer components {
   .electricity-gradient {
     @apply bg-gradient-to-r from-electricity-500 to-energy-500;
