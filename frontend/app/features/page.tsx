@@ -13,11 +13,9 @@ import {
   ChevronRight 
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 const features = [
   {
@@ -79,8 +77,6 @@ const features = [
 ]
 
 export default function FeaturesPage() {
-  const router = useRouter()
-
   return (
     <div className="min-h-screen bg-black relative">
       {/* Background Effects - Fixed to cover full page */}
@@ -90,54 +86,6 @@ export default function FeaturesPage() {
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse [animation-delay:2s]" />
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-green-600/5 rounded-full blur-[120px] animate-pulse [animation-delay:4s]" />
       </div>
-
-      {/* Navigation */}
-      <nav className="relative z-20 flex items-center justify-between px-6 py-4">
-        <motion.div 
-          className="flex items-center gap-3"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2 shadow-2xl">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/25">
-                <Logo className="h-5 w-5" width={20} height={20} />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                UrjaBandhu
-              </span>
-            </Link>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          className="flex items-center gap-4"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-2 py-2 shadow-xl">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
-                <Link href="/">Home</Link>
-              </Button>
-              <Button variant="ghost" className="text-green-400 bg-white/10 font-medium transition-all duration-300">
-                Features
-              </Button>
-              <Button variant="ghost" className="text-gray-300 hover:text-green-400 font-medium hover:bg-white/10 transition-all duration-300" asChild>
-                <Link href="/about">About</Link>
-              </Button>
-              <Button 
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold shadow-lg shadow-green-500/25 transition-all duration-300"
-                onClick={() => router.push('/auth')}
-              >
-                Sign In
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      </nav>
 
       {/* Main Content - Relative positioning to stay above background */}
       <div className="relative z-10 px-6 py-12 pb-24">
@@ -157,14 +105,13 @@ export default function FeaturesPage() {
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto font-light">
             Discover all the intelligent tools and features designed to help you optimize your energy consumption and reduce costs.
           </p>
-          <Button 
-            onClick={() => router.push('/auth')}
-            size="lg"
-            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold px-8 py-4 text-lg shadow-xl shadow-green-500/25 transition-all duration-300"
+          <Link 
+            href="/auth"
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold px-8 py-4 text-lg shadow-xl shadow-green-500/25 transition-all duration-300 rounded-md inline-flex items-center justify-center"
           >
             Get Started Now
             <ChevronRight className="ml-2 h-5 w-5" />
-          </Button>
+          </Link>
         </motion.div>
 
         {/* Features Grid */}
@@ -232,22 +179,19 @@ export default function FeaturesPage() {
               Join thousands of users who are already saving money and reducing their carbon footprint with UrjaBandhu.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                onClick={() => router.push('/auth')}
-                size="lg"
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold px-8 py-4 text-lg shadow-xl shadow-green-500/25 transition-all duration-300"
+              <Link 
+                href="/auth"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-semibold px-8 py-4 text-lg shadow-xl shadow-green-500/25 transition-all duration-300 rounded-md inline-flex items-center justify-center"
               >
                 Get Started Free
                 <ChevronRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                variant="outline"
-                size="lg"
-                className="border-green-400/30 text-green-400 hover:bg-green-400/10 px-8 py-4 text-lg transition-all duration-300"
-                asChild
+              </Link>
+              <Link 
+                href="/about"
+                className="border border-green-400/30 text-green-400 hover:bg-green-400/10 px-8 py-4 text-lg transition-all duration-300 rounded-md inline-flex items-center justify-center"
               >
-                <Link href="/about">Learn More</Link>
-              </Button>
+                Learn More
+              </Link>
             </div>
           </div>
         </motion.div>
