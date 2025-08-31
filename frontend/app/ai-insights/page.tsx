@@ -50,6 +50,28 @@ import { Separator } from '@/components/ui/separator'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { theme } from '@/lib/theme'
+
+// Fallback theme in case import fails during build
+const fallbackTheme = {
+  background: {
+    base: "min-h-screen bg-black relative overflow-hidden",
+    grid: "absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]",
+    orbs: {
+      topLeft: "absolute top-20 left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[80px] animate-pulse",
+      bottomRight: "absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]"
+    }
+  },
+  cards: {
+    glass: "bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl"
+  },
+  text: {
+    primary: "text-white",
+    muted: "text-gray-400",
+    gradient: "bg-gradient-to-r from-green-400 via-emerald-400 to-green-400 bg-clip-text text-transparent"
+  }
+}
+
+const safeTheme = theme || fallbackTheme
 import {
   RadialBarChart,
   RadialBar,
@@ -128,18 +150,18 @@ export default function AIInsightsDashboard() {
 
   if (loading || insightsLoading) {
     return (
-      <div className={theme.background.base}>
+      <div className={safeTheme.background.base}>
         {/* Background Effects */}
         <div className="absolute inset-0">
-          <div className={theme.background.grid} />
-          <div className={theme.background.orbs.topLeft} />
-          <div className={theme.background.orbs.bottomRight} />
+          <div className={safeTheme.background.grid} />
+          <div className={safeTheme.background.orbs.topLeft} />
+          <div className={safeTheme.background.orbs.bottomRight} />
         </div>
         
         <div className="relative z-10 flex items-center justify-center min-h-screen">
-          <div className={`flex items-center space-x-3 ${theme.cards.glass} p-6`}>
+          <div className={`flex items-center space-x-3 ${safeTheme.cards.glass} p-6`}>
             <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-            <span className={`text-lg font-medium ${theme.text.primary}`}>Loading AI Insights...</span>
+            <span className={`text-lg font-medium ${safeTheme.text.primary}`}>Loading AI Insights...</span>
           </div>
         </div>
       </div>
@@ -147,12 +169,12 @@ export default function AIInsightsDashboard() {
   }
 
   return (
-    <div className={theme.background.base}>
+    <div className={safeTheme.background.base}>
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className={theme.background.grid} />
-        <div className={theme.background.orbs.topLeft} />
-        <div className={theme.background.orbs.bottomRight} />
+        <div className={safeTheme.background.grid} />
+        <div className={safeTheme.background.orbs.topLeft} />
+        <div className={safeTheme.background.orbs.bottomRight} />
       </div>
       
       <div className="max-w-7xl mx-auto space-y-8 relative z-10 p-6">
@@ -164,11 +186,11 @@ export default function AIInsightsDashboard() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className={`text-3xl font-bold ${theme.text.gradient} flex items-center gap-3`}>
+            <h1 className={`text-3xl font-bold ${safeTheme.text.gradient} flex items-center gap-3`}>
               <Brain className="h-8 w-8 text-green-400" />
               AI Energy Insights
             </h1>
-            <p className={`${theme.text.muted} mt-2`}>Intelligent energy analysis powered by AI to optimize your consumption and reduce costs</p>
+            <p className={`${safeTheme.text.muted} mt-2`}>Intelligent energy analysis powered by AI to optimize your consumption and reduce costs</p>
           </div>
 
           <div className="flex items-center space-x-4">
