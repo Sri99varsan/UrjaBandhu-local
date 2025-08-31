@@ -150,10 +150,10 @@ export default function ChatbotLandingPage({
       return;
     }
 
-    // Entrance animation sequence
+    // Entrance animation sequence - show for 3 seconds to give users time to see the setup
     const timer1 = setTimeout(() => {
       setAnimationPhase("analyzing");
-    }, 2000);
+    }, 3000); // Increased from 2000 to 3000 for better UX
 
     return () => clearTimeout(timer1);
   }, [initialQuery]); // Auto-show festival prompt when chat becomes available
@@ -263,17 +263,48 @@ export default function ChatbotLandingPage({
         Include some analysis of fictional energy usage data for an Indian household: current consumption (around 2.4 kWh today),
         monthly spending (around ₹127 so far), and a month-end prediction (around ₹380).
         Format your response to include these metrics with <strong> HTML tags around the numbers.
-        Offer to help them reduce their electricity bill.
+        Offer to help them reduce their electricity bill and suggest asking about energy-saving tips.
         Keep it under 150 words and make it sound like you've just analyzed their personal data.`;
       }
 
       const response = await callGeminiAPI(prompt);
       setInitialBotResponse(response);
+      
+      // Also add a setup prompt to chat messages
+      const setupMessage = {
+        id: Date.now().toString(),
+        text: response,
+        sender: "bot" as const,
+      };
+      setChatMessages([setupMessage]);
+      
     } catch (error) {
       console.error("Error getting initial response:", error);
-      setInitialBotResponse(
-        "Hello! I'm your energy assistant. I can help you analyze your energy usage and provide tips to reduce your electricity bill. What would you like to know?"
-      );
+      const fallbackMessage = `Hello! Welcome to UrjaBandhu! 🌟 
+      
+I've just analyzed your energy usage and here's what I found:
+
+📊 **Current consumption:** <strong>2.4 kWh</strong> today
+💰 **Monthly spending so far:** <strong>₹127</strong>
+📈 **Month-end prediction:** <strong>₹380</strong>
+
+I'm here to help you reduce your electricity bill and make smarter energy decisions. You can ask me about:
+- Energy-saving tips for your home
+- Understanding your electricity patterns
+- Festival-specific energy saving advice
+- Smart device recommendations
+
+What would you like to know about your energy usage?`;
+      
+      setInitialBotResponse(fallbackMessage);
+      
+      // Add fallback setup message to chat
+      const setupMessage = {
+        id: Date.now().toString(),
+        text: fallbackMessage,
+        sender: "bot" as const,
+      };
+      setChatMessages([setupMessage]);
     }
   };
 
