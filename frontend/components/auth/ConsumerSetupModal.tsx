@@ -151,7 +151,16 @@ export default function ConsumerSetupModal({ isOpen, onComplete, onSkip, userId 
     
     setSaving(true)
     try {
-      // Prepare connections data
+      // For demo users, simulate the setup process without database save
+      if (userId === 'demo-user') {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        toast.success(`Setup completed successfully! Welcome to UrjaBandhu!`)
+        onComplete()
+        return
+      }
+
+      // Prepare connections data for authenticated users
       const connectionsData = connections.map((conn, index) => ({
         user_id: userId,
         consumer_id: conn.consumer_id.trim(),

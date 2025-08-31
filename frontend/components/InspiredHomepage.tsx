@@ -132,7 +132,7 @@ export function InspiredHomepage() {
             </Button>
             
             <Button 
-              onClick={() => router.push('/ai-chatbot')}
+              onClick={() => router.push('/setup')}
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black px-6 py-2 rounded-lg font-semibold transition-all duration-300 text-sm cursor-pointer"
             >
               Get Started

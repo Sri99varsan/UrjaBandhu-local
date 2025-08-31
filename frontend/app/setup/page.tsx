@@ -2,32 +2,36 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/components/auth/AuthProvider'
 import ConsumerSetupModal from '@/components/auth/ConsumerSetupModal'
 
 export default function SetupPage() {
-  const { user, loading } = useAuth()
   const router = useRouter()
-  const [isModalOpen, setIsModalOpen] = useState(true)
-
-  useEffect(() => {
-    if (!loading && !user) {
-      // If user is not authenticated, redirect to auth page
-      router.push('/auth')
-    }
-  }, [user, loading, router])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showInitialSetup, setShowInitialSetup] = useState(true)
 
   const handleSetupComplete = () => {
     setIsModalOpen(false)
-    router.push('/ai-chatbot')
+    setShowInitialSetup(false)
+    // Show success message and redirect to AI-chatbot
+    setTimeout(() => {
+      router.push('/ai-chatbot')
+    }, 1500)
   }
 
   const handleSkipSetup = () => {
     setIsModalOpen(false)
-    router.push('/ai-chatbot')
+    setShowInitialSetup(false)
+    // Show a message about skipping and redirect to AI-chatbot
+    setTimeout(() => {
+      router.push('/ai-chatbot')
+    }, 1000)
   }
 
-  if (loading) {
+  const startSetup = () => {
+    setIsModalOpen(true)
+  }
+
+  if (!showInitialSetup) {
     return (
       <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
         {/* Background effects */}
@@ -37,16 +41,12 @@ export default function SetupPage() {
           <div className="absolute bottom-20 right-20 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] animate-pulse [animation-delay:2s]" />
         </div>
         
-        <div className="relative z-10 flex items-center space-x-3">
-          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-lg font-medium text-white">Loading setup...</span>
+        <div className="relative z-10 text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <span className="text-lg font-medium text-white">Redirecting to AI Assistant...</span>
         </div>
       </div>
     )
-  }
-
-  if (!user) {
-    return null // Will redirect to auth
   }
 
   return (
@@ -76,7 +76,7 @@ export default function SetupPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={startSetup}
                   className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg"
                 >
                   Set Up Connection
@@ -111,12 +111,12 @@ export default function SetupPage() {
         </div>
       </div>
 
-      {isModalOpen && user && (
+      {isModalOpen && (
         <ConsumerSetupModal
           isOpen={isModalOpen}
           onComplete={handleSetupComplete}
           onSkip={handleSkipSetup}
-          userId={user.id}
+          userId="demo-user" // Use demo user for setup without authentication
         />
       )}
     </div>
