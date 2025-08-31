@@ -82,9 +82,9 @@ export default function FeaturesPage() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
+    <div className="min-h-screen bg-black relative">
+      {/* Background Effects - Fixed to cover full page */}
+      <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
         <div className="absolute top-20 left-20 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] animate-pulse" />
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-[80px] animate-pulse [animation-delay:2s]" />
@@ -139,8 +139,8 @@ export default function FeaturesPage() {
         </motion.div>
       </nav>
 
-      {/* Main Content */}
-      <div className="relative z-10 px-6 py-12">
+      {/* Main Content - Relative positioning to stay above background */}
+      <div className="relative z-10 px-6 py-12 pb-24">
         {/* Header Section */}
         <motion.div 
           className="text-center max-w-4xl mx-auto mb-16"
